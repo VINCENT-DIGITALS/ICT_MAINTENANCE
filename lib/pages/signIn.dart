@@ -1,6 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/api_service/auth_service.dart';
+import 'package:servicetracker_app/components/appbar.dart';
 
 import 'package:servicetracker_app/pages/home.dart';
 
@@ -37,6 +38,12 @@ class _LoginPageState extends State<LoginPage>
     if (success) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Login Successful!")));
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Invalid Credentials")));
@@ -62,28 +69,27 @@ class _LoginPageState extends State<LoginPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final containerWidth = screenWidth * 0.8; // 80% of the screen width
     return Scaffold(
-      appBar: AppBar(
-        shadowColor: Colors.black,
-        backgroundColor: const Color.fromARGB(255, 219, 180, 39),
-        automaticallyImplyLeading: false,
-        // leading: IconButton(
-        //   icon: Icon(Icons.phone, color: Colors.green, size: 40),
-        //   onPressed: () => _dialNumber(phoneNumber),
-        // ),
-        title: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      HomePage()), // Replace `HomePage` with your target page
-            );
-          },
-          child: const Text(' '),
+      appBar: CurvedEdgesAppBar(
+        height: 300,
+        showFooter: true, // Enables "Developed by..." text
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircleAvatar(
+              radius: 40,
+              backgroundColor: Colors.white,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'ICT Maintenance',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        centerTitle: false,
-        elevation: 2,
-        actions: [],
       ),
       backgroundColor: Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
@@ -92,28 +98,26 @@ class _LoginPageState extends State<LoginPage>
             return Column(
               children: [
                 Expanded(
-                    child: Row(
+                    child: Column(
                   children: [
-                    // Expanded(
-                    //   child: Padding(
-                    //     padding: const EdgeInsetsDirectional.fromSTEB(
-                    //         10, 10, 10, 10),
-                    //     child: Image.asset(
-                    //       logoPath,
-                    //       width: constraints.maxWidth *
-                    //           0.5, // Adjust width based on screen size
-                    //       height: constraints.maxHeight *
-                    //           0.5, // Adjust height based on screen size
-                    //     ),
-                    //   ),
-                    // ),
                     Expanded(
                       child: SingleChildScrollView(
                         child: _buildLoginForm(containerWidth),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Text(
+                          "DA - Philippine Rice ReseSarch Institute",
+                          style: TextStyle(fontSize: 12, color: Colors.black),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
                   ],
-                ))
+                )),
               ],
             );
           } else {
@@ -127,24 +131,25 @@ class _LoginPageState extends State<LoginPage>
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Padding(
-                          //   padding: const EdgeInsetsDirectional.fromSTEB(
-                          //       10, 10, 10, 10),
-                          //   child: Image.asset(
-                          //     logoPath,
-                          //     width: MediaQuery.of(context).size.width *
-                          //         1.6, // Adjust width based on screen size
-                          //     height: MediaQuery.of(context).size.height *
-                          //         0.2, // Adjust height based on screen size
-                          //   ),
-                          // ),
-                          _buildLoginForm(containerWidth)
+                          _buildLoginForm(containerWidth),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10.0),
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Text(
+                                "DA - Philippine Rice Research Institute",
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.black),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             );
@@ -162,12 +167,12 @@ class _LoginPageState extends State<LoginPage>
           decoration: BoxDecoration(
             color: const Color.fromARGB(255, 255, 255, 255),
             boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: const Offset(0, 2), // changes position of shadow
-              ),
+              // BoxShadow(
+              //   color: Colors.grey.withOpacity(0.5),
+              //   spreadRadius: 5,
+              //   blurRadius: 7,
+              //   offset: const Offset(0, 2), // changes position of shadow
+              // ),
             ],
             borderRadius: BorderRadius.circular(25),
           ),
@@ -180,18 +185,18 @@ class _LoginPageState extends State<LoginPage>
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        AutoSizeText(
-                          "Sign in here",
-                          maxLines: 2,
-                          style: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Color(0xFF14181B),
-                            fontSize: 25,
-                            letterSpacing: 0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
+                        // AutoSizeText(
+                        //   "Sign in here",
+                        //   maxLines: 2,
+                        //   style: const TextStyle(
+                        //     fontFamily: 'Inter',
+                        //     color: Color(0xFF14181B),
+                        //     fontSize: 25,
+                        //     letterSpacing: 0,
+                        //     fontWeight: FontWeight.bold,
+                        //   ),
+                        // ),
+                        // const SizedBox(height: 10),
                         Form(
                           key: _formKey,
                           autovalidateMode: AutovalidateMode.disabled,
@@ -371,7 +376,7 @@ class _LoginPageState extends State<LoginPage>
                                       style: ButtonStyle(
                                         padding: MaterialStateProperty.all(
                                           const EdgeInsets.symmetric(
-                                              horizontal: 30, vertical: 15),
+                                              horizontal: 90, vertical: 15),
                                         ),
                                         shape: MaterialStateProperty.all(
                                           RoundedRectangleBorder(
@@ -383,10 +388,11 @@ class _LoginPageState extends State<LoginPage>
                                             .resolveWith<Color>((states) {
                                           if (states.contains(
                                               MaterialState.pressed)) {
-                                            return const Color.fromARGB(255, 93,
-                                                255, 68); // Pressed color
+                                            return const Color(
+                                                0xFF007A33); // Pressed color
                                           }
-                                          return Colors.blue; // Default color
+                                          return const Color(
+                                              0xFF007A33); // New color
                                         }),
                                       ),
                                       child: isLoading

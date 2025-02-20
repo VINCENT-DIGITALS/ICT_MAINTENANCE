@@ -30,6 +30,7 @@ class _HomePageState extends State<HomePage> {
         key: _scaffoldKey,
         appBar: AppBar(
           title: Text('Home Page'),
+          
         ),
         drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
         body: _isLoading
