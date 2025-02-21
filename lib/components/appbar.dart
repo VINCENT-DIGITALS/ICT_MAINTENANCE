@@ -56,17 +56,19 @@ class CurvedEdgesAppBar extends StatelessWidget implements PreferredSizeWidget {
 class CurvedEdgesClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    Path path = Path();
-    path.lineTo(0, size.height - 30);
+    double cornerRadius = 40.0; // Radius for bottom corners
 
-    // Left curve
-    path.quadraticBezierTo(size.width * 0.01, size.height, size.width * 0.1, size.height);
+    Path path = Path();
+    path.lineTo(0, size.height - cornerRadius);
+
+    // Bottom left rounded corner
+    path.quadraticBezierTo(0, size.height, cornerRadius, size.height);
 
     // Straight middle
-    path.lineTo(size.width * 0.9, size.height);
+    path.lineTo(size.width - cornerRadius, size.height);
 
-    // Right curve
-    path.quadraticBezierTo(size.width * 0.99, size.height, size.width, size.height - 30);
+    // Bottom right rounded corner
+    path.quadraticBezierTo(size.width, size.height, size.width, size.height - cornerRadius);
 
     path.lineTo(size.width, 0);
     path.close();
@@ -76,3 +78,4 @@ class CurvedEdgesClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/qrScanner.dart';
 
 class HomePage extends StatefulWidget {
   final String currentPage;
@@ -19,12 +20,17 @@ class _HomePageState extends State<HomePage> {
     return SafeArea(
       child: Scaffold(
         appBar: CurvedEdgesAppBar(
-          height: 50,
+          height:
+              MediaQuery.of(context).size.height * 0.1, // 50% of screen height
           showFooter: false,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               const SizedBox(height: 10),
+              // IconButton(
+              //   onPressed: () {}, 
+              //   icon: const Icon(Icons.arrow_back, color: Colors.white),
+              // ),
               const Text(
                 'Mabuhay, Ranniel!',
                 style: TextStyle(
@@ -32,6 +38,10 @@ class _HomePageState extends State<HomePage> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
+              ),
+              IconButton(
+                onPressed: () {}, // Logout or Profile
+                icon: const Icon(Icons.logout, color: Colors.white),
               ),
             ],
           ),
@@ -47,14 +57,14 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   ListView(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(15, 0, 0, 15),
                     children: [
                       /// 🔹 Title: Ongoing Repairs
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            "Ongoing Repairs",
+                            "Picked Requests",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -79,7 +89,25 @@ class _HomePageState extends State<HomePage> {
                                 _buildAddRequestButtons()
                               ],
                             ),
-
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Ongoing Services",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: const Text(
+                              "See all services",
+                              style: TextStyle(color: Colors.green),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(
                           height: 80), // Extra space to prevent hiding content
                     ],
@@ -124,6 +152,36 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// 🔹 Open QR Scanner
+  void _scanQRCode() async {
+    final String? scannedValue = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const QRScannerScreen()),
+    );
+
+    if (scannedValue != null) {
+      // Handle scanned value (e.g., show a dialog or navigate)
+      _showScannedDialog(scannedValue);
+    }
+  }
+
+  /// 🔹 Show Scanned Value in a Dialog
+  void _showScannedDialog(String scannedValue) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Scanned Code"),
+        content: Text("Scanned Value: $scannedValue"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 🛠 Bottom Section with Buttons
   Widget _buildAddRequestButtons() {
     return Container(
@@ -132,27 +190,35 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          /// 🔥 Add New Request Button (Always Visible)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF007A33),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          Padding(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 10), // Simplified padding
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width *
+                      0.9, // 90% of screen width
+                  child: ElevatedButton(
+                    onPressed: _scanQRCode,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF007A33),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      "ADD NEW REQUEST",
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                  ),
                 ),
-              ),
-              child: const Text(
-                "ADD NEW REQUEST",
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-            ),
-          ),
+              ))
+
+          /// 🔥 Add New Request Button (Always Visible)
         ],
       ),
     );
@@ -160,43 +226,54 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildPendingButtons() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0A213B),
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text(
-                "Pending Requests",
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+        color: Colors.white,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width *
+                      0.9, // 90% of screen width
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0A213B),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Text(
+                          "Pending Requests",
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        SizedBox(width: 10),
+                        Icon(Icons.arrow_forward, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              SizedBox(width: 10),
-              Icon(Icons.arrow_forward, color: Colors.white),
-            ],
-          ),
-        ),
-      ),
-    );
+            )
+          ],
+        ));
   }
 
   /// 🛠 Builds a list of Ongoing Repairs (Replace with your real data)
   Widget _buildOngoingRepairs() {
     return Column(
       children: List.generate(
-        2,
+        6,
         (index) => Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(12),
@@ -212,13 +289,22 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 5),
-              const Text("Mighty Jemuel Sotto"),
-              const Text("Information Systems Division"),
+              const Text(
+                "Mighty Jemuel Sotto",
+                style: TextStyle(
+                  fontSize: 14,
+                ),
+              ),
+              const Text(
+                "Information Systems Division",
+                style: TextStyle(),
+              ),
               const Text("Requested: February 14, 2025, 10:00 AM"),
               const SizedBox(height: 5),
               const Text("Current Location: ISD Server Room"),
+              const SizedBox(height: 5),
               const Text("Status: Serviceable - for repair"),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(

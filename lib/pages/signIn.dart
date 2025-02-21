@@ -85,94 +85,60 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final containerWidth = screenWidth * 0.8; // 80% of the screen width
+    final containerWidth = screenWidth * 1;
+
     return Scaffold(
-      appBar: CurvedEdgesAppBar(
-        height: 300,
-        showFooter: true, // Enables "Developed by..." text
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.white,
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'ICT Maintenance',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-      backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      resizeToAvoidBottomInset:
+          true, // Allows the body to resize when keyboard appears
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, constraints) {
-          if (constraints.maxWidth > 600) {
-            return Column(
-              children: [
-                Expanded(
-                    child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: _buildLoginForm(containerWidth),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10.0),
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Text(
-                          "DA - Philippine Rice ReseSarch Institute",
-                          style: TextStyle(fontSize: 12, color: Colors.black),
-                          textAlign: TextAlign.center,
+        child: SingleChildScrollView(
+          physics: ClampingScrollPhysics(), // Prevent excessive scrolling
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity, // Ensures full width
+                child: CurvedEdgesAppBar(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  showFooter: true,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircleAvatar(
+                          radius: 40, backgroundColor: Colors.white),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'ICT Maintenance',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
-                )),
-              ],
-            );
-          } else {
-            return Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildLoginForm(containerWidth),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0),
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Text(
-                                "DA - Philippine Rice Research Institute",
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.black),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            );
-          }
-        }),
+              AnimatedPadding(
+                duration: Duration(milliseconds: 200),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: _buildLoginForm(containerWidth),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Text(
+                    "DA - Philippine Rice Research Institute",
+                    style: TextStyle(fontSize: 12, color: Colors.black),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -198,259 +164,228 @@ class _LoginPageState extends State<LoginPage>
             children: [
               Align(
                 alignment: const AlignmentDirectional(0, 0),
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        // AutoSizeText(
-                        //   "Sign in here",
-                        //   maxLines: 2,
-                        //   style: const TextStyle(
-                        //     fontFamily: 'Inter',
-                        //     color: Color(0xFF14181B),
-                        //     fontSize: 25,
-                        //     letterSpacing: 0,
-                        //     fontWeight: FontWeight.bold,
-                        //   ),
-                        // ),
-                        // const SizedBox(height: 10),
-                        Form(
-                          key: _formKey,
-                          autovalidateMode: AutovalidateMode.disabled,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10), // Simplified padding
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                      maxWidth: 300), // Max width set to 400px
-                                  child: SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.6, // 90% of screen width
-                                    child: TextFormField(
-                                      controller: emailController,
-                                      autofocus: false,
-                                      obscureText: false,
-                                      decoration: const InputDecoration(
-                                        labelText: 'ID Number',
-                                        labelStyle: TextStyle(
-                                          fontFamily: 'Inter',
-                                          color: Color.fromARGB(255, 0, 0, 0),
-                                          fontSize: 14,
-                                          letterSpacing: 0,
-                                          fontWeight: FontWeight.normal,
-                                        ),
-                                        hintStyle: TextStyle(
-                                          fontFamily: 'Inter',
-                                          color: Color.fromARGB(255, 0, 0, 0),
-                                          fontSize: 14,
-                                          letterSpacing: 0,
-                                          fontWeight: FontWeight.normal,
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Color(0xFF018203),
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(12)),
-                                        ),
-                                        focusedErrorBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Color(0xFFFF5963),
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(12)),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Colors.black,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(12)),
-                                        ),
-                                        errorBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Color(0xFFFF5963),
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(12)),
-                                        ),
-                                      ),
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.disabled,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10), // Simplified padding
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                              maxWidth: 500), // Max width set to 400px
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width *
+                                0.9, // 90% of screen width
+                            child: TextFormField(
+                              controller: emailController,
+                              autofocus: false,
+                              obscureText: false,
+                              decoration: const InputDecoration(
+                                labelText: 'ID Number',
+                                labelStyle: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Color.fromARGB(255, 0, 0, 0),
+                                  fontSize: 14,
+                                  letterSpacing: 0,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                                hintStyle: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Color.fromARGB(255, 0, 0, 0),
+                                  fontSize: 14,
+                                  letterSpacing: 0,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0xFF018203),
+                                    width: 2,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0xFFFF5963),
+                                    width: 2,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Colors.black,
+                                    width: 2,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0xFFFF5963),
+                                    width: 2,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Padding(
+                        padding:
+                            const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                        child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                                maxWidth: 500), // Set max width
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width *
+                                  0.9, // 90% of screen width
+                              child: TextFormField(
+                                controller: passwordController,
+                                autofocus: false,
+                                obscureText: !_passwordVisible,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  labelStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Color.fromARGB(255, 0, 0, 0),
+                                    fontSize: 14,
+                                    letterSpacing: 0,
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  alignLabelWithHint: false,
+                                  hintStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Color.fromARGB(255, 0, 0, 0),
+                                    fontSize: 14,
+                                    letterSpacing: 0,
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Color(0xFF018203),
+                                      width: 2,
+                                    ),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(12)),
+                                  ),
+                                  focusedErrorBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Color(0xFFFF5963),
+                                      width: 2,
+                                    ),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(12)),
+                                  ),
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.black,
+                                      width: 2,
+                                    ),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(12)),
+                                  ),
+                                  errorBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Color(0xFFFF5963),
+                                      width: 2,
+                                    ),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(12)),
+                                  ),
+                                  suffixIcon: InkWell(
+                                    onTap: () => setState(() {
+                                      _passwordVisible = !_passwordVisible;
+                                    }),
+                                    focusNode: FocusNode(skipTraversal: true),
+                                    child: Icon(
+                                      _passwordVisible
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                      color: const Color(0xFF57636C),
+                                      size: 22,
                                     ),
                                   ),
                                 ),
                               ),
-
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0, 10, 0, 10),
-                                child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                        maxWidth: 300), // Set max width
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.6, // 90% of screen width
-                                      child: TextFormField(
-                                        controller: passwordController,
-                                        autofocus: false,
-                                        obscureText: !_passwordVisible,
-                                        decoration: InputDecoration(
-                                          labelText: 'Password',
-                                          labelStyle: const TextStyle(
-                                            fontFamily: 'Inter',
-                                            color: Color.fromARGB(255, 0, 0, 0),
-                                            fontSize: 14,
-                                            letterSpacing: 0,
-                                            fontWeight: FontWeight.normal,
-                                          ),
-                                          alignLabelWithHint: false,
-                                          hintStyle: const TextStyle(
-                                            fontFamily: 'Inter',
-                                            color: Color.fromARGB(255, 0, 0, 0),
-                                            fontSize: 14,
-                                            letterSpacing: 0,
-                                            fontWeight: FontWeight.normal,
-                                          ),
-                                          focusedBorder:
-                                              const OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Color(0xFF018203),
-                                              width: 2,
-                                            ),
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(12)),
-                                          ),
-                                          focusedErrorBorder:
-                                              const OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Color(0xFFFF5963),
-                                              width: 2,
-                                            ),
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(12)),
-                                          ),
-                                          enabledBorder:
-                                              const OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.black,
-                                              width: 2,
-                                            ),
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(12)),
-                                          ),
-                                          errorBorder: const OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Color(0xFFFF5963),
-                                              width: 2,
-                                            ),
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(12)),
-                                          ),
-                                          suffixIcon: InkWell(
-                                            onTap: () => setState(() {
-                                              _passwordVisible =
-                                                  !_passwordVisible;
-                                            }),
-                                            focusNode:
-                                                FocusNode(skipTraversal: true),
-                                            child: Icon(
-                                              _passwordVisible
-                                                  ? Icons.visibility_outlined
-                                                  : Icons
-                                                      .visibility_off_outlined,
-                                              color: const Color(0xFF57636C),
-                                              size: 22,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )),
-                              ),
-                              // if (errorMessage.isNotEmpty)
-                              //   Padding(
-                              //     padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 5),
-                              //     child: Row(
-                              //       mainAxisAlignment: MainAxisAlignment.center,
-                              //       children: [
-                              //         AutoSizeText(
-                              //           errorMessage,
-                              //           maxLines: 2,
-                              //           softWrap: true,
-                              //           overflow: TextOverflow.ellipsis,
-                              //           minFontSize: 8,
-                              //           stepGranularity: 1,
-                              //           style: const TextStyle(
-                              //             fontFamily: 'Inter',
-                              //             color: Colors.red,
-                              //             fontSize: 11,
-                              //             letterSpacing: 0,
-                              //             fontWeight: FontWeight.bold,
-                              //           ),
-                              //         ),
-                              //       ],
-                              //     ),
-                              //   ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment
-                                    .center, // Center the button
-                                children: [
-                                  Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                            0, 10, 0, 0),
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                          maxWidth: 300), // Max width of 400px
-                                      child: SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.5, // 80% of screen width
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            _signin();
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical:
-                                                    15), // Responsive padding
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            ),
-                                            backgroundColor: const Color(
-                                                0xFF007A33), // Button color
-                                          ),
-                                          child: isLoading
-                                              ? const CircularProgressIndicator(
-                                                  color: Colors
-                                                      .white) // Loading indicator
-                                              : const Text(
-                                                  "Sign In",
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                        ),
-                                      ),
+                            )),
+                      ),
+                      // if (errorMessage.isNotEmpty)
+                      //   Padding(
+                      //     padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 5),
+                      //     child: Row(
+                      //       mainAxisAlignment: MainAxisAlignment.center,
+                      //       children: [
+                      //         AutoSizeText(
+                      //           errorMessage,
+                      //           maxLines: 2,
+                      //           softWrap: true,
+                      //           overflow: TextOverflow.ellipsis,
+                      //           minFontSize: 8,
+                      //           stepGranularity: 1,
+                      //           style: const TextStyle(
+                      //             fontFamily: 'Inter',
+                      //             color: Colors.red,
+                      //             fontSize: 11,
+                      //             letterSpacing: 0,
+                      //             fontWeight: FontWeight.bold,
+                      //           ),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.center, // Center the button
+                        children: [
+                          Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                                0, 10, 0, 0),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                  maxWidth: 500), // Max width of 400px
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width *
+                                    0.9, // 80% of screen width
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    _signin();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 15), // Responsive padding
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
                                     ),
+                                    backgroundColor:
+                                        const Color(0xFF007A33), // Button color
                                   ),
-                                ],
+                                  child: isLoading
+                                      ? const CircularProgressIndicator(
+                                          color:
+                                              Colors.white) // Loading indicator
+                                      : const Text(
+                                          "Sign In",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
