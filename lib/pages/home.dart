@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               const SizedBox(height: 10),
               // IconButton(
-              //   onPressed: () {}, 
+              //   onPressed: () {},
               //   icon: const Icon(Icons.arrow_back, color: Colors.white),
               // ),
               const Text(
@@ -82,11 +82,10 @@ class _HomePageState extends State<HomePage> {
 
                       /// 🔹 List of Ongoing Repairs (Or Empty State)
                       hasOngoingRepairs
-                          ? _buildOngoingRepairs()
+                          ? _buildPickedRequests(context)
                           : Column(
                               children: [
-                                _buildEmptyState(),
-                                _buildAddRequestButtons()
+                                _buildEmptyPickedState(context),
                               ],
                             ),
                       Row(
@@ -108,6 +107,15 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
+
+                      /// 🔹 List of Ongoing Repairs (Or Empty State)
+                      hasOngoingRepairs
+                          ? _buildOngoingRepairs(context)
+                          : Column(
+                              children: [
+                                _buildEmptyOngoingState(context),
+                              ],
+                            ),
                       const SizedBox(
                           height: 80), // Extra space to prevent hiding content
                     ],
@@ -136,14 +144,20 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            hasOngoingRepairs
-                ? Column(
-                    children: [
-                      _buildAddRequestButtons(),
-                      _buildPendingButtons(),
-                    ],
-                  )
-                : _buildPendingButtons(),
+            // hasOngoingRepairs
+            //     ? Column(
+            //         children: [
+            //           _buildAddRequestButtons(),
+            //           _buildPendingButtons(),
+            //         ],
+            //       )
+            //     :
+            Column(
+              children: [
+                _buildAddRequestButtons(),
+                _buildPendingButtons(context),
+              ],
+            )
 
             /// 🔹 Fixed Bottom Buttons
           ],
@@ -224,57 +238,82 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPendingButtons() {
+  Widget _buildPendingButtons(BuildContext context) {
     return Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        color: Colors.white,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      height: MediaQuery.of(context).size.height * 0.18, // 12% of screen height
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFFFA500), // Orange background
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(40), // Curved top-left
+          topRight: Radius.circular(40), // Curved top-right
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildActionButton("INCIDENT REPORTS", () {
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(builder: (context) => IncidentReportsPage()),
+            // );
+          }),
+          const SizedBox(width: 10), // Space between buttons
+          _buildActionButton("PENDING REQUESTS", () {
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(builder: (context) => PendingRequestsPage()),
+            // );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String text, VoidCallback onPressed) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0A213B), // Dark blue
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(8), // Slightly rounded button corners
+          ),
+        ),
+        child: Row(
+          mainAxisSize:
+              MainAxisSize.min, // Ensures content is centered properly
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 500),
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width *
-                      0.9, // 90% of screen width
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0A213B),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Text(
-                          "Pending Requests",
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        SizedBox(width: 10),
-                        Icon(Icons.arrow_forward, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                ),
+            Text(
+              text.replaceAll(" ", "\n"), // Splits words into two lines
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
-            )
+              textAlign: TextAlign.center, // Centers the text
+            ),
+            const SizedBox(height: 5), // Space between text and icon
+            const Icon(
+              Icons.arrow_forward,
+              color: Colors.white,
+              size: 24,
+            ),
           ],
-        ));
+        ),
+      ),
+    );
   }
 
   /// 🛠 Builds a list of Ongoing Repairs (Replace with your real data)
-  Widget _buildOngoingRepairs() {
+  Widget _buildPickedRequests(BuildContext context) {
     return Column(
       children: List.generate(
-        6,
+        1,
         (index) => Container(
+          width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -291,20 +330,16 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 5),
               const Text(
                 "Mighty Jemuel Sotto",
-                style: TextStyle(
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontSize: 14),
               ),
-              const Text(
-                "Information Systems Division",
-                style: TextStyle(),
-              ),
+              const Text("Information Systems Division"),
               const Text("Requested: February 14, 2025, 10:00 AM"),
               const SizedBox(height: 5),
               const Text("Current Location: ISD Server Room"),
               const SizedBox(height: 5),
               const Text("Status: Serviceable - for repair"),
               const SizedBox(height: 20),
+              // GREEN BUTTON
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
@@ -312,11 +347,33 @@ class _HomePageState extends State<HomePage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  minimumSize:
+                      const Size(double.infinity, 50), // Full width button
                 ),
                 child: const Text(
-                  "VIEW DETAILS",
-                  style: TextStyle(color: Colors.white),
+                  "COMPLETE DETAILS",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // TEXT BUTTON (Remove from my list)
+              Center(
+                child: TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    "Remove from my list",
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -326,24 +383,119 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// 🛠 Shows Empty State when there are no Ongoing Repairs
-  Widget _buildEmptyState() {
+  /// 🛠 Builds a list of Ongoing Repairs (Replace with your real data)
+  Widget _buildOngoingRepairs(BuildContext context) {
     return Column(
-      children: [
-        const SizedBox(height: 30),
-        const Text(
-          "You have no ongoing repairs.",
-          style: TextStyle(fontSize: 16),
-          textAlign: TextAlign.center,
+      children: List.generate(
+        1,
+        (index) => Container(
+          width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "TN25-0143 Computer Repair",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                "Mighty Jemuel Sotto",
+                style: TextStyle(fontSize: 14),
+              ),
+              const Text("Information Systems Division"),
+              const Text("Requested: February 14, 2025, 10:00 AM"),
+              const SizedBox(height: 5),
+              const Text("Current Location: ISD Server Room"),
+              const SizedBox(height: 5),
+              const Text("Status: Serviceable - for repair"),
+              const SizedBox(height: 20),
+              // GREEN BUTTON
+              ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[400],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  minimumSize:
+                      const Size(double.infinity, 50), // Full width button
+                ),
+                child: const Text(
+                  "COMPLETE DETAILS",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+            ],
+          ),
         ),
-        const SizedBox(height: 5),
-        const Text(
-          "Add a new request or select from pending requests to get started.",
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 30),
-      ],
+      ),
+    );
+  }
+
+  /// 🛠 Shows Empty State when there are no Ongoing Repairs
+  Widget _buildEmptyPickedState(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+
+      padding: const EdgeInsets.all(16), // Adds spacing inside the container
+      decoration: BoxDecoration(
+        color: Colors.grey[200], // Light gray background
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+      ),
+      child: Column(
+        mainAxisAlignment:
+            MainAxisAlignment.center, // Centers content vertically
+        children: const [
+          SizedBox(height: 5),
+          Text(
+            "Select from pending requests to get started.",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyOngoingState(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+
+      padding: const EdgeInsets.all(16), // Adds spacing inside the container
+      decoration: BoxDecoration(
+        color: Colors.grey[200], // Light gray background
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+      ),
+      child: Column(
+        mainAxisAlignment:
+            MainAxisAlignment.center, // Centers content vertically
+        children: const [
+          Text(
+            "You have no ongoing services.", // Matches the text in the image
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 5),
+          Text(
+            "Add a new request or select from pending requests to get started.",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }
