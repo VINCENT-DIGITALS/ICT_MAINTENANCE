@@ -60,13 +60,13 @@ class CurvedEdgesClipper extends CustomClipper<Path> {
     path.lineTo(0, size.height - 30);
 
     // Left curve
-    path.quadraticBezierTo(size.width * 0.05, size.height, size.width * 0.2, size.height);
+    path.quadraticBezierTo(size.width * 0.01, size.height, size.width * 0.1, size.height);
 
     // Straight middle
-    path.lineTo(size.width * 0.8, size.height);
+    path.lineTo(size.width * 0.9, size.height);
 
     // Right curve
-    path.quadraticBezierTo(size.width * 0.95, size.height, size.width, size.height - 30);
+    path.quadraticBezierTo(size.width * 0.99, size.height, size.width, size.height - 30);
 
     path.lineTo(size.width, 0);
     path.close();

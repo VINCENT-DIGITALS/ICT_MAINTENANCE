@@ -33,12 +33,18 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _signin() async {
+    setState(() {
+      isLoading = true;
+    });
     bool success =
         await authService.login(emailController.text, passwordController.text);
     if (success) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Login Successful!")));
       if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
@@ -47,6 +53,18 @@ class _LoginPageState extends State<LoginPage>
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Invalid Credentials")));
+      setState(() {
+        isLoading = false;
+      });
+      if (context.mounted) {
+        // setState(() {
+        //   isLoading = false;
+        // });
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
     }
   }
 
@@ -205,60 +223,67 @@ class _LoginPageState extends State<LoginPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0, 10, 0, 10),
-                                child: TextFormField(
-                                  controller: emailController,
-                                  autofocus: false,
-                                  obscureText: false,
-                                  decoration: const InputDecoration(
-                                    labelText: 'ID Number',
-                                    labelStyle: TextStyle(
-                                      fontFamily: 'Inter',
-                                      color: Color.fromARGB(255, 0, 0, 0),
-                                      fontSize: 14,
-                                      letterSpacing: 0,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                    alignLabelWithHint: false,
-                                    hintStyle: TextStyle(
-                                      fontFamily: 'Inter',
-                                      color: Color.fromARGB(255, 0, 0, 0),
-                                      fontSize: 14,
-                                      letterSpacing: 0,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF018203),
-                                        width: 2,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10), // Simplified padding
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                      maxWidth: 300), // Max width set to 400px
+                                  child: SizedBox(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.6, // 90% of screen width
+                                    child: TextFormField(
+                                      controller: emailController,
+                                      autofocus: false,
+                                      obscureText: false,
+                                      decoration: const InputDecoration(
+                                        labelText: 'ID Number',
+                                        labelStyle: TextStyle(
+                                          fontFamily: 'Inter',
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                          fontSize: 14,
+                                          letterSpacing: 0,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                        hintStyle: TextStyle(
+                                          fontFamily: 'Inter',
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                          fontSize: 14,
+                                          letterSpacing: 0,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Color(0xFF018203),
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(12)),
+                                        ),
+                                        focusedErrorBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Color(0xFFFF5963),
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(12)),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Colors.black,
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(12)),
+                                        ),
+                                        errorBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Color(0xFFFF5963),
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(12)),
+                                        ),
                                       ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    focusedErrorBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Color(0xFFFF5963),
-                                        width: 2,
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.black,
-                                        width: 2,
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    errorBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Color(0xFFFF5963),
-                                        width: 2,
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
                                     ),
                                   ),
                                 ),
@@ -267,75 +292,87 @@ class _LoginPageState extends State<LoginPage>
                               Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
                                     0, 10, 0, 10),
-                                child: TextFormField(
-                                  controller: passwordController,
-                                  autofocus: false,
-                                  obscureText: !_passwordVisible,
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    labelStyle: const TextStyle(
-                                      fontFamily: 'Inter',
-                                      color: Color.fromARGB(255, 0, 0, 0),
-                                      fontSize: 14,
-                                      letterSpacing: 0,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                    alignLabelWithHint: false,
-                                    hintStyle: const TextStyle(
-                                      fontFamily: 'Inter',
-                                      color: Color.fromARGB(255, 0, 0, 0),
-                                      fontSize: 14,
-                                      letterSpacing: 0,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                    focusedBorder: const OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF018203),
-                                        width: 2,
+                                child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                        maxWidth: 300), // Set max width
+                                    child: SizedBox(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.6, // 90% of screen width
+                                      child: TextFormField(
+                                        controller: passwordController,
+                                        autofocus: false,
+                                        obscureText: !_passwordVisible,
+                                        decoration: InputDecoration(
+                                          labelText: 'Password',
+                                          labelStyle: const TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color.fromARGB(255, 0, 0, 0),
+                                            fontSize: 14,
+                                            letterSpacing: 0,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                          alignLabelWithHint: false,
+                                          hintStyle: const TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color.fromARGB(255, 0, 0, 0),
+                                            fontSize: 14,
+                                            letterSpacing: 0,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                          focusedBorder:
+                                              const OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: Color(0xFF018203),
+                                              width: 2,
+                                            ),
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(12)),
+                                          ),
+                                          focusedErrorBorder:
+                                              const OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: Color(0xFFFF5963),
+                                              width: 2,
+                                            ),
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(12)),
+                                          ),
+                                          enabledBorder:
+                                              const OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: Colors.black,
+                                              width: 2,
+                                            ),
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(12)),
+                                          ),
+                                          errorBorder: const OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: Color(0xFFFF5963),
+                                              width: 2,
+                                            ),
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(12)),
+                                          ),
+                                          suffixIcon: InkWell(
+                                            onTap: () => setState(() {
+                                              _passwordVisible =
+                                                  !_passwordVisible;
+                                            }),
+                                            focusNode:
+                                                FocusNode(skipTraversal: true),
+                                            child: Icon(
+                                              _passwordVisible
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                      .visibility_off_outlined,
+                                              color: const Color(0xFF57636C),
+                                              size: 22,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    focusedErrorBorder:
-                                        const OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Color(0xFFFF5963),
-                                        width: 2,
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    enabledBorder: const OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.black,
-                                        width: 2,
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    errorBorder: const OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Color(0xFFFF5963),
-                                        width: 2,
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    suffixIcon: InkWell(
-                                      onTap: () => setState(() {
-                                        _passwordVisible = !_passwordVisible;
-                                      }),
-                                      focusNode: FocusNode(skipTraversal: true),
-                                      child: Icon(
-                                        _passwordVisible
-                                            ? Icons.visibility_outlined
-                                            : Icons.visibility_off_outlined,
-                                        color: const Color(0xFF57636C),
-                                        size: 22,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                    )),
                               ),
                               // if (errorMessage.isNotEmpty)
                               //   Padding(
@@ -362,51 +399,49 @@ class _LoginPageState extends State<LoginPage>
                               //     ),
                               //   ),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .center, // Center the button
                                 children: [
                                   Padding(
                                     padding:
                                         const EdgeInsetsDirectional.fromSTEB(
                                             0, 10, 0, 0),
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        _signin();
-                                      },
-                                      style: ButtonStyle(
-                                        padding: MaterialStateProperty.all(
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 90, vertical: 15),
-                                        ),
-                                        shape: MaterialStateProperty.all(
-                                          RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(15),
-                                          ),
-                                        ),
-                                        backgroundColor: MaterialStateProperty
-                                            .resolveWith<Color>((states) {
-                                          if (states.contains(
-                                              MaterialState.pressed)) {
-                                            return const Color(
-                                                0xFF007A33); // Pressed color
-                                          }
-                                          return const Color(
-                                              0xFF007A33); // New color
-                                        }),
-                                      ),
-                                      child: isLoading
-                                          ? const CircularProgressIndicator(
-                                              color: Colors
-                                                  .white) // Loading indicator
-                                          : Text(
-                                              "Sign In",
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                          maxWidth: 300), // Max width of 400px
+                                      child: SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.5, // 80% of screen width
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            _signin();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical:
+                                                    15), // Responsive padding
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
                                             ),
+                                            backgroundColor: const Color(
+                                                0xFF007A33), // Button color
+                                          ),
+                                          child: isLoading
+                                              ? const CircularProgressIndicator(
+                                                  color: Colors
+                                                      .white) // Loading indicator
+                                              : const Text(
+                                                  "Sign In",
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
