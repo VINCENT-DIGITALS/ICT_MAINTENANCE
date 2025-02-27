@@ -36,7 +36,7 @@ class _NewRequestQRState extends State<NewRequestQR> {
     return SafeArea(
       child: Scaffold(
         appBar: CurvedEdgesAppBar(
-          height: MediaQuery.of(context).size.height * 0.1,
+          height: MediaQuery.of(context).size.height * 0.13,
           showFooter: false,
           child: Padding(
             padding:
@@ -45,7 +45,11 @@ class _NewRequestQRState extends State<NewRequestQR> {
               children: [
                 IconButton(
                   onPressed: () => Navigator.pop(context), // Go Back
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const Expanded(
                   child: Align(
@@ -88,51 +92,43 @@ class _NewRequestQRState extends State<NewRequestQR> {
               const SizedBox(height: 10),
 
               /// 📄 **QR Scan Text**
-              const Text(
-                "Scan QR/Serial Number of Equipment",
+              Text(
+                scannedData ?? "Scan QR/Serial Number of Equipment",
                 style: TextStyle(fontSize: 16, color: Colors.black54),
                 textAlign: TextAlign.center,
               ),
 
               const SizedBox(height: 20),
 
-              /// 📌 **Display Scanned Data**
-              Text(
-                scannedData ?? "No data scanned yet",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
               const SizedBox(height: 30),
 
               /// 🔘 **Manual Entry Button**
-              ElevatedButton(
-                onPressed: () {
-                  controller
-                      ?.pauseCamera(); // ⏸️ Pause the camera before navigation
-                  Navigator.pushNamed(context, '/NewRequestSave').then((_) {
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85, // Set width
+                child: ElevatedButton(
+                  onPressed: () {
                     controller
-                        ?.resumeCamera(); // ▶️ Resume camera when coming back (if needed)
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF007A33),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                        ?.pauseCamera(); // ⏸️ Pause the camera before navigation
+                    Navigator.pushNamed(context, '/NewRequestSave').then((_) {
+                      controller
+                          ?.resumeCamera(); // ▶️ Resume camera when coming back (if needed)
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF007A33),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  "ENTER DETAILS MANUALLY",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  child: const Text(
+                    "ENTER DETAILS MANUALLY",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

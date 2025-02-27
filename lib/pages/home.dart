@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: CurvedEdgesAppBar(
           height:
-              MediaQuery.of(context).size.height * 0.1, // 50% of screen height
+              MediaQuery.of(context).size.height * 0.13, // 50% of screen height
           showFooter: false,
           child: Padding(
             padding:
@@ -81,7 +81,9 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {}, // Logout or Profile
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }, // Logout or Profile
                   icon: const Icon(Icons.logout, color: Colors.white),
                 ),
               ],
@@ -97,93 +99,98 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: Stack(
                 children: [
-                  ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(15, 0, 0, 15),
-                    children: [
-                      /// 🔹 Title: Ongoing Repairs
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "Picked Requests",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                  SizedBox(
+                    width:
+                        MediaQuery.of(context).size.width * 0.85, // Set width
+                    child: ListView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      children: [
+                        /// 🔹 Title: Picked Repairs
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Picked Requests",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            hasOngoingRepairs
-                                ? TextButton(
-                                    onPressed: () {},
-                                    child: const Text(
-                                      "See all services",
-                                      style: TextStyle(color: Colors.green),
-                                    ),
-                                  )
-                                : TextButton(
-                                    onPressed: () {},
-                                    child: const Text(
-                                      "",
-                                      style: TextStyle(color: Colors.green),
-                                    ),
-                                  )
-                          ],
-                        ),
-                      ),
-
-                      /// 🔹 List of Ongoing Repairs (Or Empty State)
-                      hasOngoingRepairs
-                          ? _buildPickedRequests(context)
-                          : Column(
-                              children: [
-                                _buildEmptyPickedState(context),
-                              ],
-                            ),
-
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "Ongoing Services",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width *
+                                    0.35, // Consistent button width
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: hasOngoingRepairs
+                                      ? TextButton(
+                                          onPressed: () {},
+                                          child: const Text(
+                                            "See all services",
+                                            style:
+                                                TextStyle(color: Colors.green, fontSize: 14),
+                                          ),
+                                        )
+                                      : const SizedBox(),
+                                ),
                               ),
-                            ),
-                            hasOngoingRepairs
-                                ? TextButton(
-                                    onPressed: () {},
-                                    child: const Text(
-                                      "See all services",
-                                      style: TextStyle(color: Colors.green),
-                                    ),
-                                  )
-                                : TextButton(
-                                    onPressed: () {},
-                                    child: const Text(
-                                      "",
-                                      style: TextStyle(color: Colors.green),
-                                    ),
-                                  ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
 
-                      /// 🔹 List of Ongoing Repairs (Or Empty State)
-                      hasOngoingRepairs
-                          ? _buildOngoingRepairs(context)
-                          : Column(
-                              children: [
-                                _buildEmptyOngoingState(context),
-                              ],
-                            ),
-                      const SizedBox(
-                          height: 80), // Extra space to prevent hiding content
-                    ],
+                        /// 🔹 List of Picked Requests (Or Empty State)
+                        hasOngoingRepairs
+                            ? _buildPickedRequests(context)
+                            : Column(
+                                children: [_buildEmptyPickedState(context)]),
+
+                        /// 🔹 Title: Ongoing Services
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Ongoing Services",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width *
+                                    0.35, // Consistent button width
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: hasOngoingRepairs
+                                      ? TextButton(
+                                          onPressed: () {},
+                                          child: const Text(
+                                            "See all services",
+                                            style:
+                                                TextStyle(color: Colors.green, fontSize: 14),
+                                          ),
+                                        )
+                                      : const SizedBox(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        /// 🔹 List of Ongoing Repairs (Or Empty State)
+                        hasOngoingRepairs
+                            ? _buildOngoingRepairs(context)
+                            : Column(
+                                children: [_buildEmptyOngoingState(context)]),
+
+                        const SizedBox(
+                            height:
+                                80), // Extra space to prevent content from being hidden
+                      ],
+                    ),
                   ),
 
                   /// 🔥 Overlay Fade Effect (Shows Scrollable Area)
@@ -276,7 +283,7 @@ class _HomePageState extends State<HomePage> {
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width *
-                      0.9, // 90% of screen width
+                      0.85, // 90% of screen width
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pushNamed(context, '/newRequest');
@@ -324,51 +331,55 @@ class _HomePageState extends State<HomePage> {
             //   context,
             //   MaterialPageRoute(builder: (context) => IncidentReportsPage()),
             // );
-          }),
+          }, context),
           const SizedBox(width: 10), // Space between buttons
           _buildActionButton("PENDING REQUESTS", () {
             // Navigator.push(
             //   context,
             //   MaterialPageRoute(builder: (context) => PendingRequestsPage()),
             // );
-          }),
+          }, context),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(String text, VoidCallback onPressed) {
+  Widget _buildActionButton(
+      String text, VoidCallback onPressed, BuildContext context) {
     return Expanded(
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF14213D), // Dark blue
-          padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
-          shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(8), // Slightly rounded button corners
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.85, // Set button width
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF14213D), // Dark blue
+            padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
+            shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(8), // Slightly rounded button corners
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize:
-              MainAxisSize.min, // Ensures content is centered properly
-          children: [
-            Text(
-              text.replaceAll(" ", "\n"), // Splits words into two lines
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          child: Row(
+            mainAxisSize:
+                MainAxisSize.min, // Ensures content is centered properly
+            children: [
+              Text(
+                text.replaceAll(" ", "\n"), // Splits words into two lines
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center, // Centers the text
               ),
-              textAlign: TextAlign.center, // Centers the text
-            ),
-            const SizedBox(width: 15), // Space between text and icon
-            const Icon(
-              Icons.arrow_forward,
-              color: Colors.white,
-              size: 36,
-            ),
-          ],
+              const SizedBox(width: 15), // Space between text and icon
+              const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 36,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -380,7 +391,8 @@ class _HomePageState extends State<HomePage> {
       children: List.generate(
         1,
         (index) => Container(
-          width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+          width:
+              MediaQuery.of(context).size.width * 0.85, // 90% of screen width
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -456,7 +468,8 @@ class _HomePageState extends State<HomePage> {
       children: List.generate(
         1,
         (index) => Container(
-          width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+          width:
+              MediaQuery.of(context).size.width * 0.85, // 90% of screen width
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -515,7 +528,7 @@ class _HomePageState extends State<HomePage> {
   /// 🛠 Shows Empty State when there are no Ongoing Repairs
   Widget _buildEmptyPickedState(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+      width: MediaQuery.of(context).size.width * 0.85, // 90% of screen width
 
       padding: const EdgeInsets.fromLTRB(
           20, 0, 20, 0), // Adds spacing inside the container
@@ -540,7 +553,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildEmptyOngoingState(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+      width: MediaQuery.of(context).size.width * 0.85, // 90% of screen width
 
       padding: const EdgeInsets.fromLTRB(
           30, 0, 30, 0), // Adds spacing inside the container

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/pages/home.dart';
-import 'package:servicetracker_app/pages/newRequest.dart';
-import 'package:servicetracker_app/pages/newRequestQR.dart';
-import 'package:servicetracker_app/pages/newRequestSave.dart';
+import 'package:servicetracker_app/pages/request/newRequest.dart';
+import 'package:servicetracker_app/pages/request/newRequestQR.dart';
+import 'package:servicetracker_app/pages/request/newRequestSave.dart';
+import 'package:servicetracker_app/pages/serviceDetails.dart';
 import 'package:servicetracker_app/pages/signIn.dart';
 
 import 'models/splash_screen.dart';
@@ -44,6 +45,7 @@ class _MyAppState extends State<MyApp> {
             const NewRequest(), // Define newRequest route
         '/NewRequestQR': (context) => const NewRequestQR(),
         '/NewRequestSave': (context) => const NewRequestSave(),
+        '/ServiceDetails' : (context) => const ServiceDetails(),
       },
     );
   }

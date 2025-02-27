@@ -112,7 +112,8 @@ class _NewRequestState extends State<NewRequest> {
               onTap: () => _showModal(context, options, onSelect),
               child: Container(
                 height: 55,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black, width: 2),
                   borderRadius: BorderRadius.circular(12),
@@ -124,7 +125,7 @@ class _NewRequestState extends State<NewRequest> {
                       value ?? '',
                       style: const TextStyle(fontSize: 18, color: Colors.black),
                     ),
-                    const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                    const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                   ],
                 ),
               ),
@@ -182,15 +183,20 @@ class _NewRequestState extends State<NewRequest> {
     return SafeArea(
       child: Scaffold(
         appBar: CurvedEdgesAppBar(
-          height: MediaQuery.of(context).size.height * 0.1,
+          height: MediaQuery.of(context).size.height * 0.13,
           showFooter: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () {}, // Go Back
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const Expanded(
                   child: Align(
@@ -211,67 +217,86 @@ class _NewRequestState extends State<NewRequest> {
         ),
         backgroundColor: Colors.white,
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Request Details',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-
-              /// 📝 **Form Fields**
-              _buildDropdownField("Service Category", selectedServiceCategory,
-                  serviceCategories, (value) {
-                setState(() => selectedServiceCategory = value);
-              }),
-              _buildTextField("Subject", subjectController),
-              _buildTextField("Description", descriptionController),
-              _buildTextField("Requester", requesterController),
-              _buildDropdownField("Division", selectedDivision, divisions,
-                  (value) {
-                setState(() => selectedDivision = value);
-              }),
-
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/NewRequestQR',
-                          arguments: {
-                            'serviceCategory': selectedServiceCategory,
-                            'subject': subjectController.text,
-                            'description': descriptionController.text,
-                            'requester': requesterController.text,
-                            'division': selectedDivision,
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007A33),
-                        padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+              /// Wrap all form fields inside a SizedBox
+              Center(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width *
+                      0.85, // Set width for all children
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 25, 0, 15),
+                        child: Align(
+                          alignment: Alignment
+                              .centerLeft, // Aligns only the text to the left
+                          child: const Text(
+                            'Request Details',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        "NEXT",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      _buildDropdownField("Service Category",
+                          selectedServiceCategory, serviceCategories, (value) {
+                        setState(() => selectedServiceCategory = value);
+                      }),
+                      _buildTextField("Subject", subjectController),
+                      _buildTextField("Description", descriptionController),
+                      _buildTextField("Requester", requesterController),
+                      _buildDropdownField(
+                          "Division", selectedDivision, divisions, (value) {
+                        setState(() => selectedDivision = value);
+                      }),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/NewRequestQR',
+                                  arguments: {
+                                    'serviceCategory': selectedServiceCategory,
+                                    'subject': subjectController.text,
+                                    'description': descriptionController.text,
+                                    'requester': requesterController.text,
+                                    'division': selectedDivision,
+                                  },
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF007A33),
+                                padding:
+                                    const EdgeInsets.fromLTRB(15, 15, 15, 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                "NEXT",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),

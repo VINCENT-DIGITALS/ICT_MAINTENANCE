@@ -173,7 +173,7 @@ class _LoginPageState extends State<LoginPage>
                               maxWidth: 500), // Max width set to 400px
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width *
-                                0.9, // 90% of screen width
+                                0.85, // 90% of screen width
                             child: TextFormField(
                               controller: emailController,
                               autofocus: false,
@@ -240,7 +240,7 @@ class _LoginPageState extends State<LoginPage>
                                 maxWidth: 500), // Set max width
                             child: SizedBox(
                               width: MediaQuery.of(context).size.width *
-                                  0.9, // 90% of screen width
+                                  0.85, // 90% of screen width
                               child: TextFormField(
                                 controller: passwordController,
                                 autofocus: false,
@@ -347,7 +347,7 @@ class _LoginPageState extends State<LoginPage>
                                   maxWidth: 500), // Max width of 400px
                               child: SizedBox(
                                 width: MediaQuery.of(context).size.width *
-                                    0.9, // 80% of screen width
+                                    0.85, // 80% of screen width
                                 child: ElevatedButton(
                                   onPressed: () {
                                     _signin();
