@@ -45,10 +45,7 @@ class _LoginPageState extends State<LoginPage>
         setState(() {
           isLoading = false;
         });
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+        Navigator.pushReplacementNamed(context, '/home');
       }
     } else {
       ScaffoldMessenger.of(context)
@@ -60,10 +57,7 @@ class _LoginPageState extends State<LoginPage>
         // setState(() {
         //   isLoading = false;
         // });
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+        Navigator.pushReplacementNamed(context, '/home');
       }
     }
   }

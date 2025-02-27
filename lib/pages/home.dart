@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 
@@ -16,6 +17,48 @@ class _HomePageState extends State<HomePage> {
   bool hasOngoingRepairs = true; // Change to false to test empty state
 
   @override
+  void initState() {
+    super.initState();
+    _checkCameraPermission(); // 🔥 Check permissions on start
+  }
+
+  /// 🔥 **Check and Request Camera Permission**
+  Future<void> _checkCameraPermission() async {
+    var status = await Permission.camera.status;
+
+    if (!status.isGranted) {
+      var result = await Permission.camera.request();
+      if (!result.isGranted) {
+        _showPermissionDialog();
+      }
+    }
+  }
+
+  /// ❌ **Show Dialog if Camera is Denied**
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Camera Permission Required"),
+        content: const Text("Please allow camera access to scan QR codes."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              openAppSettings(); // Open device settings
+              Navigator.pop(context);
+            },
+            child: const Text("Open Settings"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
@@ -23,27 +66,26 @@ class _HomePageState extends State<HomePage> {
           height:
               MediaQuery.of(context).size.height * 0.1, // 50% of screen height
           showFooter: false,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              const SizedBox(height: 10),
-              // IconButton(
-              //   onPressed: () {},
-              //   icon: const Icon(Icons.arrow_back, color: Colors.white),
-              // ),
-              const Text(
-                'Mabuhay, Ranniel!',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Mabuhay, Ranniel!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              IconButton(
-                onPressed: () {}, // Logout or Profile
-                icon: const Icon(Icons.logout, color: Colors.white),
-              ),
-            ],
+                IconButton(
+                  onPressed: () {}, // Logout or Profile
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                ),
+              ],
+            ),
           ),
         ),
         backgroundColor: Colors.white,
@@ -60,24 +102,35 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.fromLTRB(15, 0, 0, 15),
                     children: [
                       /// 🔹 Title: Ongoing Repairs
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Picked Requests",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Picked Requests",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text(
-                              "See all services",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ),
-                        ],
+                            hasOngoingRepairs
+                                ? TextButton(
+                                    onPressed: () {},
+                                    child: const Text(
+                                      "See all services",
+                                      style: TextStyle(color: Colors.green),
+                                    ),
+                                  )
+                                : TextButton(
+                                    onPressed: () {},
+                                    child: const Text(
+                                      "",
+                                      style: TextStyle(color: Colors.green),
+                                    ),
+                                  )
+                          ],
+                        ),
                       ),
 
                       /// 🔹 List of Ongoing Repairs (Or Empty State)
@@ -88,24 +141,36 @@ class _HomePageState extends State<HomePage> {
                                 _buildEmptyPickedState(context),
                               ],
                             ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Ongoing Services",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Ongoing Services",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text(
-                              "See all services",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ),
-                        ],
+                            hasOngoingRepairs
+                                ? TextButton(
+                                    onPressed: () {},
+                                    child: const Text(
+                                      "See all services",
+                                      style: TextStyle(color: Colors.green),
+                                    ),
+                                  )
+                                : TextButton(
+                                    onPressed: () {},
+                                    child: const Text(
+                                      "",
+                                      style: TextStyle(color: Colors.green),
+                                    ),
+                                  ),
+                          ],
+                        ),
                       ),
 
                       /// 🔹 List of Ongoing Repairs (Or Empty State)
@@ -199,7 +264,7 @@ class _HomePageState extends State<HomePage> {
   /// 🛠 Bottom Section with Buttons
   Widget _buildAddRequestButtons() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       color: Colors.white,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -213,7 +278,9 @@ class _HomePageState extends State<HomePage> {
                   width: MediaQuery.of(context).size.width *
                       0.9, // 90% of screen width
                   child: ElevatedButton(
-                    onPressed: _scanQRCode,
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/newRequest');
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF007A33),
                       padding: const EdgeInsets.symmetric(vertical: 15),
@@ -241,9 +308,9 @@ class _HomePageState extends State<HomePage> {
   Widget _buildPendingButtons(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.18, // 12% of screen height
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(30, 15, 30, 15),
       decoration: BoxDecoration(
-        color: Color(0xFFFFA500), // Orange background
+        color: Color(0xFFFCA311), // Orange background
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(40), // Curved top-left
           topRight: Radius.circular(40), // Curved top-right
@@ -275,8 +342,8 @@ class _HomePageState extends State<HomePage> {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0A213B), // Dark blue
-          padding: const EdgeInsets.symmetric(vertical: 15),
+          backgroundColor: const Color(0xFF14213D), // Dark blue
+          padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
           shape: RoundedRectangleBorder(
             borderRadius:
                 BorderRadius.circular(8), // Slightly rounded button corners
@@ -295,11 +362,11 @@ class _HomePageState extends State<HomePage> {
               ),
               textAlign: TextAlign.center, // Centers the text
             ),
-            const SizedBox(height: 5), // Space between text and icon
+            const SizedBox(width: 15), // Space between text and icon
             const Icon(
               Icons.arrow_forward,
               color: Colors.white,
-              size: 24,
+              size: 36,
             ),
           ],
         ),
@@ -450,7 +517,8 @@ class _HomePageState extends State<HomePage> {
     return Container(
       width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
 
-      padding: const EdgeInsets.all(16), // Adds spacing inside the container
+      padding: const EdgeInsets.fromLTRB(
+          20, 0, 20, 0), // Adds spacing inside the container
       decoration: BoxDecoration(
         color: Colors.grey[200], // Light gray background
         borderRadius: BorderRadius.circular(12), // Rounded corners
@@ -459,7 +527,7 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment:
             MainAxisAlignment.center, // Centers content vertically
         children: const [
-          SizedBox(height: 5),
+          // SizedBox(height: 5),
           Text(
             "Select from pending requests to get started.",
             style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -474,7 +542,8 @@ class _HomePageState extends State<HomePage> {
     return Container(
       width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
 
-      padding: const EdgeInsets.all(16), // Adds spacing inside the container
+      padding: const EdgeInsets.fromLTRB(
+          30, 0, 30, 0), // Adds spacing inside the container
       decoration: BoxDecoration(
         color: Colors.grey[200], // Light gray background
         borderRadius: BorderRadius.circular(12), // Rounded corners
@@ -488,7 +557,7 @@ class _HomePageState extends State<HomePage> {
             style: TextStyle(fontSize: 16, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 5),
+          // SizedBox(height: 5),
           Text(
             "Add a new request or select from pending requests to get started.",
             style: TextStyle(fontSize: 14, color: Colors.grey),
