@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/pages/home.dart';
+import 'package:servicetracker_app/pages/incidentReports/incidentDetails.dart';
+import 'package:servicetracker_app/pages/incidentReports/incidentReport.dart';
+import 'package:servicetracker_app/pages/incidentReports/newIncidentReport.dart';
+import 'package:servicetracker_app/pages/myServices.dart';
+import 'package:servicetracker_app/pages/pendingRequests/pendingRequests.dart';
+import 'package:servicetracker_app/pages/request/UpdateRequest.dart';
 import 'package:servicetracker_app/pages/request/newRequest.dart';
+import 'package:servicetracker_app/pages/request/newRequestManualQR.dart';
 import 'package:servicetracker_app/pages/request/newRequestQR.dart';
 import 'package:servicetracker_app/pages/request/newRequestSave.dart';
 import 'package:servicetracker_app/pages/serviceDetails.dart';
@@ -28,7 +35,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
   }
-//Navigator.pushNamed(context, '/newRequest'); //with backoption
+//Navigator.pushNamed(context, '/IncidentReportDetails'); //with backoption
 //Navigator.pushReplacementNamed(context, '/newRequest'); //without back options
 
   @override
@@ -43,9 +50,16 @@ class _MyAppState extends State<MyApp> {
         '/home': (context) => const HomePage(),
         '/newRequest': (context) =>
             const NewRequest(), // Define newRequest route
-        '/NewRequestQR': (context) => const NewRequestQR(),
+        '/NewRequestQR': (context) => NewRequestQR(),
         '/NewRequestSave': (context) => const NewRequestSave(),
-        '/ServiceDetails' : (context) => const ServiceDetails(),
+        '/ServiceDetails': (context) => const ServiceDetails(),
+        '/NewRequestManualQR': (context) => const NewRequestManualQR(),
+        '/UpdateRequest': (context) => const UpdateRequest(),
+        '/MyServices': (context) => const MyServices(),
+        '/IncidentReports': (context) => const IncidentReports(),
+        '/PendingRequests': (context) => const PendingRequests(),
+        '/IncidentReportDetails': (context) => const IncidentReportDetails(),
+        '/NewIncidentReport': (context) => const NewIncidentReport(),
       },
     );
   }

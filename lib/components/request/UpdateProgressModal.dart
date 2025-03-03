@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
-class CustomModalSaveProgress extends StatelessWidget {
+class CustomModalUpdateProgress extends StatelessWidget {
   final String title;
-  final String message;
   final VoidCallback onConfirm;
 
-  const CustomModalSaveProgress({
+  const CustomModalUpdateProgress({
     Key? key,
     required this.title,
-    required this.message,
     required this.onConfirm,
   }) : super(key: key);
 
@@ -50,17 +48,6 @@ class CustomModalSaveProgress extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-
-              // ✅ Message
-              Text(
-                message,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
-                textAlign: TextAlign.center,
-              ),
 
               const SizedBox(height: 20),
 
@@ -80,7 +67,7 @@ class CustomModalSaveProgress extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    "VIEW SERVICE DETAILS",
+                    "BACK TO DETAILS",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

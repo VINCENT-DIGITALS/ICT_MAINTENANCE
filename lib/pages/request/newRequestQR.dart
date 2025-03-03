@@ -13,6 +13,7 @@ class _NewRequestQRState extends State<NewRequestQR> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   String? scannedData;
+  bool isScannerActive = false; // 👈 Controls scanner state
 
   @override
   void dispose() {
@@ -26,8 +27,18 @@ class _NewRequestQRState extends State<NewRequestQR> {
       setState(() {
         scannedData = scanData.code;
       });
-      // Pause the camera after detecting a QR code
+
+      // Pause the camera and navigate to the next page
       controller.pauseCamera();
+      Navigator.pushNamed(context, '/NewRequestSave').then((_) {
+        controller.resumeCamera();
+      });
+    });
+  }
+
+  void _startScanner() {
+    setState(() {
+      isScannerActive = true; // 👈 Enables scanner when tapped
     });
   }
 
@@ -39,30 +50,34 @@ class _NewRequestQRState extends State<NewRequestQR> {
           height: MediaQuery.of(context).size.height * 0.13,
           showFooter: false,
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
-            child: Row(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                IconButton(
-                  onPressed: () => Navigator.pop(context), // Go Back
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const Expanded(
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'New Request',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
+                // 🔹 Back Icon
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () {
+                      controller?.pauseCamera();
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 30,
                     ),
                   ),
+                ),
+                // 🔹 Title
+                const Text(
+                  'New Request',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -70,54 +85,56 @@ class _NewRequestQRState extends State<NewRequestQR> {
         ),
         backgroundColor: Colors.white,
 
-        /// 🔹 **Main Content**
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              /// 📷 **QR Scanner Box**
-              Container(
-                height: 250,
-                width: 250,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black38, width: 2),
-                ),
-                child: QRView(
-                  key: qrKey,
-                  onQRViewCreated: _onQRViewCreated,
+              // 📷 **QR Scanner Box**
+              GestureDetector(
+                onTap: _startScanner, // 🔹 Tap to enable scanner
+                child: Container(
+                  height: 250,
+                  width: 250,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black38, width: 2),
+                  ),
+                  child: isScannerActive
+                      ? QRView(
+                          key: qrKey,
+                          onQRViewCreated: _onQRViewCreated,
+                        )
+                      : const Center(
+                          child: Text(
+                            "Tap to Scan QR Code",
+                            style: TextStyle(fontSize: 16, color: Colors.black54),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 10),
 
-              /// 📄 **QR Scan Text**
+              // 📄 **QR Scan Text**
               Text(
                 scannedData ?? "Scan QR/Serial Number of Equipment",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
                 textAlign: TextAlign.center,
               ),
-
-              const SizedBox(height: 20),
-
               const SizedBox(height: 30),
 
-              /// 🔘 **Manual Entry Button**
+              // 🔘 **Manual Entry Button**
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.85, // Set width
+                width: MediaQuery.of(context).size.width * 0.85,
                 child: ElevatedButton(
                   onPressed: () {
-                    controller
-                        ?.pauseCamera(); // ⏸️ Pause the camera before navigation
-                    Navigator.pushNamed(context, '/NewRequestSave').then((_) {
-                      controller
-                          ?.resumeCamera(); // ▶️ Resume camera when coming back (if needed)
+                    controller?.pauseCamera();
+                    Navigator.pushNamed(context, '/NewRequestManualQR').then((_) {
+                      controller?.resumeCamera();
                     });
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF007A33),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 15, horizontal: 30),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

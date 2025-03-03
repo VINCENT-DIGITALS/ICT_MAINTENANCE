@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
-class CustomModalSaveProgress extends StatelessWidget {
+class CustomModalIncidentModal extends StatelessWidget {
   final String title;
-  final String message;
   final VoidCallback onConfirm;
 
-  const CustomModalSaveProgress({
+  const CustomModalIncidentModal({
     Key? key,
     required this.title,
-    required this.message,
     required this.onConfirm,
   }) : super(key: key);
 
@@ -44,23 +42,14 @@ class CustomModalSaveProgress extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
+                  height: 1
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-
-              // ✅ Message
-              Text(
-                message,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
-                textAlign: TextAlign.center,
-              ),
 
               const SizedBox(height: 20),
 
@@ -70,7 +59,8 @@ class CustomModalSaveProgress extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context); // Close the modal
-                    Navigator.pushReplacementNamed(context, '/ServiceDetails');
+                    Navigator.pushReplacementNamed(
+                        context, '/IncidentReportDetails');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF14213D), // Updated color
@@ -80,7 +70,7 @@ class CustomModalSaveProgress extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    "VIEW SERVICE DETAILS",
+                    "BACK TO INCIDENT REPORT",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

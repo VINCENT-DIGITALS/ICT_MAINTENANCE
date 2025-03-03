@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class CustomModalSaveProgress extends StatelessWidget {
+class CustomModalPickRequest extends StatelessWidget {
   final String title;
   final String message;
   final VoidCallback onConfirm;
 
-  const CustomModalSaveProgress({
+  const CustomModalPickRequest({
     Key? key,
     required this.title,
     required this.message,
@@ -70,7 +70,7 @@ class CustomModalSaveProgress extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context); // Close the modal
-                    Navigator.pushReplacementNamed(context, '/ServiceDetails');
+                    Navigator.pushReplacementNamed(context, '/home');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF14213D), // Updated color
@@ -80,7 +80,7 @@ class CustomModalSaveProgress extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    "VIEW SERVICE DETAILS",
+                    "BACK TO HOME",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

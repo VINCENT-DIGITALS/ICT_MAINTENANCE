@@ -108,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         /// 🔹 Title: Picked Repairs
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+                          padding: const EdgeInsets.fromLTRB(0, 25, 0, 5),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -129,8 +129,9 @@ class _HomePageState extends State<HomePage> {
                                           onPressed: () {},
                                           child: const Text(
                                             "See all services",
-                                            style:
-                                                TextStyle(color: Colors.green, fontSize: 14),
+                                            style: TextStyle(
+                                                color: Colors.green,
+                                                fontSize: 14),
                                           ),
                                         )
                                       : const SizedBox(),
@@ -148,7 +149,7 @@ class _HomePageState extends State<HomePage> {
 
                         /// 🔹 Title: Ongoing Services
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+                          padding: const EdgeInsets.fromLTRB(0, 25, 0, 5),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -169,8 +170,9 @@ class _HomePageState extends State<HomePage> {
                                           onPressed: () {},
                                           child: const Text(
                                             "See all services",
-                                            style:
-                                                TextStyle(color: Colors.green, fontSize: 14),
+                                            style: TextStyle(
+                                                color: Colors.green,
+                                                fontSize: 14),
                                           ),
                                         )
                                       : const SizedBox(),
@@ -280,7 +282,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.symmetric(
                   vertical: 10), // Simplified padding
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 500),
+                constraints: const BoxConstraints(maxWidth: 2222222),
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width *
                       0.85, // 90% of screen width
@@ -327,17 +329,11 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildActionButton("INCIDENT REPORTS", () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => IncidentReportsPage()),
-            // );
+            Navigator.pushNamed(context, '/IncidentReports'); 
           }, context),
           const SizedBox(width: 10), // Space between buttons
           _buildActionButton("PENDING REQUESTS", () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => PendingRequestsPage()),
-            // );
+             Navigator.pushNamed(context, '/PendingRequests'); 
           }, context),
         ],
       ),
@@ -393,8 +389,8 @@ class _HomePageState extends State<HomePage> {
         (index) => Container(
           width:
               MediaQuery.of(context).size.width * 0.85, // 90% of screen width
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.all(12),
+
+          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
           decoration: BoxDecoration(
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(10),
@@ -404,19 +400,48 @@ class _HomePageState extends State<HomePage> {
             children: [
               const Text(
                 "TN25-0143 Computer Repair",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
               ),
               const SizedBox(height: 5),
               const Text(
                 "Mighty Jemuel Sotto",
                 style: TextStyle(fontSize: 14),
               ),
-              const Text("Information Systems Division"),
-              const Text("Requested: February 14, 2025, 10:00 AM"),
-              const SizedBox(height: 5),
-              const Text("Current Location: ISD Server Room"),
-              const SizedBox(height: 5),
-              const Text("Status: Serviceable - for repair"),
+              const Text(
+                "Information Systems Division",
+                style: TextStyle(
+                  height: 1.0, // Reduces spacing
+                ),
+              ),
+              const Text(
+                "Requested: February 14, 2025, 10:00 AM",
+                style: TextStyle(
+                  height: 1.0, // Reduces spacing
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Subject of request",
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  height: 1.0, // Reduces spacing
+                ),
+              ),
+              const SizedBox(height: 2), // Reduce spacing here
+              Text(
+                "asasd cscsdcvsdvv dvv asasd cscsdcvsdvv dvvsdsdsdsdsdsdsdsdsc dvddv ",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                  height: 1.2, // Adjust line height for tighter spacing
+                ),
+                softWrap: true,
+                overflow: TextOverflow.visible,
+                maxLines: 3,
+              ),
+
               const SizedBox(height: 20),
               // GREEN BUTTON
               ElevatedButton(
@@ -433,7 +458,7 @@ class _HomePageState extends State<HomePage> {
                 child: const Text(
                   "COMPLETE DETAILS",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -470,8 +495,8 @@ class _HomePageState extends State<HomePage> {
         (index) => Container(
           width:
               MediaQuery.of(context).size.width * 0.85, // 90% of screen width
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.all(12),
+          // margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
           decoration: BoxDecoration(
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(10),
@@ -481,19 +506,64 @@ class _HomePageState extends State<HomePage> {
             children: [
               const Text(
                 "TN25-0143 Computer Repair",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
               ),
               const SizedBox(height: 5),
               const Text(
                 "Mighty Jemuel Sotto",
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: const Color(0xFF707070),
+                  height: 1.2, // Adjust line height for tighter spacing
+                ),
               ),
-              const Text("Information Systems Division"),
-              const Text("Requested: February 14, 2025, 10:00 AM"),
+              const Text(
+                "Information Systems Division",
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: const Color(0xFF707070),
+
+                  height: 1.2, // Adjust line height for tighter spacing
+                ),
+              ),
+              const Text(
+                "Requested: February 14, 2025, 10:00 AM",
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: const Color(0xFF707070),
+                  height: 1.2, // Adjust line height for tighter spacing
+                ),
+              ),
               const SizedBox(height: 5),
-              const Text("Current Location: ISD Server Room"),
-              const SizedBox(height: 5),
-              const Text("Status: Serviceable - for repair"),
+              const Text(
+                "Current Location: ISD Server Room",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                  height: 1.2, // Adjust line height for tighter spacing
+                ),
+              ),
+
+              const Text(
+                "Status: Serviceable - for repair",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                  height: 1.2, // Adjust line height for tighter spacing
+                ),
+              ),
+
+              const Text(
+                "Last Updated: February 19, 2025 | 3:00PM",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                  height: 1.2, // Adjust line height for tighter spacing
+                ),
+              ),
               const SizedBox(height: 20),
               // GREEN BUTTON
               ElevatedButton(
@@ -510,7 +580,7 @@ class _HomePageState extends State<HomePage> {
                 child: const Text(
                   "COMPLETE DETAILS",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -531,7 +601,7 @@ class _HomePageState extends State<HomePage> {
       width: MediaQuery.of(context).size.width * 0.85, // 90% of screen width
 
       padding: const EdgeInsets.fromLTRB(
-          20, 0, 20, 0), // Adds spacing inside the container
+          20, 5, 20, 5), // Adds spacing inside the container
       decoration: BoxDecoration(
         color: Colors.grey[200], // Light gray background
         borderRadius: BorderRadius.circular(12), // Rounded corners
@@ -556,7 +626,7 @@ class _HomePageState extends State<HomePage> {
       width: MediaQuery.of(context).size.width * 0.85, // 90% of screen width
 
       padding: const EdgeInsets.fromLTRB(
-          30, 0, 30, 0), // Adds spacing inside the container
+          30, 5, 30, 5), // Adds spacing inside the container
       decoration: BoxDecoration(
         color: Colors.grey[200], // Light gray background
         borderRadius: BorderRadius.circular(12), // Rounded corners

@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/customRadio.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
+import 'package:servicetracker_app/components/request/UpdateProgressModal.dart';
 import 'package:servicetracker_app/components/request/saveProgressModal.dart';
 
-class NewRequestSave extends StatefulWidget {
-  const NewRequestSave({Key? key}) : super(key: key);
+class UpdateRequest extends StatefulWidget {
+  const UpdateRequest({Key? key}) : super(key: key);
 
   @override
-  _NewRequestSaveState createState() => _NewRequestSaveState();
+  _UpdateRequestState createState() => _UpdateRequestState();
 }
 
-class _NewRequestSaveState extends State<NewRequestSave> {
+class _UpdateRequestState extends State<UpdateRequest> {
   String? selectedLocation;
-  bool isRepair = false;
-  String selectedStatus = "none"; // Default selected value
+  String selectedStatus = "repair"; // Default selected value
 
   bool isCompleted = false; // Checkbox state
 
@@ -191,7 +191,7 @@ class _NewRequestSaveState extends State<NewRequestSave> {
 
               // 🔹 Title (Centered)
               const Text(
-                'New Request',
+                'Update Status',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 30,
@@ -294,69 +294,96 @@ class _NewRequestSaveState extends State<NewRequestSave> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
+                      child: Align(
+                        alignment: Alignment
+                            .centerLeft, // Aligns only the text to the left
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomRadioButton(
+                              label: "Serviceable - For Repair",
+                              value: "repair",
+                              groupValue: selectedStatus,
+                              onChanged: (value) =>
+                                  setState(() => selectedStatus = value),
+                            ),
+                            CustomRadioButton(
+                              label: "Unserviceable - For Disposal",
+                              value: "disposal",
+                              groupValue: selectedStatus,
+                              onChanged: (value) =>
+                                  setState(() => selectedStatus = value),
+                            ),
+                            CustomRadioButton(
+                              label: "Serviceable - For Item Procurement",
+                              value: "procurement",
+                              groupValue: selectedStatus,
+                              onChanged: (value) =>
+                                  setState(() => selectedStatus = value),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // SizedBox(
+                    //   width: MediaQuery.of(context).size.width * 0.7,
+                    //   // height: 200, // Define an appropriate height
+                    //   child: Column(
+                    //     mainAxisSize: MainAxisSize.min,
+                    //     crossAxisAlignment: CrossAxisAlignment.start,
+                    //     children: [
+                    //       CustomRadioButton(
+                    //         label: "Serviceable - For Repair",
+                    //         value: "repair",
+                    //         groupValue: selectedStatus,
+                    //         onChanged: (value) =>
+                    //             setState(() => selectedStatus = value),
+                    //       ),
+                    //       CustomRadioButton(
+                    //         label: "Unserviceable - For Disposal",
+                    //         value: "disposal",
+                    //         groupValue: selectedStatus,
+                    //         onChanged: (value) =>
+                    //             setState(() => selectedStatus = value),
+                    //       ),
+                    //       CustomRadioButton(
+                    //         label: "Serviceable - For Item Procurement",
+                    //         value: "procurement",
+                    //         groupValue: selectedStatus,
+                    //         onChanged: (value) =>
+                    //             setState(() => selectedStatus = value),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    Padding(
+                        padding: EdgeInsets.fromLTRB(11, 0, 0, 0),
+                        child: Align(
+                          alignment: Alignment
+                              .centerLeft, // Aligns only the text to the left
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: isCompleted,
+                                activeColor: Color(0xFF007A33),
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    isCompleted = value!;
+                                  });
+                                },
+                              ),
+                              Text("Mark as completed",
+                                  style: TextStyle(fontSize: 16)),
+                            ],
+                          ),
+                        )),
 
                     const SizedBox(height: 20),
-                    isRepair
-                        ? Padding(
-                            padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
-                            child: Align(
-                              alignment: Alignment
-                                  .centerLeft, // Aligns only the text to the left
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  CustomRadioButton(
-                                    label: "Serviceable - For Repair",
-                                    value: "repair",
-                                    groupValue: selectedStatus,
-                                    onChanged: (value) =>
-                                        setState(() => selectedStatus = value),
-                                  ),
-                                  CustomRadioButton(
-                                    label: "Unserviceable - For Disposal",
-                                    value: "disposal",
-                                    groupValue: selectedStatus,
-                                    onChanged: (value) =>
-                                        setState(() => selectedStatus = value),
-                                  ),
-                                  CustomRadioButton(
-                                    label: "Serviceable - For Item Procurement",
-                                    value: "procurement",
-                                    groupValue: selectedStatus,
-                                    onChanged: (value) =>
-                                        setState(() => selectedStatus = value),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                    isRepair
-                        ? Padding(
-                            padding: EdgeInsets.fromLTRB(11, 0, 0, 0),
-                            child: Align(
-                              alignment: Alignment
-                                  .centerLeft, // Aligns only the text to the left
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: isCompleted,
-                                    activeColor: Color(0xFF007A33),
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        isCompleted = value!;
-                                      });
-                                    },
-                                  ),
-                                  Text("Mark as completed",
-                                      style: TextStyle(fontSize: 16)),
-                                ],
-                              ),
-                            ))
-                        : const SizedBox.shrink(),
 
-                    // : const SizedBox(height: 10),
                     /// 📷 **Photo Documentation**
                     /// 📸 **Centered Documentation**
                     Center(
@@ -431,56 +458,29 @@ class _NewRequestSaveState extends State<NewRequestSave> {
 
                     /// 🔘 **Save Request Button**
                     _buildButton(
-                        context, "SAVE REQUEST", Color(0xFF007A33), () {}),
+                        context, "UPDATE STATUS", Color(0xFF007A33), () {}),
 
                     const SizedBox(height: 10),
-                    isRepair
-                        ? Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                0, 20, 0, 15), // Adds padding
-                            child: GestureDetector(
-                                onTap: () {
-                                  // Handle click action here
-                                  setState(() {
-                                    isRepair = false;
-                                  });
-                                },
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: const Text(
-                                    "If not repair request",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                      color: Color(
-                                          0xFF707070), // Corrected color format
-                                    ),
-                                  ),
-                                )),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                0, 20, 0, 15), // Adds padding
-                            child: GestureDetector(
-                                onTap: () {
-                                  // Handle click action here
-                                  setState(() {
-                                    isRepair = true;
-                                  });
-                                },
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: const Text(
-                                    "If repair request",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                      color: Color(
-                                          0xFF707070), // Corrected color format
-                                    ),
-                                  ),
-                                )),
-                          ),
+                    // Padding(
+                    //   padding: const EdgeInsets.fromLTRB(
+                    //       0, 20, 0, 15), // Adds padding
+                    //   child: GestureDetector(
+                    //       onTap: () {
+                    //         // Handle click action here
+                    //       },
+                    //       child: Align(
+                    //         alignment: Alignment.centerLeft,
+                    //         child: const Text(
+                    //           "If repair request",
+                    //           style: TextStyle(
+                    //             fontSize: 12,
+                    //             fontStyle: FontStyle.italic,
+                    //             color:
+                    //                 Color(0xFF707070), // Corrected color format
+                    //           ),
+                    //         ),
+                    //       )),
+                    // )
                   ],
                 ),
               ),
@@ -522,9 +522,8 @@ class _NewRequestSaveState extends State<NewRequestSave> {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => CustomModalSaveProgress(
-              title: "Request Added to Your Services",
-              message: "25-0143 Computer Repair",
+            builder: (context) => CustomModalUpdateProgress(
+              title: "Request Status Updated Successfully ",
               onConfirm: () {
                 Navigator.pop(context); // Close modal first
                 onPressed(); // Then navigate

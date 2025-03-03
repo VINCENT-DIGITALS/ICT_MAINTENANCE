@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/api_service/auth_service.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/buildtextField.dart';
 
 import 'package:servicetracker_app/pages/home.dart';
 
@@ -174,60 +175,61 @@ class _LoginPageState extends State<LoginPage>
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width *
                                 0.85, // 90% of screen width
-                            child: TextFormField(
-                              controller: emailController,
-                              autofocus: false,
-                              obscureText: false,
-                              decoration: const InputDecoration(
-                                labelText: 'ID Number',
-                                labelStyle: TextStyle(
-                                  fontFamily: 'Inter',
-                                  color: Color.fromARGB(255, 0, 0, 0),
-                                  fontSize: 14,
-                                  letterSpacing: 0,
-                                  fontWeight: FontWeight.normal,
-                                ),
-                                hintStyle: TextStyle(
-                                  fontFamily: 'Inter',
-                                  color: Color.fromARGB(255, 0, 0, 0),
-                                  fontSize: 14,
-                                  letterSpacing: 0,
-                                  fontWeight: FontWeight.normal,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Color(0xFF018203),
-                                    width: 2,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(12)),
-                                ),
-                                focusedErrorBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Color(0xFFFF5963),
-                                    width: 2,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(12)),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.black,
-                                    width: 2,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(12)),
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Color(0xFFFF5963),
-                                    width: 2,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(12)),
-                                ),
-                              ),
-                            ),
+                            child: buildTextField(" ID Number", emailController),
+                            //  TextFormField(
+                            //   controller: emailController,
+                            //   autofocus: false,
+                            //   obscureText: false,
+                            //   decoration: const InputDecoration(
+                            //     labelText: 'ID Number',
+                            //     labelStyle: TextStyle(
+                            //       fontFamily: 'Inter',
+                            //       color: Color.fromARGB(255, 0, 0, 0),
+                            //       fontSize: 14,
+                            //       letterSpacing: 0,
+                            //       fontWeight: FontWeight.normal,
+                            //     ),
+                            //     hintStyle: TextStyle(
+                            //       fontFamily: 'Inter',
+                            //       color: Color.fromARGB(255, 0, 0, 0),
+                            //       fontSize: 14,
+                            //       letterSpacing: 0,
+                            //       fontWeight: FontWeight.normal,
+                            //     ),
+                            //     focusedBorder: OutlineInputBorder(
+                            //       borderSide: BorderSide(
+                            //         color: Color(0xFF018203),
+                            //         width: 2,
+                            //       ),
+                            //       borderRadius:
+                            //           BorderRadius.all(Radius.circular(12)),
+                            //     ),
+                            //     focusedErrorBorder: OutlineInputBorder(
+                            //       borderSide: BorderSide(
+                            //         color: Color(0xFFFF5963),
+                            //         width: 2,
+                            //       ),
+                            //       borderRadius:
+                            //           BorderRadius.all(Radius.circular(12)),
+                            //     ),
+                            //     enabledBorder: OutlineInputBorder(
+                            //       borderSide: BorderSide(
+                            //         color: Colors.black,
+                            //         width: 2,
+                            //       ),
+                            //       borderRadius:
+                            //           BorderRadius.all(Radius.circular(12)),
+                            //     ),
+                            //     errorBorder: OutlineInputBorder(
+                            //       borderSide: BorderSide(
+                            //         color: Color(0xFFFF5963),
+                            //         width: 2,
+                            //       ),
+                            //       borderRadius:
+                            //           BorderRadius.all(Radius.circular(12)),
+                            //     ),
+                            //   ),
+                            // ),
                           ),
                         ),
                       ),
@@ -250,7 +252,7 @@ class _LoginPageState extends State<LoginPage>
                                   labelStyle: const TextStyle(
                                     fontFamily: 'Inter',
                                     color: Color.fromARGB(255, 0, 0, 0),
-                                    fontSize: 14,
+                                    fontSize: 18,
                                     letterSpacing: 0,
                                     fontWeight: FontWeight.normal,
                                   ),
@@ -258,7 +260,7 @@ class _LoginPageState extends State<LoginPage>
                                   hintStyle: const TextStyle(
                                     fontFamily: 'Inter',
                                     color: Color.fromARGB(255, 0, 0, 0),
-                                    fontSize: 14,
+                                    fontSize: 18,
                                     letterSpacing: 0,
                                     fontWeight: FontWeight.normal,
                                   ),

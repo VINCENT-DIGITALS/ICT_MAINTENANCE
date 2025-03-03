@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/buildDropdownField.dart';
+import 'package:servicetracker_app/components/buildtextField.dart';
+import 'package:servicetracker_app/components/customSelectionModal.dart';
 
 class NewRequest extends StatefulWidget {
   final String currentPage;
@@ -30,7 +33,7 @@ class _NewRequestState extends State<NewRequest> {
   ];
 
   final List<String> divisions = [
-    "Information Systems Division",
+    "Information Systems Divwwwwwwwwwwwwwwwwwwision",
     "HR Division",
     "Finance Division",
     "Operations Division",
@@ -46,111 +49,59 @@ class _NewRequestState extends State<NewRequest> {
 
   void _showModal(
       BuildContext context, List<String> options, Function(String) onSelect) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SizedBox(
-          height: 300,
-          child: ListView.builder(
-            itemCount: options.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(options[index]),
-                onTap: () {
-                  onSelect(options[index]);
-                  Navigator.pop(context);
-                },
-              );
-            },
+      barrierDismissible: true, // Dismiss when tapped outside
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 5,
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Keep it compact
+              children: [
+                const Text(
+                  "Select an Option",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 15),
+
+                /// **Options List**
+                Column(
+                  children: options.map((String option) {
+                    return InkWell(
+                      onTap: () {
+                        onSelect(option);
+                        Navigator.pop(dialogContext);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          option,
+                          style: const TextStyle(
+                              fontSize: 18, color: Colors.black87),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                const SizedBox(height: 10),
+
+                /// **Cancel Button**
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text("Cancel",
+                      style: TextStyle(fontSize: 16, color: Colors.red)),
+                ),
+              ],
+            ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: const TextStyle(
-              fontFamily: 'Inter',
-              color: Colors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.normal,
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF018203), width: 2),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black, width: 2),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-          ),
-        ),
-        const SizedBox(height: 15),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField(String label, String? value, List<String> options,
-      Function(String) onSelect) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            GestureDetector(
-              onTap: () => _showModal(context, options, onSelect),
-              child: Container(
-                height: 55,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      value ?? '',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                    const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: value != null ? -10 : 16,
-              left: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                color: Colors.white,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: Colors.black,
-                    fontSize: value != null ? 18 : 18,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
-      ],
     );
   }
 
@@ -188,28 +139,31 @@ class _NewRequestState extends State<NewRequest> {
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
-            child: Row(
+            child: Stack(
+              alignment: Alignment.center, // Centers the text
               children: [
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const Expanded(
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'New Request',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
+                // 🔹 Back Icon (Left)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 30,
                     ),
                   ),
+                ),
+
+                // 🔹 Title (Centered)
+                const Text(
+                  'New Request',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -243,15 +197,16 @@ class _NewRequestState extends State<NewRequest> {
                           ),
                         ),
                       ),
-                      _buildDropdownField("Service Category",
+                      buildDropdownField(context, "Service Category",
                           selectedServiceCategory, serviceCategories, (value) {
                         setState(() => selectedServiceCategory = value);
                       }),
-                      _buildTextField("Subject", subjectController),
-                      _buildTextField("Description", descriptionController),
-                      _buildTextField("Requester", requesterController),
-                      _buildDropdownField(
-                          "Division", selectedDivision, divisions, (value) {
+                      buildTextField("Subject", subjectController),
+                      buildTextField("Description", descriptionController),
+                      buildTextField("Requester", requesterController),
+                      buildDropdownField(
+                          context, "Division", selectedDivision, divisions,
+                          (value) {
                         setState(() => selectedDivision = value);
                       }),
                       const SizedBox(height: 20),
@@ -260,17 +215,22 @@ class _NewRequestState extends State<NewRequest> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/NewRequestQR',
-                                  arguments: {
-                                    'serviceCategory': selectedServiceCategory,
-                                    'subject': subjectController.text,
-                                    'description': descriptionController.text,
-                                    'requester': requesterController.text,
-                                    'division': selectedDivision,
-                                  },
-                                );
+                                Navigator.pop(context);
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/NewRequestQR',
+                                    arguments: {
+                                      'serviceCategory':
+                                          selectedServiceCategory,
+                                      'subject': subjectController.text,
+                                      'description': descriptionController.text,
+                                      'requester': requesterController.text,
+                                      'division': selectedDivision,
+                                    },
+                                  );
+                                });
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF007A33),
