@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+  
 class ApiService {
-  static const String baseUrl = "http://192.168.106.34/flutter_api/api.php";
+  static const String baseUrl = "http://vincent-digitals.atwebpages.com/flutter_api/api.php";
 
   // Add User
   static Future<void> addUser(String name, String email) async {

@@ -1,7 +1,10 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
+import 'package:servicetracker_app/services/FormProvider.dart';
 
 class HomePage extends StatefulWidget {
   final String currentPage;
@@ -72,19 +75,24 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Mabuhay, Ranniel!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: AutoSizeText(
+                    'Mabuhay, Ranniel!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 30, // Max font size
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    minFontSize: 12, // Set a lower min font size
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 IconButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/login');
                   }, // Logout or Profile
-                  icon: const Icon(Icons.logout, color: Colors.white),
+                  icon: const Icon(Icons.logout, color: Colors.white, size: 24,),
                 ),
               ],
             ),
@@ -106,37 +114,51 @@ class _HomePageState extends State<HomePage> {
                       controller: _scrollController,
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
                       children: [
-                        /// 🔹 Title: Picked Repairs
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 25, 0, 5),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                "Picked Requests",
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                              /// 🔹 Auto-Resizing Title
+                              Flexible(
+                                child: AutoSizeText(
+                                  "Picked Requests",
+                                  style: TextStyle(
+                                    fontSize: 24, // Max size
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF000000),
+                                  ),
+                                  maxLines: 1,
+                                  minFontSize: 14, // Allows shrinking
                                 ),
                               ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width *
-                                    0.35, // Consistent button width
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: hasOngoingRepairs
-                                      ? TextButton(
-                                          onPressed: () {},
-                                          child: const Text(
-                                            "See all services",
-                                            style: TextStyle(
-                                                color: Colors.green,
-                                                fontSize: 14),
-                                          ),
-                                        )
-                                      : const SizedBox(),
+
+                              /// 🔹 Button (Aligned & Responsive)
+                              if (hasOngoingRepairs)
+                                SizedBox(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.35, // Consistent width
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () {
+                                        Navigator.pushNamed(
+                                            context, '/MyServices');
+                                      },
+                                      child: AutoSizeText(
+                                        "See all services",
+                                        style: TextStyle(
+                                          fontSize: 14, // Max size
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF007A33),
+                                        ),
+                                        maxLines: 1,
+                                        minFontSize: 9,
+                                        softWrap: true,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -153,31 +175,45 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                "Ongoing Services",
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                              Flexible(
+                                child: AutoSizeText(
+                                  "Ongoing Services",
+                                  style: TextStyle(
+                                    fontSize: 24, // Max size
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF000000), // Updated color
+                                  ),
+                                  maxLines: 1,
+                                  minFontSize: 14, // Allows shrinking
                                 ),
                               ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width *
-                                    0.35, // Consistent button width
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: hasOngoingRepairs
-                                      ? TextButton(
-                                          onPressed: () {},
-                                          child: const Text(
-                                            "See all services",
-                                            style: TextStyle(
-                                                color: Colors.green,
-                                                fontSize: 14),
-                                          ),
-                                        )
-                                      : const SizedBox(),
+
+                              /// 🔹 Button (Aligned & Responsive)
+                              if (hasOngoingRepairs)
+                                SizedBox(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.35, // Consistent width
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () {
+                                        Navigator.pushNamed(
+                                            context, '/MyServices');
+                                      },
+                                      child: AutoSizeText(
+                                        "See all services",
+                                        style: TextStyle(
+                                          fontSize: 14, // Max size
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF007A33),
+                                        ),
+                                        maxLines: 1,
+                                        minFontSize: 9,
+                                        softWrap: true,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -329,11 +365,11 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildActionButton("INCIDENT REPORTS", () {
-            Navigator.pushNamed(context, '/IncidentReports'); 
+            Navigator.pushNamed(context, '/IncidentReports');
           }, context),
           const SizedBox(width: 10), // Space between buttons
           _buildActionButton("PENDING REQUESTS", () {
-             Navigator.pushNamed(context, '/PendingRequests'); 
+            Navigator.pushNamed(context, '/PendingRequests');
           }, context),
         ],
       ),
@@ -346,7 +382,11 @@ class _HomePageState extends State<HomePage> {
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.85, // Set button width
         child: ElevatedButton(
-          onPressed: onPressed,
+           onPressed: () {
+          final formProvider = Provider.of<FormProvider>(context, listen: false);
+          formProvider.resetForm(); // ✅ Clear form before starting
+          onPressed(); // ✅ Continue navigation or action
+        },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF14213D), // Dark blue
             padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
@@ -355,26 +395,35 @@ class _HomePageState extends State<HomePage> {
                   BorderRadius.circular(8), // Slightly rounded button corners
             ),
           ),
-          child: Row(
-            mainAxisSize:
-                MainAxisSize.min, // Ensures content is centered properly
-            children: [
-              Text(
-                text.replaceAll(" ", "\n"), // Splits words into two lines
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center, // Centers the text
-              ),
-              const SizedBox(width: 15), // Space between text and icon
-              const Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 36,
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double iconSize =
+                  constraints.maxWidth * 0.09; // Adaptive icon size
+              return Row(
+                mainAxisSize: MainAxisSize.min, // Keeps content centered
+                children: [
+                  Expanded(
+                    child: AutoSizeText(
+                      text,
+                      style: const TextStyle(
+                        fontSize: 16, // Max size
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2, // Allows wrapping into two lines
+                      minFontSize: 8, // Shrinks text when needed
+                    ),
+                  ),
+                  const SizedBox(width: 10), // Space between text and icon
+                  Icon(
+                    Icons.arrow_forward,
+                    color: Colors.white,
+                    size: iconSize.clamp(20, 36), // Adaptive & clamped size
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -400,46 +449,55 @@ class _HomePageState extends State<HomePage> {
             children: [
               const Text(
                 "TN25-0143 Computer Repair",
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000),
+                    fontSize: 18),
               ),
               const SizedBox(height: 5),
               const Text(
                 "Mighty Jemuel Sotto",
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(
+                    height: 1.0, fontSize: 14, color: Color(0xFF707070)),
               ),
               const Text(
                 "Information Systems Division",
                 style: TextStyle(
                   height: 1.0, // Reduces spacing
+                  color: Color(0xFF707070),
+                  fontSize: 14,
                 ),
               ),
               const Text(
                 "Requested: February 14, 2025, 10:00 AM",
                 style: TextStyle(
                   height: 1.0, // Reduces spacing
+                  color: Color(0xFF707070),
+                  fontSize: 14,
                 ),
               ),
               const SizedBox(height: 10),
               const Text(
                 "Subject of request",
                 style: TextStyle(
-                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF000000),
+                  fontWeight: FontWeight.bold,
                   fontSize: 14,
                   height: 1.0, // Reduces spacing
                 ),
               ),
               const SizedBox(height: 2), // Reduce spacing here
               Text(
-                "asasd cscsdcvsdvv dvv asasd cscsdcvsdvv dvvsdsdsdsdsdsdsdsdsc dvddv ",
+                "asasd cscsdcvsdvv cscsdcvsdvv cscsdcvsdvvcscsdcvsdvvcscsdcvscscscscscsdcvsdvvcscsdcvsdvvcscsdcvsdvvc scsdcvsdvvcscsdcvsdvvdcvsdvvcscsdcvsdvvcscsdcvsdvvcsdcvsdvvcscsdcvsdvvcscsdcvsdvvdvvcscsdcvsdvv cscsdcvsdvv dvv asasd cscsdcvsdvv dvvsdsdsdsdsdsdsdsdsc dvddv ",
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                  height: 1.2, // Adjust line height for tighter spacing
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: Color(0xFF000000),
+                  height: 1.0, // Adjust line height for tighter spacing
                 ),
                 softWrap: true,
-                overflow: TextOverflow.visible,
-                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 4,
               ),
 
               const SizedBox(height: 20),
@@ -458,7 +516,7 @@ class _HomePageState extends State<HomePage> {
                 child: const Text(
                   "COMPLETE DETAILS",
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Color(0xFF007A33),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -613,7 +671,7 @@ class _HomePageState extends State<HomePage> {
           // SizedBox(height: 5),
           Text(
             "Select from pending requests to get started.",
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: Color(0xFF707070)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -637,13 +695,13 @@ class _HomePageState extends State<HomePage> {
         children: const [
           Text(
             "You have no ongoing services.", // Matches the text in the image
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: 16, color: Color(0xFF707070)),
             textAlign: TextAlign.center,
           ),
           // SizedBox(height: 5),
           Text(
             "Add a new request or select from pending requests to get started.",
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: Color(0xFF707070)),
             textAlign: TextAlign.center,
           ),
         ],

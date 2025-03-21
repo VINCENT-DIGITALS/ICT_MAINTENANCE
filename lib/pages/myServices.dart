@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:servicetracker_app/components/appbar.dart';
@@ -135,16 +136,28 @@ class _MyServicesState extends State<MyServices> {
                 ),
               ),
 
-              // 🔹 Title (Centered)
-              const Text(
+                   Row(
+          mainAxisSize: MainAxisSize.min, // Prevents unnecessary stretching
+          children: [
+       
+            const SizedBox(width: 8), // Space between icon and text
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.5, // Responsive width
+              child: AutoSizeText(
                 'My Services',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 30,
+                  fontSize: 30, // Max size
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                minFontSize: 12, // Shrinks if needed
+                overflow: TextOverflow.ellipsis, // Prevents overflow
               ),
+            ),
+          ],
+        ),
             ],
           ),
         ),

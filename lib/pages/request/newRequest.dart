@@ -1,8 +1,11 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/buildDropdownField.dart';
 import 'package:servicetracker_app/components/buildtextField.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
+import 'package:servicetracker_app/services/FormProvider.dart';
 
 class NewRequest extends StatefulWidget {
   final String currentPage;
@@ -16,14 +19,37 @@ class NewRequest extends StatefulWidget {
 
 class _NewRequestState extends State<NewRequest> {
   final ScrollController _scrollController = ScrollController();
-
+  int _currentStep = 0;
   // Controllers for each field
-  final TextEditingController subjectController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController requesterController = TextEditingController();
+  late TextEditingController subjectController = TextEditingController();
+  late TextEditingController descriptionController = TextEditingController();
+  late TextEditingController requesterController = TextEditingController();
 
   String? selectedServiceCategory;
   String? selectedDivision;
+
+  @override
+  void initState() {
+    super.initState();
+    final subjectFromProvider =
+        Provider.of<FormProvider>(context, listen: false).subject;
+    subjectController = TextEditingController(text: subjectFromProvider ?? '');
+
+    final descriptionFromProvider =
+        Provider.of<FormProvider>(context, listen: false).description;
+    descriptionController =
+        TextEditingController(text: descriptionFromProvider ?? '');
+
+    final requesterFromProvider =
+        Provider.of<FormProvider>(context, listen: false).requester;
+    requesterController =
+        TextEditingController(text: requesterFromProvider ?? '');
+        
+    selectedServiceCategory =
+        Provider.of<FormProvider>(context, listen: false).serviceCategory;
+    selectedDivision =
+        Provider.of<FormProvider>(context, listen: false).division;
+  }
 
   final List<String> serviceCategories = [
     "Computer & Peripheral Services",
@@ -131,6 +157,7 @@ class _NewRequestState extends State<NewRequest> {
 
   @override
   Widget build(BuildContext context) {
+    final formProvider = Provider.of<FormProvider>(context);
     return SafeArea(
       child: Scaffold(
         appBar: CurvedEdgesAppBar(
@@ -140,7 +167,7 @@ class _NewRequestState extends State<NewRequest> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
             child: Stack(
-              alignment: Alignment.center, // Centers the text
+              alignment: Alignment.center, // Keeps everything centered
               children: [
                 // 🔹 Back Icon (Left)
                 Align(
@@ -155,15 +182,29 @@ class _NewRequestState extends State<NewRequest> {
                   ),
                 ),
 
-                // 🔹 Title (Centered)
-                const Text(
-                  'New Request',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                // 🔹 Title with Icon (Centered & Resizable)
+                Row(
+                  mainAxisSize:
+                      MainAxisSize.min, // Prevents unnecessary stretching
+                  children: [
+                    const SizedBox(width: 8), // Space between icon and text
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width *
+                          0.5, // Responsive width
+                      child: AutoSizeText(
+                        'New Request',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 30, // Max size
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        minFontSize: 12, // Shrinks if needed
+                        overflow: TextOverflow.ellipsis, // Prevents overflow
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -171,95 +212,138 @@ class _NewRequestState extends State<NewRequest> {
         ),
         backgroundColor: Colors.white,
         body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              /// Wrap all form fields inside a SizedBox
-              Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width *
-                      0.85, // Set width for all children
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 25, 0, 15),
-                        child: Align(
-                          alignment: Alignment
-                              .centerLeft, // Aligns only the text to the left
-                          child: const Text(
-                            'Request Details',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      buildDropdownField(context, "Service Category",
-                          selectedServiceCategory, serviceCategories, (value) {
-                        setState(() => selectedServiceCategory = value);
-                      }),
-                      buildTextField("Subject", subjectController),
-                      buildTextField("Description", descriptionController),
-                      buildTextField("Requester", requesterController),
-                      buildDropdownField(
-                          context, "Division", selectedDivision, divisions,
-                          (value) {
-                        setState(() => selectedDivision = value);
-                      }),
-                      const SizedBox(height: 20),
-                      Row(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+            child: Form(
+              key: formProvider.requestFormKeyStep1, // Assign GlobalKey here
+
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// Wrap all form fields inside a SizedBox
+                  Center(
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width *
+                          0.85, // Set width for all children
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/NewRequestQR',
-                                    arguments: {
-                                      'serviceCategory':
-                                          selectedServiceCategory,
-                                      'subject': subjectController.text,
-                                      'description': descriptionController.text,
-                                      'requester': requesterController.text,
-                                      'division': selectedDivision,
-                                    },
-                                  );
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF007A33),
-                                padding:
-                                    const EdgeInsets.fromLTRB(15, 15, 15, 15),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 25, 0, 15),
+                            child: Align(
+                              alignment: Alignment
+                                  .centerLeft, // Aligns only the text to the left
                               child: const Text(
-                                "NEXT",
+                                'Request Details',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
                                 ),
                               ),
                             ),
                           ),
+
+                          /// **Dropdown for Service Category**
+
+                          buildDropdownField(
+                            context,
+                            "Service Category",
+                            selectedServiceCategory,
+                            serviceCategories,
+                            (value) {
+                              setState(() => selectedServiceCategory = value);
+                            },
+                            validator: (value) => value == null || value.isEmpty
+                                ? "Service is required"
+                                : null,
+                          ),
+                          const SizedBox(height: 15),
+                          buildTextField(
+                            "Subject",
+                            subjectController,
+                            validator: (value) => value == null || value.isEmpty
+                                ? "Subject is required"
+                                : null,
+                          ),
+                          const SizedBox(height: 15),
+                          buildTextField(
+                            "Description",
+                            descriptionController,
+                            validator: (value) => value == null || value.isEmpty
+                                ? "Desription is required"
+                                : null,
+                          ),
+                          const SizedBox(height: 15),
+                          buildTextField(
+                            "Requester",
+                            requesterController,
+                            validator: (value) => value == null || value.isEmpty
+                                ? "Requester is required"
+                                : null,
+                          ),
+                          const SizedBox(height: 15),
+                          buildDropdownField(
+                            context,
+                            "Division",
+                            selectedDivision,
+                            divisions,
+                            (value) {
+                              setState(() => selectedDivision = value);
+                            },
+                            validator: (value) => value == null || value.isEmpty
+                                ? "Division is required"
+                                : null,
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (formProvider
+                                        .requestFormKeyStep1.currentState!
+                                        .validate()) {
+                                      // ✅ Proceed to next page
+                                      Navigator.pushNamed(
+                                          context, '/NewRequestQR');
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              "Please fill all required fields"),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF007A33),
+                                    padding: const EdgeInsets.fromLTRB(
+                                        15, 15, 15, 15),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    "NEXT",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
+            )),
       ),
     );
   }

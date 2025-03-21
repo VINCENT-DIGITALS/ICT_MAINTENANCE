@@ -45,7 +45,7 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
 
                 // 🔹 Title (Centered)
                 const Text(
-                  'TN25-0143',
+                  "Incident No. 117",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 30,
@@ -69,20 +69,12 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
-                      const Text(
-                        "Incident No. 117",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                       const SizedBox(height: 5),
 
                       const Text(
                         "PhilRice - Negros Internet is Down, Globe ISP",
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -90,7 +82,10 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
 
                       const Text(
                         "Reported by: Ranniel Lauriaga\nFebruary 11, 2025, 01:00 PM",
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF707070),
+                            height: 1.0),
                       ),
                       const SizedBox(height: 10),
 
@@ -98,7 +93,9 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                       const Text(
                         "Priority Level: Normal",
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF000000)),
                       ),
                       const SizedBox(height: 15),
 
@@ -106,43 +103,111 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                       const Text(
                         "Incident Details",
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF000000)),
                       ),
-                      const SizedBox(height: 5),
-                      const Text("Date and Time of Incident:"),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Date and Time of Incident:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
                       const Text(
                         "February 10, 2025, 10:00 AM",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
-                      const SizedBox(height: 5),
-                      const Text("Incident Type:"),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Incident Type:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
                       const Text(
                         "Others",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
-                      const SizedBox(height: 5),
-                      const Text("Location of Incident:"),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Location of Incident:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
                       const Text(
                         "PhilRice Negros",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
-                      const SizedBox(height: 5),
-                      const Text("Problem Description:"),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Problem Description:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
                       const Text(
                         "PhilRice - Negros Internet is Down, Globe ISP",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
-                      const SizedBox(height: 5),
-                      const Text("Impact/s:"),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Impact/s:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
                       const Text(
                         "No internet access",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
-                      const SizedBox(height: 5),
-                      const Text("Affected Area/s:"),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Affected Area/s:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
                       const Text(
                         "PhilRice - Negros",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
 
                       const SizedBox(height: 15),
@@ -151,13 +216,60 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                       const Text(
                         "Additional Details",
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
-                      const SizedBox(height: 5),
-                      const Text("Verified by:"),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Verified by:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
                       const Text(
                         "Consolacion D. Diaz",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
+                      const Text(
+                        "Information Technology Officer I",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Verified by:",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
+                      const Text(
+                        "Luis Alejandre I. Tamani",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
+                      ),
+                      const Text(
+                        "Information Technology Officer III",
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 18,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
 
                       const SizedBox(height: 20),
@@ -166,7 +278,10 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                       const Text(
                         "Documentation",
                         style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
                       const SizedBox(height: 5),
                       Container(
@@ -193,10 +308,11 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                             0.85, // Set button width
                         child: ElevatedButton(
                           onPressed: () {
+                            Navigator.pushNamed(context, '/EditIncidentReport');
                             // Handle edit action
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: Color(0xFF45CF7F),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -205,8 +321,9 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                           child: const Text(
                             "EDIT DETAILS",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF007A33),
                               fontWeight: FontWeight.bold,
+                              fontSize: 18,
                             ),
                           ),
                         ),
@@ -217,7 +334,10 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                       const Text(
                         "Findings and Recommendations",
                         style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                            color: Color(0xFF000000),
+                            height: 1.0),
                       ),
                       const SizedBox(height: 5),
                       Container(
@@ -231,7 +351,11 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                         child: const Text(
                           "No actions taken yet.",
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontSize: 14,
+                              color: Color(0xFF707070),
+                              height: 1.0),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -242,10 +366,12 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                             0.85, // Set button width
                         child: ElevatedButton(
                           onPressed: () {
+                            Navigator.pushNamed(
+                                context, '/newIncidentReportFindings');
                             // Handle add findings action
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green[700],
+                            backgroundColor: Color(0xFF007A33),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -254,8 +380,9 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                           child: const Text(
                             "ADD FINDINGS",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFFFFFFFF),
                               fontWeight: FontWeight.bold,
+                              fontSize: 18,
                             ),
                           ),
                         ),
@@ -270,7 +397,7 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                             // Handle edit action
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: Color(0xFF45CF7F),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -279,8 +406,9 @@ class _IncidentReportDetailsState extends State<IncidentReportDetails> {
                           child: const Text(
                             "SAVE REPORT AS PDF",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF007A33),
                               fontWeight: FontWeight.bold,
+                              fontSize: 18,
                             ),
                           ),
                         ),

@@ -1,8 +1,17 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/buildDropdownField.dart';
+import 'package:servicetracker_app/components/buildtextField.dart';
+import 'package:servicetracker_app/components/cameraScreen.dart';
 import 'package:servicetracker_app/components/customRadio.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/request/saveProgressModal.dart';
+import 'package:servicetracker_app/services/FormProvider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class NewRequestSave extends StatefulWidget {
   const NewRequestSave({Key? key}) : super(key: key);
@@ -15,8 +24,12 @@ class _NewRequestSaveState extends State<NewRequestSave> {
   String? selectedLocation;
   bool isRepair = false;
   String selectedStatus = "none"; // Default selected value
-
+  String? scannedLocation;
   bool isCompleted = false; // Checkbox state
+  final AutoSizeGroup radioTextGroup = AutoSizeGroup(); // ✅ Shared Group
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  QRViewController? controller;
+  final String mainTechnician = "Dennis Cargamento";
 
   final List<String> Locations = [
     "Computer & Peripheral Services",
@@ -24,14 +37,49 @@ class _NewRequestSaveState extends State<NewRequestSave> {
     "Software Support",
     "Hardware Repair",
   ];
-  TextEditingController notesController = TextEditingController();
-  List<String> technicians = ['Ranniel F. Lauriaga'];
+  late TextEditingController notesController = TextEditingController();
+  List<String> technicians = [
+    'Ranniel F. Lauriaga',
+    "Christian 2",
+    "Christian 3",
+    "Christian 4",
+  ];
+
+  File? _capturedImage;
+
+  void _openCamera() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CameraScreen(initialImage: _capturedImage),
+      ),
+    );
+
+    if (result != null && result is File) {
+      setState(() {
+        _capturedImage = result;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    scannedLocation =
+        Provider.of<FormProvider>(context, listen: false).location;
+    notesController.text =
+        Provider.of<FormProvider>(context, listen: false).technicianNotes ?? '';
+
+    technicians =
+        Provider.of<FormProvider>(context, listen: false).assignedTechnicians;
+  }
 
   /// 🔹 **Show Modal for Adding Technician**
   void _showAddTechnicianModal(BuildContext context) {
     List<String> availableTechnicians = [
       "Ranniel F. Lauriaga",
       "Dennis Cargamento",
+      "Dennis Cargamensto",
       "Christian Sicat",
       "Christian 2",
       "Christian 3",
@@ -42,31 +90,70 @@ class _NewRequestSaveState extends State<NewRequestSave> {
       "Christian 8",
       "Christian 9",
     ];
+// ✅ Remove if exists to avoid duplicates, then insert at top
+    availableTechnicians.remove(mainTechnician);
+    availableTechnicians.insert(0, mainTechnician);
 
     showCustomSelectionModal(
       context: context,
       title: "Add Technicians",
       options: availableTechnicians,
-      selectedOptions: technicians, // Use your existing list
+      selectedOptions: technicians, // Use existing list
       onConfirm: (List<String> selectedTechs) {
         setState(() {
-          technicians = selectedTechs; // Update state with selected items
+          // Ensure fixed technician is always included
+          if (!selectedTechs.contains(mainTechnician)) {
+            selectedTechs.add(mainTechnician);
+          }
+          technicians = selectedTechs;
         });
       },
+      fixedTechnician: mainTechnician,
     );
   }
 
   void _showRemoveTechnicianDialog(BuildContext context, String techName) {
+    // Prevent removal of the fixed technician
+    if (techName == mainTechnician) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Action Not Allowed",
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          content: Text("You cannot removed yourself for now.",
+              style: TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.normal)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "OK",
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Normal removal dialog for others
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Remove Technician"),
-          content: Text("Are you sure you want to remove $techName?"),
+          title: const Text("Remove Technician",
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+          content: Text("Are you sure you want to remove $techName?",
+              style: TextStyle(
+                  fontWeight: FontWeight.normal, color: Colors.black)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), // Close dialog
-              child: const Text("CANCEL"),
+              child:
+                  const Text("CANCEL", style: TextStyle(color: Colors.black)),
             ),
             TextButton(
               onPressed: () {
@@ -84,80 +171,51 @@ class _NewRequestSaveState extends State<NewRequestSave> {
     );
   }
 
-  Widget _buildDropdownField(String label, String? value, List<String> options,
-      Function(String) onSelect) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            GestureDetector(
-              onTap: () => _showModal(context, options, onSelect),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      value ?? '',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                    const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: value != null ? -10 : 13,
-              left: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                color: Colors.white,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: Colors.black,
-                    fontSize: value != null ? 18 : 18,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        // const SizedBox(height: 15),
-      ],
-    );
+  void _onQRViewCreated(QRViewController qrController) {
+    controller = qrController;
+    qrController.scannedDataStream.listen((scanData) {
+      setState(() {
+        scannedLocation = scanData.code ?? '';
+      });
+      Navigator.of(context).pop(); // ✅ Close the modal once scanned
+      controller?.dispose(); // ✅ Stop scanner after scan
+    });
   }
 
-  void _showModal(
-      BuildContext context, List<String> options, Function(String) onSelect) {
-    showModalBottomSheet(
+  void _showQRScannerModal() {
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SizedBox(
-          height: 300,
-          child: ListView.builder(
-            itemCount: options.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(options[index]),
-                onTap: () {
-                  onSelect(options[index]);
-                  Navigator.pop(context);
-                },
-              );
-            },
+      barrierDismissible: true, // ✅ Tap outside to close
+      barrierColor: Colors.black.withOpacity(0.5), // ✅ Dim background
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          insetPadding: const EdgeInsets.all(20),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.width * 0.85,
+            width: MediaQuery.of(context).size.width * 0.85,
+            child: Column(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: QRView(
+                      key: qrKey,
+                      onQRViewCreated: _onQRViewCreated,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    controller?.dispose(); // ✅ Stop scanner if manually closed
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Close",
+                      style: TextStyle(color: Colors.red, fontSize: 18)),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -166,6 +224,7 @@ class _NewRequestSaveState extends State<NewRequestSave> {
 
   @override
   Widget build(BuildContext context) {
+    final formProvider = Provider.of<FormProvider>(context);
     return SafeArea(
         child: Scaffold(
       appBar: CurvedEdgesAppBar(
@@ -190,14 +249,28 @@ class _NewRequestSaveState extends State<NewRequestSave> {
               ),
 
               // 🔹 Title (Centered)
-              const Text(
-                'New Request',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisSize:
+                    MainAxisSize.min, // Prevents unnecessary stretching
+                children: [
+                  const SizedBox(width: 8), // Space between icon and text
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width *
+                        0.5, // Responsive width
+                    child: AutoSizeText(
+                      'New Request',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30, // Max size
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      minFontSize: 12, // Shrinks if needed
+                      overflow: TextOverflow.ellipsis, // Prevents overflow
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -205,295 +278,371 @@ class _NewRequestSaveState extends State<NewRequestSave> {
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width *
-                    0.85, // Set width for all children
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(0, 25, 0, 10),
-                      child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
-                        child: Text(
-                          "Technician Remarks",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      // width: MediaQuery.of(context).size.width * 0.85,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildDropdownField(
-                              "Service Category",
-                              selectedLocation,
-                              Locations,
-                              (value) {
-                                setState(() => selectedLocation = value);
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton(
-                            onPressed:
-                                () {}, // Add QR scanning functionality here
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color(0xFF007A33), // Updated color
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 15),
-                            ),
-                            child: const Text(
-                              "SCAN QR",
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          child: Form(
+            key: formProvider.requestFormKeyStep3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width *
+                        0.85, // Set width for all children
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(0, 25, 0, 10),
+                          child: Align(
+                            alignment: Alignment
+                                .centerLeft, // Aligns only the text to the left
+                            child: Text(
+                              "Technician Remarks",
                               style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: notesController,
-                      minLines: 1, // Start with one line
-                      maxLines: null, // Allow expansion as user types
-                      keyboardType:
-                          TextInputType.multiline, // Enable multiline input
-                      decoration: InputDecoration(
-                        labelText: 'Notes',
-                        labelStyle: const TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.normal,
-                        ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Color(0xFF018203), width: 2),
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black, width: 2),
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-                    isRepair
-                        ? Padding(
-                            padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
-                            child: Align(
-                              alignment: Alignment
-                                  .centerLeft, // Aligns only the text to the left
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  CustomRadioButton(
-                                    label: "Serviceable - For Repair",
-                                    value: "repair",
-                                    groupValue: selectedStatus,
-                                    onChanged: (value) =>
-                                        setState(() => selectedStatus = value),
-                                  ),
-                                  CustomRadioButton(
-                                    label: "Unserviceable - For Disposal",
-                                    value: "disposal",
-                                    groupValue: selectedStatus,
-                                    onChanged: (value) =>
-                                        setState(() => selectedStatus = value),
-                                  ),
-                                  CustomRadioButton(
-                                    label: "Serviceable - For Item Procurement",
-                                    value: "procurement",
-                                    groupValue: selectedStatus,
-                                    onChanged: (value) =>
-                                        setState(() => selectedStatus = value),
-                                  ),
-                                ],
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          )
-                        : const SizedBox.shrink(),
-                    isRepair
-                        ? Padding(
-                            padding: EdgeInsets.fromLTRB(11, 0, 0, 0),
-                            child: Align(
-                              alignment: Alignment
-                                  .centerLeft, // Aligns only the text to the left
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: isCompleted,
-                                    activeColor: Color(0xFF007A33),
-                                    onChanged: (bool? value) {
+                          ),
+                        ),
+                        Container(
+                          // width: MediaQuery.of(context).size.width * 0.85,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: buildDropdownField(
+                                  context,
+                                  "Location",
+                                  selectedLocation,
+                                  Locations,
+                                  (value) {
+                                    setState(() => selectedLocation = value);
+                                  },
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
+                                          ? "Location is required"
+                                          : null,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: _showQRScannerModal,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      const Color(0xFF007A33), // Updated color
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 20),
+                                ),
+                                child: const Text(
+                                  "SCAN QR",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        buildTextField(
+                          "Notes",
+                          notesController,
+                          validator: (value) => value == null || value.isEmpty
+                              ? "Notes is required"
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+                        isRepair
+                            ? Padding(
+                                padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
+                                child: Align(
+                                  alignment: Alignment
+                                      .centerLeft, // Aligns only the text to the left
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      CustomRadioButton(
+                                        label: "Serviceable - For Repair",
+                                        value: "repair",
+                                        groupValue: selectedStatus,
+                                        onChanged: (value) => setState(
+                                            () => selectedStatus = value),
+                                        textGroup:
+                                            radioTextGroup, // ✅ Pass AutoSizeGroup
+                                      ),
+                                      CustomRadioButton(
+                                        label: "Unserviceable - For Disposal",
+                                        value: "disposal",
+                                        groupValue: selectedStatus,
+                                        onChanged: (value) => setState(
+                                            () => selectedStatus = value),
+                                        textGroup:
+                                            radioTextGroup, // ✅ Pass AutoSizeGroup
+                                      ),
+                                      CustomRadioButton(
+                                        label:
+                                            "Serviceable - For Item Procurement",
+                                        value: "procurement",
+                                        groupValue: selectedStatus,
+                                        onChanged: (value) => setState(
+                                            () => selectedStatus = value),
+                                        textGroup:
+                                            radioTextGroup, // ✅ Pass AutoSizeGroup
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+
+                        const SizedBox(height: 10),
+
+                        /// 📷 **Photo Documentation**
+                        Center(
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: _openCamera, // Open camera on tap
+                                child: Container(
+                                  height: 100,
+                                  width: 100,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: _capturedImage != null
+                                        ? DecorationImage(
+                                            image: FileImage(_capturedImage!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  child: _capturedImage == null
+                                      ? const Icon(Icons.camera_alt,
+                                          size: 40, color: Colors.grey)
+                                      : null, // Show icon if no image
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                "Add photo documentation.",
+                                style: TextStyle(
+                                    fontSize: 18, color: Colors.black),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        /// 👷 **Assigned Technician/s**
+                        ///
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: const Text(
+                            "Assigned Technician/s",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+
+                        SizedBox(
+                          child: ListView.builder(
+                            // ✅ Create a display list with mainTechnician always on top
+                            itemCount: ([
+                              mainTechnician,
+                              ...technicians.where((tech) =>
+                                  tech != mainTechnician), // Remove duplicates
+                            ]).length,
+                            shrinkWrap: true,
+                            physics:
+                                const NeverScrollableScrollPhysics(), // Prevents nested scrolling
+                            itemBuilder: (context, index) {
+                              // ✅ Get the combined list
+                              List<String> displayTechnicians = [
+                                mainTechnician,
+                                ...technicians.where((tech) =>
+                                    tech != mainTechnician), // Avoid duplicates
+                              ];
+
+                              String tech = displayTechnicians[index];
+
+                              return GestureDetector(
+                                onTap: () =>
+                                    _showRemoveTechnicianDialog(context, tech),
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.85,
+                                  padding: const EdgeInsets.all(15),
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFEEEEEE),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    tech,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.normal,
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        /// 🔘 **Add Technician Button**
+                        _addTechBuildButton(
+                          context: context,
+                          text: "ADD TECHNICIAN",
+                          color: Color(0xFF45CF7F),
+                          TxtColor: Color(0xFF007A33), // Optional
+                          onPressed: () => _showAddTechnicianModal(context),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        /// 🔘 **Save Request Button**
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 40),
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width *
+                                0.85, // Set width for all children
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (formProvider
+                                    .requestFormKeyStep3.currentState!
+                                    .validate()) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) =>
+                                        CustomModalSaveProgress(
+                                      title: "Request Added to Your Services",
+                                      message: "25-0143 Computer Repair",
+                                      onConfirm: () {
+                                        formProvider.resetForm(); // ✅ Clear the form
+                                        Navigator.pop(
+                                            context); // Close modal first
+                                        // onPressed(); // Then navigate
+                                      },
+                                    ),
+                                  ).then((_) {
+                                    formProvider.resetForm(); // ✅ Clear the form
+                                    // If dialog is dismissed by tapping outside, navigate anyway
+                                    Navigator.pushReplacementNamed(
+                                        context, '/ServiceDetails');
+                                  }); 
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          "Please fill all required fields"),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF007A33),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                "SAVE REQUEST",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+                        isRepair
+                            ? Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    0, 20, 0, 15), // Adds padding
+                                child: GestureDetector(
+                                    onTap: () {
+                                      // Handle click action here
                                       setState(() {
-                                        isCompleted = value!;
+                                        isRepair = false;
+                                        selectedStatus =
+                                            "none"; // Default selected value
+
+                                        isCompleted = false; // Checkbox state
                                       });
                                     },
-                                  ),
-                                  Text("Mark as completed",
-                                      style: TextStyle(fontSize: 16)),
-                                ],
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: const Text(
+                                        "If not repair request",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          color: Color(
+                                              0xFF707070), // Corrected color format
+                                        ),
+                                      ),
+                                    )),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    0, 20, 0, 15), // Adds padding
+                                child: GestureDetector(
+                                    onTap: () {
+                                      // Handle click action here
+                                      setState(() {
+                                        isRepair = true;
+                                      });
+                                    },
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: const Text(
+                                        "If repair request",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          color: Color(
+                                              0xFF707070), // Corrected color format
+                                        ),
+                                      ),
+                                    )),
                               ),
-                            ))
-                        : const SizedBox.shrink(),
-
-                    // : const SizedBox(height: 10),
-                    /// 📷 **Photo Documentation**
-                    /// 📸 **Centered Documentation**
-                    Center(
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 100,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.camera_alt,
-                                size: 40, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text("Add photo documentation."),
-                        ],
-                      ),
+                      ],
                     ),
-
-                    const SizedBox(height: 20),
-
-                    /// 👷 **Assigned Technician/s**
-                    ///
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: const Text(
-                        "Assigned Technician/s",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-
-                    SizedBox(
-                      child: ListView.builder(
-                        itemCount: technicians.length,
-                        shrinkWrap: true,
-                        physics:
-                            const NeverScrollableScrollPhysics(), // Prevents nested scrolling
-                        itemBuilder: (context, index) {
-                          String tech = technicians[index];
-                          return GestureDetector(
-                            onTap: () =>
-                                _showRemoveTechnicianDialog(context, tech),
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.85,
-                              padding: const EdgeInsets.all(15),
-                              margin: const EdgeInsets.symmetric(vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(tech, textAlign: TextAlign.center),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    /// 🔘 **Add Technician Button**
-                    _addTechBuildButton(
-                        context,
-                        "ADD TECHNICIAN",
-                        Color(0xFF45CF7F),
-                        () => _showAddTechnicianModal(context)),
-
-                    const SizedBox(height: 25),
-
-                    /// 🔘 **Save Request Button**
-                    _buildButton(
-                        context, "SAVE REQUEST", Color(0xFF007A33), () {}),
-
-                    const SizedBox(height: 10),
-                    isRepair
-                        ? Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                0, 20, 0, 15), // Adds padding
-                            child: GestureDetector(
-                                onTap: () {
-                                  // Handle click action here
-                                  setState(() {
-                                    isRepair = false;
-                                  });
-                                },
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: const Text(
-                                    "If not repair request",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                      color: Color(
-                                          0xFF707070), // Corrected color format
-                                    ),
-                                  ),
-                                )),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                0, 20, 0, 15), // Adds padding
-                            child: GestureDetector(
-                                onTap: () {
-                                  // Handle click action here
-                                  setState(() {
-                                    isRepair = true;
-                                  });
-                                },
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: const Text(
-                                    "If repair request",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                      color: Color(
-                                          0xFF707070), // Corrected color format
-                                    ),
-                                  ),
-                                )),
-                          ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          )),
     ));
   }
 
+
   /// 🔹 **Reusable Button**
-  Widget _addTechBuildButton(
-      BuildContext context, String text, Color color, VoidCallback onPressed) {
+  Widget _addTechBuildButton({
+    required BuildContext context,
+    required String text,
+    required Color color,
+    Color TxtColor = Colors.white, // Optional with a default value
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.85,
       child: ElevatedButton(
@@ -507,8 +656,8 @@ class _NewRequestSaveState extends State<NewRequestSave> {
         ),
         child: Text(
           text,
-          style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: TxtColor),
         ),
       ),
     );
@@ -542,7 +691,7 @@ class _NewRequestSaveState extends State<NewRequestSave> {
         child: Text(
           text,
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
     );

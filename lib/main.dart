@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:servicetracker_app/pages/home.dart';
+import 'package:servicetracker_app/pages/incidentReports/editIncidentReport.dart';
 import 'package:servicetracker_app/pages/incidentReports/incidentDetails.dart';
 import 'package:servicetracker_app/pages/incidentReports/incidentReport.dart';
 import 'package:servicetracker_app/pages/incidentReports/newIncidentReport.dart';
+import 'package:servicetracker_app/pages/incidentReports/newIncidentReportFindings.dart';
 import 'package:servicetracker_app/pages/myServices.dart';
 import 'package:servicetracker_app/pages/pendingRequests/pendingRequests.dart';
 import 'package:servicetracker_app/pages/request/UpdateRequest.dart';
@@ -12,14 +15,18 @@ import 'package:servicetracker_app/pages/request/newRequestQR.dart';
 import 'package:servicetracker_app/pages/request/newRequestSave.dart';
 import 'package:servicetracker_app/pages/serviceDetails.dart';
 import 'package:servicetracker_app/pages/signIn.dart';
+import 'package:servicetracker_app/services/FormProvider.dart';
 
 import 'models/splash_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
-void main() async {
+void main() async{
   runApp(
-    const MyApp(),
+    ChangeNotifierProvider(
+      create: (context) => FormProvider(),
+      child:  const MyApp(),
+    ),
   );
 }
 
@@ -35,8 +42,10 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
   }
-//Navigator.pushNamed(context, '/IncidentReportDetails'); //with backoption
+//Navigator.pushNamed(context, '/EditIncidentReport'); //with backoption
 //Navigator.pushReplacementNamed(context, '/newRequest'); //without back options
+// ADD COWORKERS
+
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +69,8 @@ class _MyAppState extends State<MyApp> {
         '/PendingRequests': (context) => const PendingRequests(),
         '/IncidentReportDetails': (context) => const IncidentReportDetails(),
         '/NewIncidentReport': (context) => const NewIncidentReport(),
+        '/EditIncidentReport' : (context) => const EditIncidentReport(),
+        '/newIncidentReportFindings' : (context) => const newIncidentReportFindings(),
       },
     );
   }

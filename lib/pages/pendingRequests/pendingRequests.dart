@@ -207,25 +207,25 @@ class _PendingRequestsState extends State<PendingRequests> {
                   ),
                   const SizedBox(height: 5),
                   Text(request['requester'] ?? "Unknown",
-                      style: const TextStyle(fontSize: 14)),
-                  Text(request['division'] ?? "Unknown Division"),
-                  Text("Requested: ${request['requestedDate'] ?? "N/A"}"),
+                      style: const TextStyle(height: 1.0, fontSize: 14, color: Color(0xFF707070))),
+                  Text(request['division'] ?? "Unknown Division", style: const TextStyle(height: 1.0, fontSize: 14, color: Color(0xFF707070))),
+                  Text("Requested: ${request['requestedDate'] ?? "N/A"}", style: const TextStyle(height: 1.0, fontSize: 14, color: Color(0xFF707070))),
                   const SizedBox(height: 10),
                   const Text("Subject of request",
                       style:
-                          TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                          TextStyle(fontWeight: FontWeight.w900,color: Color(0xFF000000), fontSize: 14)),
                   const SizedBox(height: 2),
                   Text(
                     request['description'] ?? "No details available",
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w500, height: 1.2),
+                        fontSize: 14, fontWeight: FontWeight.normal, color: Color(0xFF000000), height: 1.0),
                     softWrap: true,
                     overflow: TextOverflow.visible,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 20),
-                  _buildButton(
-                      context, "PICK THIS REQUEST", Color(0xFF007A33), () {}),
+                    _buildButton(
+                      context, "PICK THIS REQUEST", Color(0xFF45CF7F), () {}),
                   const SizedBox(height: 10),
                 ],
               ),
@@ -263,7 +263,7 @@ class _PendingRequestsState extends State<PendingRequests> {
         child: Text(
           text,
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF007A33)),
         ),
       ),
     );

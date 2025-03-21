@@ -44,9 +44,9 @@ class CustomModalPickRequest extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: Color(0xFF000000),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -57,7 +57,7 @@ class CustomModalPickRequest extends StatelessWidget {
                 message,
                 style: const TextStyle(
                   fontSize: 16,
-                  color: Colors.black54,
+                  color: Color(0xFF000000),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -82,8 +82,9 @@ class CustomModalPickRequest extends StatelessWidget {
                   child: const Text(
                     "BACK TO HOME",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFFFFFFFF),
                       fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
                   ),
                 ),

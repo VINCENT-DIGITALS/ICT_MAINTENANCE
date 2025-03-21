@@ -1,25 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:servicetracker_app/components/customSelectionModal.dart';
+import 'package:intl/intl.dart';
 
-Widget buildDropdownField(
+Widget buildTimePickerField(
   BuildContext context,
   String label,
-  String? value,
-  List<String> options,
-  Function(String) onSelect, {
-  FormFieldValidator<String>? validator,
+  TimeOfDay? selectedTime,
+  Function(TimeOfDay) onSelect, {
+  FormFieldValidator<String>? validator, // Optional validator
 }) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       FormField<String>(
         validator: validator,
-        initialValue: value, // ✅ Keep in sync with state
         builder: (FormFieldState<String> state) {
-          // ✅ Dynamically set border color
-          bool isValid = (state.value != null && state.value!.isNotEmpty);
-          Color borderColor = !isValid && state.hasError ? Colors.red : Colors.black;
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -27,27 +21,30 @@ Widget buildDropdownField(
                 clipBehavior: Clip.none,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      showCustomSelectionModal(
+                    onTap: () async {
+                      final TimeOfDay initialTime = selectedTime ?? TimeOfDay.now();
+
+                      final TimeOfDay? picked = await showTimePicker(
                         context: context,
-                        title: label,
-                        options: options,
-                        selectedOptions: value != null ? [value] : [],
-                        onConfirm: (List<String> selected) {
-                          if (selected.isNotEmpty) {
-                            // ✅ Notify parent
-                            onSelect(selected.first);
-                            // ✅ Notify FormFieldState
-                            state.didChange(selected.first);
-                          }
+                        initialTime: initialTime,
+                        builder: (BuildContext context, Widget? child) {
+                          return MediaQuery(
+                            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false), // Use 12-hour format
+                            child: child!,
+                          );
                         },
-                        isSingleSelect: true,
                       );
+
+                      if (picked != null) {
+                        onSelect(picked);
+                        // Notify validator with formatted time string
+                        state.didChange(picked.format(context));
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                       decoration: BoxDecoration(
-                        border: Border.all(color: borderColor, width: 2), // ✅ Dynamic border color
+                        border: Border.all(color: Colors.black, width: 2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -55,21 +52,20 @@ Widget buildDropdownField(
                         children: [
                           Expanded(
                             child: Text(
-                              value ?? label,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: value == null ? Colors.black : Colors.black,
-                              ),
+                              selectedTime != null
+                                  ? selectedTime.format(context) // Display formatted time
+                                  : label,
+                              style: const TextStyle(fontSize: 18, color: Colors.black),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
                           ),
-                          const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+                          const Icon(Icons.access_time, color: Colors.grey),
                         ],
                       ),
                     ),
                   ),
-                  if (value != null)
+                  if (selectedTime != null)
                     Positioned(
                       top: -10,
                       left: 12,
@@ -87,7 +83,7 @@ Widget buildDropdownField(
                     ),
                 ],
               ),
-              if (state.hasError && !isValid) // ✅ Only show error if still invalid
+              if (state.hasError)
                 Padding(
                   padding: const EdgeInsets.only(top: 5, left: 12),
                   child: Text(

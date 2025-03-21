@@ -1,5 +1,7 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/buildDropdownField.dart';
 import 'package:servicetracker_app/components/customRadio.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/request/UpdateProgressModal.dart';
@@ -26,7 +28,7 @@ class _UpdateRequestState extends State<UpdateRequest> {
   ];
   TextEditingController notesController = TextEditingController();
   List<String> technicians = ['Ranniel F. Lauriaga'];
-
+  final AutoSizeGroup radioTextGroup = AutoSizeGroup(); // ✅ Shared Group
   /// 🔹 **Show Modal for Adding Technician**
   void _showAddTechnicianModal(BuildContext context) {
     List<String> availableTechnicians = [
@@ -188,16 +190,28 @@ class _UpdateRequestState extends State<UpdateRequest> {
                   ),
                 ),
               ),
-
-              // 🔹 Title (Centered)
-              const Text(
-                'Update Status',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisSize:
+                    MainAxisSize.min, // Prevents unnecessary stretching
+                children: [
+                  const SizedBox(width: 8), // Space between icon and text
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width *
+                        0.5, // Responsive width
+                    child: AutoSizeText(
+                      'Update Status',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30, // Max size
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      minFontSize: 12, // Shrinks if needed
+                      overflow: TextOverflow.ellipsis, // Prevents overflow
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -236,8 +250,9 @@ class _UpdateRequestState extends State<UpdateRequest> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: _buildDropdownField(
-                              "Service Category",
+                            child: buildDropdownField(
+                              context,
+                              "Service",
                               selectedLocation,
                               Locations,
                               (value) {
@@ -256,7 +271,7 @@ class _UpdateRequestState extends State<UpdateRequest> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 15),
+                                  horizontal: 20, vertical: 20),
                             ),
                             child: const Text(
                               "SCAN QR",
@@ -295,8 +310,9 @@ class _UpdateRequestState extends State<UpdateRequest> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width *
+                          0.65, // Set width for all children
                       child: Align(
                         alignment: Alignment
                             .centerLeft, // Aligns only the text to the left
@@ -310,6 +326,7 @@ class _UpdateRequestState extends State<UpdateRequest> {
                               groupValue: selectedStatus,
                               onChanged: (value) =>
                                   setState(() => selectedStatus = value),
+                              textGroup: radioTextGroup, // ✅ Pass AutoSizeGroup
                             ),
                             CustomRadioButton(
                               label: "Unserviceable - For Disposal",
@@ -317,6 +334,7 @@ class _UpdateRequestState extends State<UpdateRequest> {
                               groupValue: selectedStatus,
                               onChanged: (value) =>
                                   setState(() => selectedStatus = value),
+                              textGroup: radioTextGroup, // ✅ Pass AutoSizeGroup
                             ),
                             CustomRadioButton(
                               label: "Serviceable - For Item Procurement",
@@ -324,6 +342,33 @@ class _UpdateRequestState extends State<UpdateRequest> {
                               groupValue: selectedStatus,
                               onChanged: (value) =>
                                   setState(() => selectedStatus = value),
+                              textGroup: radioTextGroup, // ✅ Pass AutoSizeGroup
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Checkbox(
+                                  value: isCompleted,
+                                  activeColor: const Color(0xFF007A33),
+                                  visualDensity: VisualDensity(
+                                    horizontal: -5,
+                                  ), // 🔥 Reduce size
+                                  materialTapTargetSize: MaterialTapTargetSize
+                                      .shrinkWrap, // 🔹 Shrink padding
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      isCompleted = value!;
+                                    });
+                                  },
+                                ),
+                                const SizedBox(
+                                    width:
+                                        8), // Adjust spacing between radio and text
+                                const Text(
+                                  "Mark as completed",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -360,31 +405,9 @@ class _UpdateRequestState extends State<UpdateRequest> {
                     //     ],
                     //   ),
                     // ),
-                    Padding(
-                        padding: EdgeInsets.fromLTRB(11, 0, 0, 0),
-                        child: Align(
-                          alignment: Alignment
-                              .centerLeft, // Aligns only the text to the left
-                          child: Row(
-                            children: [
-                              Checkbox(
-                                value: isCompleted,
-                                activeColor: Color(0xFF007A33),
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    isCompleted = value!;
-                                  });
-                                },
-                              ),
-                              Text("Mark as completed",
-                                  style: TextStyle(fontSize: 16)),
-                            ],
-                          ),
-                        )),
 
                     const SizedBox(height: 20),
 
-                    /// 📷 **Photo Documentation**
                     /// 📸 **Centered Documentation**
                     Center(
                       child: Column(

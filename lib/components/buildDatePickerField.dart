@@ -1,25 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:servicetracker_app/components/customSelectionModal.dart';
+import 'package:intl/intl.dart'; // For formatting the selected date
 
-Widget buildDropdownField(
+Widget buildDatePickerField(
   BuildContext context,
   String label,
-  String? value,
-  List<String> options,
-  Function(String) onSelect, {
-  FormFieldValidator<String>? validator,
+  DateTime? selectedDate,
+  Function(DateTime) onSelect, {
+  FormFieldValidator<String>? validator, // Optional validator
 }) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       FormField<String>(
         validator: validator,
-        initialValue: value, // ✅ Keep in sync with state
         builder: (FormFieldState<String> state) {
-          // ✅ Dynamically set border color
-          bool isValid = (state.value != null && state.value!.isNotEmpty);
-          Color borderColor = !isValid && state.hasError ? Colors.red : Colors.black;
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -27,27 +21,22 @@ Widget buildDropdownField(
                 clipBehavior: Clip.none,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      showCustomSelectionModal(
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
                         context: context,
-                        title: label,
-                        options: options,
-                        selectedOptions: value != null ? [value] : [],
-                        onConfirm: (List<String> selected) {
-                          if (selected.isNotEmpty) {
-                            // ✅ Notify parent
-                            onSelect(selected.first);
-                            // ✅ Notify FormFieldState
-                            state.didChange(selected.first);
-                          }
-                        },
-                        isSingleSelect: true,
+                        initialDate: selectedDate ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
                       );
+                      if (picked != null) {
+                        onSelect(picked);
+                        state.didChange(DateFormat('yyyy-MM-dd').format(picked)); // Notify validator
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                       decoration: BoxDecoration(
-                        border: Border.all(color: borderColor, width: 2), // ✅ Dynamic border color
+                        border: Border.all(color: Colors.black, width: 2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -55,21 +44,20 @@ Widget buildDropdownField(
                         children: [
                           Expanded(
                             child: Text(
-                              value ?? label,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: value == null ? Colors.black : Colors.black,
-                              ),
+                              selectedDate != null
+                                  ? DateFormat('yyyy-MM-dd').format(selectedDate)
+                                  : label,
+                              style: const TextStyle(fontSize: 18, color: Colors.black),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
                           ),
-                          const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+                          const Icon(Icons.calendar_today, color: Colors.grey),
                         ],
                       ),
                     ),
                   ),
-                  if (value != null)
+                  if (selectedDate != null)
                     Positioned(
                       top: -10,
                       left: 12,
@@ -87,7 +75,7 @@ Widget buildDropdownField(
                     ),
                 ],
               ),
-              if (state.hasError && !isValid) // ✅ Only show error if still invalid
+              if (state.hasError)
                 Padding(
                   padding: const EdgeInsets.only(top: 5, left: 12),
                   child: Text(

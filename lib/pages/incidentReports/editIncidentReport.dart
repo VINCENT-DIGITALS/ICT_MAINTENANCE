@@ -1,28 +1,26 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/components/appbar.dart';
-import 'package:servicetracker_app/components/buildDatePickerField.dart';
 import 'package:servicetracker_app/components/buildDropdownField.dart';
-import 'package:servicetracker_app/components/buildTimePickerField.dart';
 import 'package:servicetracker_app/components/customRadio.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/request/saveProgressModal.dart';
 import 'package:servicetracker_app/components/request/submitIncidentModal.dart';
 
-class NewIncidentReport extends StatefulWidget {
-  const NewIncidentReport({Key? key}) : super(key: key);
+class EditIncidentReport extends StatefulWidget {
+  const EditIncidentReport({Key? key}) : super(key: key);
 
   @override
-  _NewIncidentReportState createState() => _NewIncidentReportState();
+  _EditIncidentReportState createState() => _EditIncidentReportState();
 }
 
-class _NewIncidentReportState extends State<NewIncidentReport> {
+class _EditIncidentReportState extends State<EditIncidentReport> {
   String? selectedLocation;
   bool isRepair = false;
   String selectedStatus = "none"; // Default selected value
-  DateTime? selectedDate;
+
   bool isAdditional = false; // Checkbox state
-  TimeOfDay? selectedTime;
+
   final List<String> Locations = [
     "Computer & Peripheral Services",
     "Network Services",
@@ -196,7 +194,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
 
               // 🔹 Title (Centered)
               const Text(
-                'New Incident Report',
+                'Edit Incident Report',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -278,49 +276,36 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         ),
                       ),
                     ),
-                    // Inside your StatefulWidget
-
-// Inside your build method
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                      child: buildDatePickerField(
-                        context,
-                        "Date of Incident",
-                        selectedDate,
-                        (date) {
-                          setState(() => selectedDate = date);
-                        },
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                      child: buildTimePickerField(
-                        context,
-                        "Time of Incident",
-                        selectedTime,
-                        (time) {
-                          setState(() => selectedTime = time);
-                        },
-                      ),
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                      child: buildDropdownField(context, "Incident Type",
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildDropdownField(context, "Service Category",
                           selectedLocation, Locations, (value) {
                         setState(() => selectedLocation = value);
                       }),
                     ),
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                      child: buildDropdownField(context, "Location of Incident",
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildDropdownField(context, "Service Category",
                           selectedLocation, Locations, (value) {
                         setState(() => selectedLocation = value);
                       }),
                     ),
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildDropdownField(context, "Service Category",
+                          selectedLocation, Locations, (value) {
+                        setState(() => selectedLocation = value);
+                      }),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildDropdownField(context, "Service Category",
+                          selectedLocation, Locations, (value) {
+                        setState(() => selectedLocation = value);
+                      }),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: TextFormField(
                         controller: notesController,
                         minLines: 1, // Start with one line
@@ -328,7 +313,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         keyboardType:
                             TextInputType.multiline, // Enable multiline input
                         decoration: InputDecoration(
-                          labelText: 'Subject',
+                          labelText: 'Notes',
                           labelStyle: const TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.black,
@@ -357,7 +342,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         keyboardType:
                             TextInputType.multiline, // Enable multiline input
                         decoration: InputDecoration(
-                          labelText: 'Problem Description',
+                          labelText: 'Notes',
                           labelStyle: const TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.black,
@@ -386,7 +371,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         keyboardType:
                             TextInputType.multiline, // Enable multiline input
                         decoration: InputDecoration(
-                          labelText: 'Impact/s',
+                          labelText: 'Notes',
                           labelStyle: const TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.black,
@@ -416,7 +401,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         keyboardType:
                             TextInputType.multiline, // Enable multiline input
                         decoration: InputDecoration(
-                          labelText: 'Affected Area/s',
+                          labelText: 'Notes',
                           labelStyle: const TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.black,
@@ -462,44 +447,44 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                     ),
                     isAdditional
                         ? Padding(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                            padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
                             child: Column(
                               children: [
                                 Padding(
                                   padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                                   child: buildDropdownField(
                                       context,
-                                      "Incident Verifier",
+                                      "Service Category",
                                       selectedLocation,
                                       Locations, (value) {
                                     setState(() => selectedLocation = value);
                                   }),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                                   child: buildDropdownField(
                                       context,
-                                      "Verifier Position",
+                                      "Service Category",
                                       selectedLocation,
                                       Locations, (value) {
                                     setState(() => selectedLocation = value);
                                   }),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                                   child: buildDropdownField(
                                       context,
-                                      "Approver",
+                                      "Service Category",
                                       selectedLocation,
                                       Locations, (value) {
                                     setState(() => selectedLocation = value);
                                   }),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                                   child: buildDropdownField(
                                       context,
-                                      "Approver Position",
+                                      "Service Category",
                                       selectedLocation,
                                       Locations, (value) {
                                     setState(() => selectedLocation = value);

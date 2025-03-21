@@ -48,7 +48,7 @@ class _IncidentReportsState extends State<IncidentReports> {
     // fetchRepairsData();
     pickedRequests = [
       {
-        "title": "TN25-0143 Computer Repair",
+        "title": "TN25-0143 Cosssssssssssssssssssssssssssssssssssmputer Repair",
         "requester": "Mighty Jemuel Sotto",
         "division": "Information Systems Division",
         "requestedDate": "February 14, 2025, 10:00 AM",
@@ -64,46 +64,47 @@ class _IncidentReportsState extends State<IncidentReports> {
       },
     ];
 
-    ongoingRepairs = [
-      {
-        "title": "TN25-0145 Server Maintenance",
-        "requester": "Jane Smith",
-        "division": "Network Administration",
-        "requestedDate": "February 13, 2025, 2:00 PM",
-        "location": "Data Center",
-        "status": "Ongoing - Awaiting Parts",
-        "lastUpdated": "February 19, 2025 | 3:00 PM",
-      },
-      {
-        "title": "TN25-0146 Laptop Repair",
-        "requester": "Alice Johnson",
-        "division": "Development Team",
-        "requestedDate": "February 12, 2025, 11:45 AM",
-        "location": "IT Lab",
-        "status": "Being Diagnosed",
-        "lastUpdated": "February 18, 2025 | 10:15 AM",
-      },
-    ];
-    completeRepairs = [
-      {
-        "title": "TN25-0145 Server Maintenance",
-        "requester": "Jane Smith",
-        "division": "Network Administration",
-        "requestedDate": "February 13, 2025, 2:00 PM",
-        "location": "Data Center",
-        "status": "Ongoing - Awaiting Parts",
-        "lastUpdated": "February 19, 2025 | 3:00 PM",
-      },
-      {
-        "title": "TN25-0146 Laptop Repair",
-        "requester": "Alice Johnson",
-        "division": "Development Team",
-        "requestedDate": "February 12, 2025, 11:45 AM",
-        "location": "IT Lab",
-        "status": "Being Diagnosed",
-        "lastUpdated": "February 18, 2025 | 10:15 AM",
-      },
-    ];
+    // ongoingRepairs = [
+    //   {
+    //     "title": "TN25-0145 Server Maintenance",
+    //     "requester": "Jane Smith",
+    //     "division": "Network Administration",
+    //     "requestedDate": "February 13, 2025, 2:00 PM",
+    //     "location": "Data Center",
+    //     "status": "Ongoing - Awaiting Parts",
+    //     "lastUpdated": "February 19, 2025 | 3:00 PM",
+    //   },
+    //   {
+    //     "title": "TN25-0146 Laptop Repair",
+    //     "requester": "Alice Johnson",
+    //     "division": "Development Team",
+    //     "requestedDate": "February 12, 2025, 11:45 AM",
+    //     "location": "IT Lab",
+    //     "status": "Being Diagnosed",
+    //     "lastUpdated": "February 18, 2025 | 10:15 AM",
+    //   },
+    // ];
+    // completeRepairs = [
+    //   {
+    //     "title": "TN25-0145 Server Maintenance",
+    //     "requester": "Jane Smith",
+    //     "division": "Network Administration",
+    //     "requestedDate": "February 13, 2025, 2:00 PM",
+    //     "location": "Data Center",
+    //     "status": "Ongoing - Awaiting Parts",
+    //     "lastUpdated": "February 19, 2025 | 3:00 PM",
+    //   },
+    //   {
+    //     "title": "TN25-0146 Laptop Repair",
+    //     "requester": "Alice Johnson",
+    //     "division": "Development Team",
+    //     "requestedDate": "February 12, 2025, 11:45 AM",
+    //     "location": "IT Lab",
+    //     "status": "Being Diagnosed",
+    //     "lastUpdated": "February 18, 2025 | 10:15 AM",
+    //   },
+    // ];
+ 
   }
 
   Future<void> fetchRepairsData() async {
@@ -238,8 +239,6 @@ class _IncidentReportsState extends State<IncidentReports> {
                         ? _buildIncidentReports(context, pickedRequests)
                         : _buildEmptyPickedState(context),
 
-                    _buildAddRequestButtons(),
-
                     const SizedBox(height: 80), // Extra space at the bottom
                   ],
                 ),
@@ -256,14 +255,15 @@ class _IncidentReportsState extends State<IncidentReports> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "Last Updated: February 19, 2025, 10:30 AM",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            _buildAddRequestButtons(),
+            // const Text(
+            //   "Last Updated: February 19, 2025, 10:30 AM",
+            //   style: TextStyle(
+            //     color: Colors.white,
+            //     fontSize: 12,
+            //     fontWeight: FontWeight.w500,
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -358,7 +358,7 @@ class _IncidentReportsState extends State<IncidentReports> {
                 constraints: const BoxConstraints(maxWidth: 2222222),
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width *
-                      0.9, // 90% of screen width
+                      0.85, // 90% of screen width
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pushNamed(context, '/NewIncidentReport');
@@ -409,32 +409,40 @@ class _IncidentReportsState extends State<IncidentReports> {
                     request['title'] ?? "No Title",
                     style: const TextStyle(
                         fontWeight: FontWeight.w900, fontSize: 18),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                   const SizedBox(height: 5),
-                  Text(request['requester'] ?? "Unknown",
-                      style: const TextStyle(fontSize: 14)),
-                  Text(request['division'] ?? "Unknown Division"),
-                  Text("Requested: ${request['requestedDate'] ?? "N/A"}"),
+                  Text("Requested by ${request['requester'] ?? "Unknown"}",
+                      style: const TextStyle(
+                          fontSize: 14, height: 1.0, color: Color(0xFF707070))),
+                  Text(
+                    "${request['requestedDate'] ?? "N/A"}",
+                    style: TextStyle(
+                        height: 1.0, fontSize: 14, color: Color(0xFF707070)),
+                  ),
                   const SizedBox(height: 10),
-                  const Text("Subject of request",
-                      style:
-                          TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-                  const SizedBox(height: 2),
                   Text(
                     request['description'] ?? "No details available",
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w500, height: 1.2),
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                        height: 1.0),
                     softWrap: true,
                     overflow: TextOverflow.visible,
                     maxLines: 3,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
+                  Text("Priority level: ${selectedPriorityCategory ?? "N/A"}",
+                      style: TextStyle(
+                          fontWeight: FontWeight.normal, fontSize: 14)),
+                  const SizedBox(height: 15),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pushNamed(context, '/IncidentReportDetails');
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[400],
+                      backgroundColor: Color(0xFF45CF7F),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -444,7 +452,7 @@ class _IncidentReportsState extends State<IncidentReports> {
                     child: const Text(
                       "VIEW DETAILS",
                       style: TextStyle(
-                          color: Colors.black,
+                          color: Color(0xFF007A33),
                           fontSize: 16,
                           fontWeight: FontWeight.bold),
                     ),

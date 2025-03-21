@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
@@ -42,16 +43,28 @@ class _ServiceDetailsState extends State<ServiceDetails> {
                     ),
                   ),
                 ),
-
-                // 🔹 Title (Centered)
-                const Text(
-                  'TN25-0143',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                Row(
+                  mainAxisSize:
+                      MainAxisSize.min, // Prevents unnecessary stretching
+                  children: [
+                    const SizedBox(width: 8), // Space between icon and text
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width *
+                          0.5, // Responsive width
+                      child: AutoSizeText(
+                        'TN25-0143',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 30, // Max size
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        minFontSize: 12, // Shrinks if needed
+                        overflow: TextOverflow.ellipsis, // Prevents overflow
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
