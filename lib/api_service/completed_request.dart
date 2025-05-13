@@ -5,7 +5,7 @@ class CompletedRequestService {
   final String baseUrl = "http://192.168.43.128/ServiceTrackerGithub/api/completed"; // Replace with your actual base URL
 
 
-  Future<Map<String, dynamic>> fetchOngoingAndPausedRequests() async {
+  Future<Map<String, dynamic>> fetchCompletedRequests() async {
     try {
       final response = await http.get(Uri.parse(baseUrl));
 
