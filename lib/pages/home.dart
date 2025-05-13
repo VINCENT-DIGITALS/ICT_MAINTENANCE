@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _refreshDashboardData() async {
     setState(() {
-   _dashboardFuture = _dashboardService.fetchDashboardData();
+      _dashboardFuture = _dashboardService.fetchDashboardData();
     });
   }
 
@@ -329,6 +329,7 @@ class _HomePageState extends State<HomePage> {
                                       (data['deniedRequests'] as List?)
                                               ?.length ??
                                           0;
+                                  final others = deniedCount + cancelledCount;
 
                                   return ConstrainedBox(
                                     constraints:
@@ -364,8 +365,7 @@ class _HomePageState extends State<HomePage> {
                                           mainValue: '$completedCount',
                                           subValues: [
                                             '$evaluatedCount evaluated',
-                                            '$cancelledCount cancelled',
-                                            '$deniedCount denied',
+                                            '$others others',
                                           ],
                                           route: '/completed',
                                         ),
@@ -695,10 +695,12 @@ class _StatCard extends StatelessWidget {
                     Flexible(
                       flex: 2,
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center, // 👈 Center vertically
+                        mainAxisAlignment:
+                            MainAxisAlignment.center, // 👈 Center vertically
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: subValues
-                            .map((sub) => Expanded( // 👈 Each sub-value takes equal space
+                            .map((sub) => Expanded(
+                                  // 👈 Each sub-value takes equal space
                                   child: Align(
                                     alignment: Alignment.centerLeft,
                                     child: AutoSizeText(
@@ -707,7 +709,8 @@ class _StatCard extends StatelessWidget {
                                       minFontSize: 10,
                                       maxFontSize: 14,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: Colors.black),
+                                      style:
+                                          const TextStyle(color: Colors.black),
                                     ),
                                   ),
                                 ))

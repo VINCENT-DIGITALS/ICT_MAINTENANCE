@@ -41,7 +41,7 @@ class _PickedRequestsState extends State<PickedRequests> {
   final List<String> priorityCategories = [
     "Information Systems Divwwwwwwwwwwwwwwwwwwision",
     "HR Division",
-    "Finance Division", 
+    "Finance Division",
     "Operations Division",
   ];
   String? selectedDivision;
@@ -66,17 +66,17 @@ class _PickedRequestsState extends State<PickedRequests> {
   bool isAscending = true; // default sort A→Z
 // put this at the top of your State class
   final DateFormat _dateFormat = DateFormat('MMMM d, y, hh:mm a');
-  List<String> get allCategories => PickedRequests
-      .where((r) => r.containsKey('category'))
-      .map((r) => r['category'] as String)
-      .toSet()
-      .toList();
+  List<String> get allCategories =>
+      PickedRequests.where((r) => r.containsKey('category'))
+          .map((r) => r['category'] as String)
+          .toSet()
+          .toList();
 
-  List<String> get allSubCategories => PickedRequests
-      .where((r) => r.containsKey('subCategory'))
-      .map((r) => r['subCategory'] as String)
-      .toSet()
-      .toList();
+  List<String> get allSubCategories =>
+      PickedRequests.where((r) => r.containsKey('subCategory'))
+          .map((r) => r['subCategory'] as String)
+          .toSet()
+          .toList();
 
   @override
   void initState() {
@@ -95,8 +95,7 @@ class _PickedRequestsState extends State<PickedRequests> {
       final List<Map<String, dynamic>> transformedRequests =
           response.map((request) {
         return {
-          "title":
-              "TN${request['id'].toString().padLeft(4, '0')} ${request['request_title'] ?? 'No Title'}",
+          "title": "${request['ticket']?["ticket_full"] ?? "Unknown Ticket"}",
           "requester": request["requester_id"] ?? "Unknown Requester",
           "division": request["location"] ?? "Unknown Division",
           "requestedDate": _formatDate(request["created_at"]),
