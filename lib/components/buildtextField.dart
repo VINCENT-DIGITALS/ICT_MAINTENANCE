@@ -17,25 +17,23 @@ Widget buildTextField(
             decoration: InputDecoration(
               labelText: label,
               labelStyle: const TextStyle(
-                fontFamily: 'Inter',
                 color: Colors.black,
                 fontSize: 18,
               ),
               hintStyle: const TextStyle(
-                fontFamily: 'Inter',
                 color: Colors.black,
                 fontSize: 18,
               ),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: fieldState.hasError ? const Color(0xFFFF5963) : Colors.black, // ✅ RED if error, BLACK if okay
+                  color: fieldState.hasError ? const Color(0xFFFF5963) : Color(0xFFB0B0B0), // ✅ RED if error, BLACK if okay
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: fieldState.hasError ? const Color(0xFFFF5963) : const Color(0xFF018203), // RED if error, GREEN if focus
+                  color: fieldState.hasError ? const Color(0xFFFF5963) : Color(0xFFB0B0B0), // RED if error, GREEN if focus
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:servicetracker_app/auth/auth_page.dart';
 import 'package:servicetracker_app/pages/home.dart';
 import 'package:servicetracker_app/pages/incidentReports/editIncidentReport.dart';
 import 'package:servicetracker_app/pages/incidentReports/incidentDetails.dart';
@@ -8,6 +9,7 @@ import 'package:servicetracker_app/pages/incidentReports/newIncidentReport.dart'
 import 'package:servicetracker_app/pages/incidentReports/newIncidentReportFindings.dart';
 import 'package:servicetracker_app/pages/myServices.dart';
 import 'package:servicetracker_app/pages/pendingRequests/pendingRequests.dart';
+import 'package:servicetracker_app/pages/pickedRequests/pickedRequests.dart';
 import 'package:servicetracker_app/pages/request/UpdateRequest.dart';
 import 'package:servicetracker_app/pages/request/newRequest.dart';
 import 'package:servicetracker_app/pages/request/newRequestManualQR.dart';
@@ -55,6 +57,7 @@ class _MyAppState extends State<MyApp> {
       initialRoute: '/', // Set the initial route
       routes: {
         '/': (context) => const SplashScreen(), // Default route
+        '/auth': (context) => const AuthPage(), // Auth route
         '/login': (context) => const LoginPage(),
         '/home': (context) => const HomePage(),
         '/newRequest': (context) =>
@@ -67,6 +70,7 @@ class _MyAppState extends State<MyApp> {
         '/MyServices': (context) => const MyServices(),
         '/IncidentReports': (context) => const IncidentReports(),
         '/PendingRequests': (context) => const PendingRequests(),
+        '/PickedRequests': (context) => const PickedRequests(),
         '/IncidentReportDetails': (context) => const IncidentReportDetails(),
         '/NewIncidentReport': (context) => const NewIncidentReport(),
         '/EditIncidentReport' : (context) => const EditIncidentReport(),

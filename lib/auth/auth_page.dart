@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/pages/home.dart';
 import 'package:servicetracker_app/pages/signIn.dart';
 
@@ -19,7 +20,18 @@ class _AuthPageState extends State<AuthPage> {
   @override
   void initState() {
     super.initState();
-    _navigateToLoginPage();
+    _checkSession();
+  }
+
+  void _checkSession() async {
+    final session = SessionManager();
+    final isLoggedIn = await session.isLoggedIn();
+
+    if (isLoggedIn) {
+      _navigateToHomePage();
+    } else {
+      _navigateToLoginPage();
+    }
   }
 
   @override

@@ -1,7 +1,9 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:servicetracker_app/api_service/home_service.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/services/FormProvider.dart';
@@ -18,11 +20,21 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   bool hasOngoingRepairs = true; // Change to false to test empty state
-
+  DateTime fromDate = DateTime.now();
+  DateTime toDate = DateTime.now();
+  late Future<Map<String, dynamic>> _dashboardFuture;
+  final DashboardService _dashboardService = DashboardService();
   @override
   void initState() {
     super.initState();
+    _dashboardFuture = _dashboardService.fetchDashboardData();
     _checkCameraPermission(); // 🔥 Check permissions on start
+  }
+
+  Future<void> _refreshDashboardData() async {
+    setState(() {
+   _dashboardFuture = _dashboardService.fetchDashboardData();
+    });
   }
 
   /// 🔥 **Check and Request Camera Permission**
@@ -61,296 +73,403 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: CurvedEdgesAppBar(
-          height:
-              MediaQuery.of(context).size.height * 0.13, // 50% of screen height
-          showFooter: false,
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: AutoSizeText(
-                    'Mabuhay, Ranniel!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 30, // Max font size
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    minFontSize: 12, // Set a lower min font size
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/login');
-                  }, // Logout or Profile
-                  icon: const Icon(Icons.logout, color: Colors.white, size: 24,),
-                ),
-              ],
+  Future<void> _pickDate(BuildContext context, bool isFrom) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isFrom ? fromDate : toDate,
+      firstDate: isFrom ? DateTime(2000) : fromDate,
+      lastDate: isFrom ? toDate : DateTime(2100),
+      helpText: isFrom ? 'Select Start Date' : 'Select End Date',
+      fieldHintText: 'dd/MM/yyyy', // for manual typing
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFF007A33), // ← your custom green
             ),
           ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        if (isFrom) {
+          fromDate = picked;
+          if (fromDate.isAfter(toDate)) toDate = fromDate;
+        } else {
+          toDate = picked;
+          if (toDate.isBefore(fromDate)) fromDate = toDate;
+        }
+        _dashboardFuture =
+            fetchFilteredDashboardData(); // refetch with new date range
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _filterByDate(
+    List<dynamic> dataList,
+    DateTime from,
+    DateTime to,
+  ) {
+    return dataList
+        .where((item) {
+          final createdAt = DateTime.tryParse(item['created_at'] ?? '');
+          if (createdAt == null) return false;
+          return createdAt.isAfter(from.subtract(const Duration(days: 1))) &&
+              createdAt.isBefore(to.add(const Duration(days: 1)));
+        })
+        .cast<Map<String, dynamic>>()
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> fetchFilteredDashboardData() async {
+    final data = await DashboardService().fetchDashboardData();
+
+    return {
+      "pendingRequests":
+          _filterByDate(data["pendingRequests"], fromDate, toDate),
+      "pickedRequests": _filterByDate(data["pickedRequests"], fromDate, toDate),
+      "ongoingRequests":
+          _filterByDate(data["ongoingRequests"], fromDate, toDate),
+      "pausedRequests": _filterByDate(data["pausedRequests"], fromDate, toDate),
+      "completedRequests":
+          _filterByDate(data["completedRequests"], fromDate, toDate),
+      "evaluatedRequests":
+          _filterByDate(data["evaluatedRequests"], fromDate, toDate),
+      "cancelledRequests":
+          _filterByDate(data["cancelledRequests"], fromDate, toDate),
+      "deniedRequests": _filterByDate(data["deniedRequests"], fromDate, toDate),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Adjust column count for GridView based on screen width
+    final screenWidth = MediaQuery.of(context).size.width;
+    const spacing = 12.0;
+    const maxCardWidth = 200.0;
+
+// determine how many columns fit (1–4):
+    int crossAxisCount;
+    if (screenWidth < maxCardWidth + spacing) {
+      crossAxisCount = 1;
+    } else if (screenWidth < (maxCardWidth + spacing) * 2) {
+      crossAxisCount = 2;
+    } else if (screenWidth < (maxCardWidth + spacing) * 3) {
+      crossAxisCount = 3;
+    } else {
+      crossAxisCount = 4;
+    }
+
+// compute the grid’s max width so cards don’t stretch:
+    final gridWidth =
+        (maxCardWidth * crossAxisCount) + (spacing * (crossAxisCount - 1));
+    return SafeArea(
+      child: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/Maintenance-Login-bg.png'),
+            fit: BoxFit.cover,
+          ),
         ),
-        backgroundColor: Colors.white,
-
-        /// 🔥 Main Layout with Fixed Bottom Buttons
-        body: Column(
-          children: [
-            /// 🔹 Scrollable Ongoing Repairs
-            Expanded(
-              child: Stack(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: CurvedEdgesAppBar(
+            height: MediaQuery.of(context).size.height * 0.13,
+            showFooter: false,
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SizedBox(
-                    width:
-                        MediaQuery.of(context).size.width * 0.85, // Set width
-                    child: ListView(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 25, 0, 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              /// 🔹 Auto-Resizing Title
-                              Flexible(
-                                child: AutoSizeText(
-                                  "Picked Requests",
-                                  style: TextStyle(
-                                    fontSize: 24, // Max size
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF000000),
-                                  ),
-                                  maxLines: 1,
-                                  minFontSize: 14, // Allows shrinking
-                                ),
-                              ),
-
-                              /// 🔹 Button (Aligned & Responsive)
-                              if (hasOngoingRepairs)
-                                SizedBox(
-                                  width: MediaQuery.of(context).size.width *
-                                      0.35, // Consistent width
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: () {
-                                        Navigator.pushNamed(
-                                            context, '/MyServices');
-                                      },
-                                      child: AutoSizeText(
-                                        "See all services",
-                                        style: TextStyle(
-                                          fontSize: 14, // Max size
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF007A33),
-                                        ),
-                                        maxLines: 1,
-                                        minFontSize: 9,
-                                        softWrap: true,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-
-                        /// 🔹 List of Picked Requests (Or Empty State)
-                        hasOngoingRepairs
-                            ? _buildPickedRequests(context)
-                            : Column(
-                                children: [_buildEmptyPickedState(context)]),
-
-                        /// 🔹 Title: Ongoing Services
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 25, 0, 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Flexible(
-                                child: AutoSizeText(
-                                  "Ongoing Services",
-                                  style: TextStyle(
-                                    fontSize: 24, // Max size
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF000000), // Updated color
-                                  ),
-                                  maxLines: 1,
-                                  minFontSize: 14, // Allows shrinking
-                                ),
-                              ),
-
-                              /// 🔹 Button (Aligned & Responsive)
-                              if (hasOngoingRepairs)
-                                SizedBox(
-                                  width: MediaQuery.of(context).size.width *
-                                      0.35, // Consistent width
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: () {
-                                        Navigator.pushNamed(
-                                            context, '/MyServices');
-                                      },
-                                      child: AutoSizeText(
-                                        "See all services",
-                                        style: TextStyle(
-                                          fontSize: 14, // Max size
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF007A33),
-                                        ),
-                                        maxLines: 1,
-                                        minFontSize: 9,
-                                        softWrap: true,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-
-                        /// 🔹 List of Ongoing Repairs (Or Empty State)
-                        hasOngoingRepairs
-                            ? _buildOngoingRepairs(context)
-                            : Column(
-                                children: [_buildEmptyOngoingState(context)]),
-
-                        const SizedBox(
-                            height:
-                                80), // Extra space to prevent content from being hidden
-                      ],
+                  Expanded(
+                    child: AutoSizeText(
+                      'Mabuhay, Ranniel!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      minFontSize: 12,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-
-                  /// 🔥 Overlay Fade Effect (Shows Scrollable Area)
-                  Positioned(
-                    bottom:
-                        0, // Adjust height to position just above the buttons
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.white,
-                            Colors.white.withOpacity(0),
-                          ],
-                        ),
-                      ),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
+                    icon: const Icon(
+                      Icons.logout,
+                      color: Colors.white,
+                      size: 24,
                     ),
                   ),
                 ],
               ),
             ),
-            // hasOngoingRepairs
-            //     ? Column(
-            //         children: [
-            //           _buildAddRequestButtons(),
-            //           _buildPendingButtons(),
-            //         ],
-            //       )
-            //     :
-            Column(
-              children: [
-                _buildAddRequestButtons(),
-                _buildPendingButtons(context),
-              ],
-            )
+          ),
+          body: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/Maintenance-Login-bg.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _refreshDashboardData,
+                child: ListView(
+                  physics:
+                      const AlwaysScrollableScrollPhysics(), // 👈 Forces scroll
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  children: [
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Date pickers row (responsive)
+                          // Date pickers row (responsive)
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isWide = constraints.maxWidth >
+                                  500; // adjust as needed
 
-            /// 🔹 Fixed Bottom Buttons
-          ],
+                              Widget dateRow = Row(
+                                children: [
+                                  Expanded(
+                                    child: _DatePickerCard(
+                                      label: 'From',
+                                      date: fromDate,
+                                      onTap: () => _pickDate(context, true),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _DatePickerCard(
+                                      label: 'To',
+                                      date: toDate,
+                                      onTap: () => _pickDate(context, false),
+                                    ),
+                                  ),
+                                ],
+                              );
+
+                              return isWide
+                                  ? Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: ConstrainedBox(
+                                        constraints:
+                                            const BoxConstraints(maxWidth: 280),
+                                        child: dateRow,
+                                      ),
+                                    )
+                                  : dateRow;
+                            },
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Responsive Grid
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: gridWidth),
+                              child: FutureBuilder<Map<String, dynamic>>(
+                                future: _dashboardFuture,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                        child: CircularProgressIndicator());
+                                  }
+
+                                  if (snapshot.hasError) {
+                                    return Center(
+                                        child:
+                                            Text('Error: ${snapshot.error}'));
+                                  }
+
+                                  final data = snapshot.data!;
+
+                                  final pendingCount =
+                                      (data['pendingRequests'] as List?)
+                                              ?.length ??
+                                          0;
+                                  final pickedCount =
+                                      (data['pickedRequests'] as List?)
+                                              ?.length ??
+                                          0;
+                                  final ongoingCount =
+                                      (data['ongoingRequests'] as List?)
+                                              ?.length ??
+                                          0;
+                                  final pausedCount =
+                                      (data['pausedRequests'] as List?)
+                                              ?.length ??
+                                          0;
+                                  final completedCount =
+                                      (data['completedRequests'] as List?)
+                                              ?.length ??
+                                          0;
+                                  final evaluatedCount =
+                                      (data['evaluatedRequests'] as List?)
+                                              ?.length ??
+                                          0;
+                                  final cancelledCount =
+                                      (data['cancelledRequests'] as List?)
+                                              ?.length ??
+                                          0;
+                                  final deniedCount =
+                                      (data['deniedRequests'] as List?)
+                                              ?.length ??
+                                          0;
+
+                                  return ConstrainedBox(
+                                    constraints:
+                                        BoxConstraints(maxWidth: gridWidth),
+                                    child: GridView.count(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      crossAxisCount: crossAxisCount,
+                                      crossAxisSpacing: spacing,
+                                      mainAxisSpacing: spacing,
+                                      childAspectRatio:
+                                          maxCardWidth / (maxCardWidth * .8),
+                                      children: [
+                                        _StatCard(
+                                          title: 'PENDING\nREQUESTS',
+                                          mainValue: '$pendingCount',
+                                          route: '/PendingRequests',
+                                        ),
+                                        _StatCard(
+                                          title: 'PICKED\nREQUESTS',
+                                          mainValue: '$pickedCount',
+                                          route: '/PickedRequests',
+                                        ),
+                                        _StatCard(
+                                          title: 'ONGOING\nSERVICES',
+                                          mainValue: '$ongoingCount',
+                                          subValues: ['$pausedCount paused'],
+                                          route: '/ongoing',
+                                        ),
+                                        _StatCard(
+                                          title: 'COMPLETED\nSERVICES',
+                                          mainValue: '$completedCount',
+                                          subValues: [
+                                            '$evaluatedCount evaluated',
+                                            '$cancelledCount cancelled',
+                                            '$deniedCount denied',
+                                          ],
+                                          route: '/completed',
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+
+                          _buildButtons(
+                            "ADD NEW SERVICE REQUEST",
+                            () => Navigator.pushNamed(context, '/newRequest'),
+                            context,
+                            textColor: const Color(0xFF004D1E),
+                            buttonColor: const Color(0xFF45CF7F),
+                          ),
+
+                          _buildButtons(
+                            "INCIDENT REPORTS",
+                            () => Navigator.pushNamed(
+                                context, '/IncidentReports'),
+                            context,
+                            textColor: const Color(0xFFFFFFFF),
+                            buttonColor: const Color(0xFF007A33),
+                          ),
+
+                          _buildButtons(
+                            "ADD NEW INCIDENT",
+                            () => Navigator.pushNamed(
+                                context, '/PendingRequests'),
+                            context,
+                            textColor: const Color(0xFF004D1E),
+                            buttonColor: const Color(0xFF45CF7F),
+                          ),
+
+                          // Action buttons (you can add the buttons back here as needed)
+                          // _ActionButton(
+                          //     text: 'ADD NEW SERVICE REQUEST',
+                          //     onTap: _onAddService),
+                          // const SizedBox(height: 12),
+                          // _ActionButton(
+                          //     text: 'INCIDENT REPORTS', onTap: _onIncidentReports),
+                          // const SizedBox(height: 12),
+                          // _ActionButton(
+                          //     text: 'ADD NEW INCIDENT', onTap: _onAddIncident),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  /// 🔹 Open QR Scanner
-  void _scanQRCode() async {
-    final String? scannedValue = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const QRScannerScreen()),
-    );
-
-    if (scannedValue != null) {
-      // Handle scanned value (e.g., show a dialog or navigate)
-      _showScannedDialog(scannedValue);
-    }
-  }
-
-  /// 🔹 Show Scanned Value in a Dialog
-  void _showScannedDialog(String scannedValue) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Scanned Code"),
-        content: Text("Scanned Value: $scannedValue"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 🛠 Bottom Section with Buttons
-  Widget _buildAddRequestButtons() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      color: Colors.white,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-              padding: const EdgeInsets.symmetric(
-                  vertical: 10), // Simplified padding
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 2222222),
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width *
-                      0.85, // 90% of screen width
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/newRequest');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007A33),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      "ADD NEW REQUEST",
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                  ),
-                ),
-              ))
-
-          /// 🔥 Add New Request Button (Always Visible)
-        ],
+  Widget _buildButtons(
+    String text,
+    VoidCallback onPressed,
+    BuildContext context, {
+    required Color textColor,
+    required Color buttonColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 2222222),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              final formProvider =
+                  Provider.of<FormProvider>(context, listen: false);
+              formProvider.resetForm(); // ✅ Clear form before starting
+              onPressed(); // ✅ Continue navigation or action
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonColor,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildPendingButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.18, // 12% of screen height
       padding: const EdgeInsets.fromLTRB(30, 15, 30, 15),
@@ -368,7 +487,7 @@ class _HomePageState extends State<HomePage> {
             Navigator.pushNamed(context, '/IncidentReports');
           }, context),
           const SizedBox(width: 10), // Space between buttons
-          _buildActionButton("PENDING REQUESTS", () {
+          _buildActionButton("ADD NEW INCIDENT", () {
             Navigator.pushNamed(context, '/PendingRequests');
           }, context),
         ],
@@ -382,11 +501,12 @@ class _HomePageState extends State<HomePage> {
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.85, // Set button width
         child: ElevatedButton(
-           onPressed: () {
-          final formProvider = Provider.of<FormProvider>(context, listen: false);
-          formProvider.resetForm(); // ✅ Clear form before starting
-          onPressed(); // ✅ Continue navigation or action
-        },
+          onPressed: () {
+            final formProvider =
+                Provider.of<FormProvider>(context, listen: false);
+            formProvider.resetForm(); // ✅ Clear form before starting
+            onPressed(); // ✅ Continue navigation or action
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF14213D), // Dark blue
             padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
@@ -429,114 +549,65 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  /// 🛠 Builds a list of Ongoing Repairs (Replace with your real data)
-  Widget _buildPickedRequests(BuildContext context) {
-    return Column(
-      children: List.generate(
-        1,
-        (index) => Container(
-          width:
-              MediaQuery.of(context).size.width * 0.85, // 90% of screen width
+// ──────────────────────────────────────────────────────────────────────────
+// Date‑picker card
+class _DatePickerCard extends StatelessWidget {
+  final String label;
+  final DateTime date;
+  final VoidCallback onTap;
 
-          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+  const _DatePickerCard({
+    required this.label,
+    required this.date,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext c) {
+    return SizedBox(
+      height: 48, // reduce overall height here
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 8, vertical: 4), // less padding
           decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white),
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              const Text(
-                "TN25-0143 Computer Repair",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF000000),
-                    fontSize: 18),
-              ),
-              const SizedBox(height: 5),
-              const Text(
-                "Mighty Jemuel Sotto",
-                style: TextStyle(
-                    height: 1.0, fontSize: 14, color: Color(0xFF707070)),
-              ),
-              const Text(
-                "Information Systems Division",
-                style: TextStyle(
-                  height: 1.0, // Reduces spacing
-                  color: Color(0xFF707070),
-                  fontSize: 14,
-                ),
-              ),
-              const Text(
-                "Requested: February 14, 2025, 10:00 AM",
-                style: TextStyle(
-                  height: 1.0, // Reduces spacing
-                  color: Color(0xFF707070),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "Subject of request",
-                style: TextStyle(
-                  color: Color(0xFF000000),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  height: 1.0, // Reduces spacing
-                ),
-              ),
-              const SizedBox(height: 2), // Reduce spacing here
-              Text(
-                "asasd cscsdcvsdvv cscsdcvsdvv cscsdcvsdvvcscsdcvsdvvcscsdcvscscscscscsdcvsdvvcscsdcvsdvvcscsdcvsdvvc scsdcvsdvvcscsdcvsdvvdcvsdvvcscsdcvsdvvcscsdcvsdvvcsdcvsdvvcscsdcvsdvvcscsdcvsdvvdvvcscsdcvsdvv cscsdcvsdvv dvv asasd cscsdcvsdvv dvvsdsdsdsdsdsdsdsdsc dvddv ",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                  color: Color(0xFF000000),
-                  height: 1.0, // Adjust line height for tighter spacing
-                ),
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 4,
-              ),
-
-              const SizedBox(height: 20),
-              // GREEN BUTTON
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[400],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  minimumSize:
-                      const Size(double.infinity, 50), // Full width button
-                ),
-                child: const Text(
-                  "COMPLETE DETAILS",
-                  style: TextStyle(
-                    color: Color(0xFF007A33),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // TEXT BUTTON (Remove from my list)
-              Center(
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Remove from my list",
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  mainAxisAlignment:
+                      MainAxisAlignment.center, // center vertically
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10, // smaller
+                      ),
                     ),
-                  ),
+                    Text(
+                      DateFormat('dd MMM yyyy').format(date),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const Icon(
+                Icons.calendar_month_outlined,
+                color: Colors.white,
+                size: 20, // smaller icon
               ),
             ],
           ),
@@ -544,167 +615,140 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  /// 🛠 Builds a list of Ongoing Repairs (Replace with your real data)
-  Widget _buildOngoingRepairs(BuildContext context) {
-    return Column(
-      children: List.generate(
-        1,
-        (index) => Container(
-          width:
-              MediaQuery.of(context).size.width * 0.85, // 90% of screen width
-          // margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "TN25-0143 Computer Repair",
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-              ),
-              const SizedBox(height: 5),
-              const Text(
-                "Mighty Jemuel Sotto",
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: const Color(0xFF707070),
-                  height: 1.2, // Adjust line height for tighter spacing
-                ),
-              ),
-              const Text(
-                "Information Systems Division",
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: const Color(0xFF707070),
+// ──────────────────────────────────────────────────────────────────────────
+// Statistic card
 
-                  height: 1.2, // Adjust line height for tighter spacing
-                ),
-              ),
-              const Text(
-                "Requested: February 14, 2025, 10:00 AM",
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: const Color(0xFF707070),
-                  height: 1.2, // Adjust line height for tighter spacing
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Text(
-                "Current Location: ISD Server Room",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                  height: 1.2, // Adjust line height for tighter spacing
-                ),
-              ),
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String mainValue;
+  final List<String> subValues;
+  final String route;
 
-              const Text(
-                "Status: Serviceable - for repair",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                  height: 1.2, // Adjust line height for tighter spacing
-                ),
-              ),
+  const _StatCard({
+    required this.title,
+    required this.mainValue,
+    this.subValues = const [],
+    required this.route,
+  });
 
-              const Text(
-                "Last Updated: February 19, 2025 | 3:00PM",
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, route);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: const BoxDecoration(
+                color: Color(0xFF007A33),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                  height: 1.2, // Adjust line height for tighter spacing
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
-              const SizedBox(height: 20),
-              // GREEN BUTTON
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[400],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  minimumSize:
-                      const Size(double.infinity, 50), // Full width button
-                ),
-                child: const Text(
-                  "COMPLETE DETAILS",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            ),
 
-              const SizedBox(height: 10),
-            ],
-          ),
+            // Body
+            Expanded(
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      flex: 2,
+                      child: AutoSizeText(
+                        mainValue,
+                        maxLines: 1,
+                        minFontSize: 20,
+                        style: const TextStyle(
+                          fontSize: 50,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      flex: 2,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center, // 👈 Center vertically
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: subValues
+                            .map((sub) => Expanded( // 👈 Each sub-value takes equal space
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: AutoSizeText(
+                                      sub,
+                                      maxLines: 1,
+                                      minFontSize: 10,
+                                      maxFontSize: 14,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  /// 🛠 Shows Empty State when there are no Ongoing Repairs
-  Widget _buildEmptyPickedState(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.85, // 90% of screen width
-
-      padding: const EdgeInsets.fromLTRB(
-          20, 5, 20, 5), // Adds spacing inside the container
-      decoration: BoxDecoration(
-        color: Colors.grey[200], // Light gray background
-        borderRadius: BorderRadius.circular(12), // Rounded corners
-      ),
-      child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center, // Centers content vertically
-        children: const [
-          // SizedBox(height: 5),
-          Text(
-            "Select from pending requests to get started.",
-            style: TextStyle(fontSize: 14, color: Color(0xFF707070)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyOngoingState(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.85, // 90% of screen width
-
-      padding: const EdgeInsets.fromLTRB(
-          30, 5, 30, 5), // Adds spacing inside the container
-      decoration: BoxDecoration(
-        color: Colors.grey[200], // Light gray background
-        borderRadius: BorderRadius.circular(12), // Rounded corners
-      ),
-      child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center, // Centers content vertically
-        children: const [
-          Text(
-            "You have no ongoing services.", // Matches the text in the image
-            style: TextStyle(fontSize: 16, color: Color(0xFF707070)),
-            textAlign: TextAlign.center,
-          ),
-          // SizedBox(height: 5),
-          Text(
-            "Add a new request or select from pending requests to get started.",
-            style: TextStyle(fontSize: 14, color: Color(0xFF707070)),
-            textAlign: TextAlign.center,
-          ),
-        ],
+// ──────────────────────────────────────────────────────────────────────────
+// Large full‑width button
+class _ActionButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  const _ActionButton({required this.text, required this.onTap});
+  @override
+  Widget build(BuildContext c) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor:
+              text.contains('INCIDENT') ? Color(0xFF007A33) : Color(0xFF27AE60),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
       ),
     );
   }

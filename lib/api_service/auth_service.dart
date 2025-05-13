@@ -2,21 +2,46 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  final String baseUrl =
-      "http://vincent-digitals.atwebpages.com/flutter_api/auth/login.php"; // Change this
+  final String baseUrl = "http://192.168.43.128/ServiceTrackerGithub/api/login";
 
-  Future<bool> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String philriceId, String password) async {
     final response = await http.post(
-      Uri.parse(baseUrl),
-      body: jsonEncode({"email": email, "password": password}),
-      headers: {"Content-Type": "application/json"},
+      Uri.parse("http://192.168.43.128/ServiceTrackerGithub/api/login"),
+      body: jsonEncode({
+        "philrice_id": philriceId,
+        "password": password,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
     );
+    // final response = await http.post(
+    //   Uri.parse(
+    //       "http://vincent-digitals.atwebpages.com/flutter_api/auth/login.php"),
+    //   body: jsonEncode({
+    //     "philrice_id": philriceId,
+    //     "password": password,
+    //   }),
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     "Accept": "application/json",
+    //   },
+    // );
 
-    final data = jsonDecode(response.body);
-    if (data["success"]) {
-      return true;
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return {
+        "success": true,
+        "token": data["token"],
+        "user": data["user"],
+      };
     } else {
-      return false;
+      final error = jsonDecode(response.body);
+      return {
+        "success": false,
+        "message": error["error"] ?? "Login failed",
+      };
     }
   }
 }

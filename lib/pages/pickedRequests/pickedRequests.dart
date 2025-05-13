@@ -5,26 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:servicetracker_app/api_service/pendingRequest.dart';
+import 'package:servicetracker_app/api_service/picked_request.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 
-class PendingRequests extends StatefulWidget {
+class PickedRequests extends StatefulWidget {
   final String currentPage;
 
-  const PendingRequests({Key? key, this.currentPage = 'PendingRequests'})
+  const PickedRequests({Key? key, this.currentPage = 'PickedRequests'})
       : super(key: key);
 
   @override
-  _PendingRequestsState createState() => _PendingRequestsState();
+  _PickedRequestsState createState() => _PickedRequestsState();
 }
 
-class _PendingRequestsState extends State<PendingRequests> {
+class _PickedRequestsState extends State<PickedRequests> {
   final ScrollController _scrollController = ScrollController();
   bool hasReports = true; // Change to false to test empty state
-  List<Map<String, dynamic>> pendingRequests = [];
+  List<Map<String, dynamic>> PickedRequests = [];
 
   String? selectedReportCategory;
   String? selectedPriorityCategory;
@@ -40,7 +41,7 @@ class _PendingRequestsState extends State<PendingRequests> {
   final List<String> priorityCategories = [
     "Information Systems Divwwwwwwwwwwwwwwwwwwision",
     "HR Division",
-    "Finance Division",
+    "Finance Division", 
     "Operations Division",
   ];
   String? selectedDivision;
@@ -52,10 +53,10 @@ class _PendingRequestsState extends State<PendingRequests> {
   DateTime lastUpdated = DateTime.now();
 
   List<String> get allDivisions =>
-      pendingRequests.map((r) => r['division'] as String).toSet().toList();
+      PickedRequests.map((r) => r['division'] as String).toSet().toList();
 
   List<String> get allRequesters =>
-      pendingRequests.map((r) => r['requester'] as String).toSet().toList();
+      PickedRequests.map((r) => r['requester'] as String).toSet().toList();
   get http => null;
 
   // ─── new filter state ─────────────────────────
@@ -65,13 +66,13 @@ class _PendingRequestsState extends State<PendingRequests> {
   bool isAscending = true; // default sort A→Z
 // put this at the top of your State class
   final DateFormat _dateFormat = DateFormat('MMMM d, y, hh:mm a');
-  List<String> get allCategories => pendingRequests
+  List<String> get allCategories => PickedRequests
       .where((r) => r.containsKey('category'))
       .map((r) => r['category'] as String)
       .toSet()
       .toList();
 
-  List<String> get allSubCategories => pendingRequests
+  List<String> get allSubCategories => PickedRequests
       .where((r) => r.containsKey('subCategory'))
       .map((r) => r['subCategory'] as String)
       .toSet()
@@ -81,15 +82,15 @@ class _PendingRequestsState extends State<PendingRequests> {
   void initState() {
     super.initState();
     // fetchRepairsData();
-    _fetchAndSetPendingRequests();
+    _fetchAndSetPickedRequests();
     searchController.addListener(_applyFilters);
   }
 
-  Future<void> _fetchAndSetPendingRequests() async {
+  Future<void> _fetchAndSetPickedRequests() async {
     try {
-      final service = PendingRequestService();
+      final service = PickedRequestsService();
       final List<Map<String, dynamic>> response =
-          await service.fetchPendingRequests();
+          await service.fetchPickedRequests();
 
       final List<Map<String, dynamic>> transformedRequests =
           response.map((request) {
@@ -108,8 +109,8 @@ class _PendingRequestsState extends State<PendingRequests> {
       }).toList();
 
       setState(() {
-        pendingRequests = transformedRequests;
-        filteredRequests = List.from(pendingRequests);
+        PickedRequests = transformedRequests;
+        filteredRequests = List.from(PickedRequests);
       });
     } catch (e) {
       print("Error fetching pending requests: $e");
@@ -159,8 +160,8 @@ class _PendingRequestsState extends State<PendingRequests> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       setState(() {
-        pendingRequests =
-            data['pendingRequests']; // Replace with actual API response key
+        PickedRequests =
+            data['pickedRequests']; // Replace with actual API response key
       });
     } else {
       throw Exception('Failed to load data');
@@ -275,7 +276,7 @@ class _PendingRequestsState extends State<PendingRequests> {
 
     setState(() {
       // Step 1: filter
-      filteredRequests = pendingRequests.where((r) {
+      filteredRequests = PickedRequests.where((r) {
         // 1️⃣ Search text match
         final title = (r['title'] as String).toLowerCase();
         final requester = (r['requester'] as String).toLowerCase();
@@ -667,7 +668,7 @@ class _PendingRequestsState extends State<PendingRequests> {
 
   Future<void> refreshDashboardData() async {
     setState(() {
-      _fetchAndSetPendingRequests();
+      _fetchAndSetPickedRequests();
       searchController.addListener(_applyFilters);
     });
   }
@@ -704,7 +705,7 @@ class _PendingRequestsState extends State<PendingRequests> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Pending Requests',
+                    'Picked Requests',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 30,

@@ -163,6 +163,7 @@ class _NewRequestState extends State<NewRequest> {
         appBar: CurvedEdgesAppBar(
           height: MediaQuery.of(context).size.height * 0.13,
           showFooter: false,
+          backgroundColor: const Color(0xFF14213D),
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),

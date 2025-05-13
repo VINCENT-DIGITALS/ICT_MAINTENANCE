@@ -1,9 +1,10 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/api_service/auth_service.dart';
+import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/buildtextField.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import 'package:servicetracker_app/pages/home.dart';
 
 class LoginPage extends StatefulWidget {
@@ -24,6 +25,7 @@ class _LoginPageState extends State<LoginPage>
   // Password visibility
   bool _passwordVisible = false;
   final AuthService authService = AuthService();
+  final session = SessionManager();
   @override
   void initState() {
     super.initState();
@@ -37,16 +39,17 @@ class _LoginPageState extends State<LoginPage>
     setState(() {
       isLoading = true;
     });
-    bool success =
+    final result =
         await authService.login(emailController.text, passwordController.text);
-    if (success) {
+    if (result["success"]) {
+      await session.saveSession(result['token'], result['user']);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Login Successful!")));
       if (context.mounted) {
         setState(() {
           isLoading = false;
         });
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/auth');
       }
     } else {
       ScaffoldMessenger.of(context)
@@ -58,7 +61,7 @@ class _LoginPageState extends State<LoginPage>
         // setState(() {
         //   isLoading = false;
         // });
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/auth');
       }
     }
   }
@@ -84,55 +87,100 @@ class _LoginPageState extends State<LoginPage>
 
     return Scaffold(
       resizeToAvoidBottomInset:
-          true, // Allows the body to resize when keyboard appears
+          false, // Allows the body to resize when keyboard appears
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: ClampingScrollPhysics(), // Prevent excessive scrolling
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity, // Ensures full width
-                child: CurvedEdgesAppBar(
-                  height: MediaQuery.of(context).size.height * 0.5,
-                  showFooter: true,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircleAvatar(
-                          radius: 40, backgroundColor: Colors.white),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'ICT Maintenance',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                SingleChildScrollView(
+                  physics: ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            child: CurvedEdgesAppBar(
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              showFooter: true,
+                              backgroundImage:
+                                  'assets/images/Maintenance-Login-bg.png',
+                              child: const Center(
+                                child: Text(
+                                  'ICT Maintenance & Service Management',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedPadding(
+                            duration: Duration(milliseconds: 200),
+                            padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom),
+                            child: _buildLoginForm(
+                                MediaQuery.of(context).size.width),
+                          ),
+                          SizedBox(
+                              height:
+                                  100), // Prevent SignIn button from being too close to footer
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Sticky Footer
+                Positioned(
+                  bottom: constraints.maxHeight * 0.015,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(
+                                text:
+                                    "© 2025 PhilRice - Information Systems Division",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: "Roboto",
+                                ),
+                              ),
+                              TextSpan(
+                                text: ". All rights reserved.",
+                                style: GoogleFonts.roboto(
+                                  fontSize: 12,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              AnimatedPadding(
-                duration: Duration(milliseconds: 200),
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
-                child: _buildLoginForm(containerWidth),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10.0),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Text(
-                    "DA - Philippine Rice Research Institute",
-                    style: TextStyle(fontSize: 12, color: Colors.black),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -175,7 +223,7 @@ class _LoginPageState extends State<LoginPage>
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width *
                                 0.85, // 90% of screen width
-                            child: buildTextField(" ID Number", emailController),
+                            child: buildTextField("Username", emailController),
                             //  TextFormField(
                             //   controller: emailController,
                             //   autofocus: false,
@@ -282,7 +330,7 @@ class _LoginPageState extends State<LoginPage>
                                   ),
                                   enabledBorder: const OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: Colors.black,
+                                      color: Color(0xFFB0B0B0),
                                       width: 2,
                                     ),
                                     borderRadius:
@@ -343,7 +391,7 @@ class _LoginPageState extends State<LoginPage>
                         children: [
                           Padding(
                             padding: const EdgeInsetsDirectional.fromSTEB(
-                                0, 10, 0, 0),
+                                0, 15, 0, 0),
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(
                                   maxWidth: 500), // Max width of 400px
@@ -364,11 +412,16 @@ class _LoginPageState extends State<LoginPage>
                                         const Color(0xFF007A33), // Button color
                                   ),
                                   child: isLoading
-                                      ? const CircularProgressIndicator(
-                                          color:
-                                              Colors.white) // Loading indicator
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
                                       : const Text(
-                                          "Sign In",
+                                          "LOG IN",
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,

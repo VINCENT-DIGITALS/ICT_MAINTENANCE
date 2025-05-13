@@ -18,50 +18,59 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(const Duration(milliseconds: 1300)).then((value) {
       if (context.mounted) {
-        Navigator.pushNamed(context, '/login');
+        Navigator.pushNamed(context, '/auth');
       }
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final theme = Theme.of(context);
+@override
+Widget build(BuildContext context) {
+  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  final theme = Theme.of(context);
+  final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      body: Align(
+  // Example: 10% of screen width as padding
+  final horizontalPadding = screenWidth * 0.1;
+
+  return Scaffold(
+    body: Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/Maintenance-Login-bg.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Align(
         alignment: Alignment.center,
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Column(
-            children: [
-              Image.asset(isDarkMode ? AppIcon.logoDark : AppIcon.logoWhite,
-                  height: 130, width: 130),
-              const SizedBox(height: 15),
-              // App Name
-              Text(
-                'Service Tracker',
-                style: theme.textTheme.headlineMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Image.asset(
+                //   isDarkMode ? AppIcon.logoDark : AppIcon.logoWhite,
+                //   height: 130,
+                //   width: 130,
+                // ),
+                const SizedBox(height: 15),
+                Text(
+                  'ICT Maintenance & Service Management',
+                  style: theme.textTheme.headlineMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                    color: Colors.white,
+                    fontSize: 90,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-
-              // Description text
-              Text(
-                'Thesadasdasdad for\nasdasdadasdsdad',
-                style: theme.textTheme.bodySmall!.copyWith(
-                  fontSize: 16,
-                  color: theme.textTheme.bodySmall!.color!.withOpacity(0.7),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
