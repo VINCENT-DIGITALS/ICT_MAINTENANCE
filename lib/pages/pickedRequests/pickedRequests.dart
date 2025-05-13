@@ -80,11 +80,19 @@ class _PickedRequestsState extends State<PickedRequests> {
       .toSet()
       .toList();
 
+  // Add these new filtered lists to your state class
+  List<String> filteredCategories = [];
+  List<String> filteredDivisions = [];
+
   @override
   void initState() {
     super.initState();
-    // fetchRepairsData();
+
     _fetchAndSetPickedRequests();
+
+    // Initialize filtered lists
+    filteredCategories = allCategories;
+    filteredDivisions = allDivisions;
     searchController.addListener(_applyFilters);
   }
 
@@ -168,21 +176,6 @@ class _PickedRequestsState extends State<PickedRequests> {
     final suffix = date.hour >= 12 ? "PM" : "AM";
     final minute = date.minute.toString().padLeft(2, '0');
     return "$hour:$minute $suffix";
-  }
-
-  Future<void> fetchRepairsData() async {
-    final response =
-        await http.get(Uri.parse('https://your-api-url.com/repairs'));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        pendingRequests =
-            data['pendingRequests']; // Replace with actual API response key
-      });
-    } else {
-      throw Exception('Failed to load data');
-    }
   }
 
   @override
@@ -307,6 +300,36 @@ class _PickedRequestsState extends State<PickedRequests> {
     Future.delayed(Duration(seconds: 2), () {
       overlayEntry.remove();
     });
+  }
+
+// Create a method to filter dropdown options
+  void _filterDropdownOptions(String? category, String? division) {
+    List<Map<String, dynamic>> sourceList = pendingRequests;
+
+    // If both are null, show all options
+    if (category == null && division == null) {
+      filteredCategories = allCategories;
+      filteredDivisions = allDivisions;
+      return;
+    }
+
+    // Filter divisions based on selected category
+    if (category != null) {
+      filteredDivisions = sourceList
+          .where((r) => r['category'] == category)
+          .map((r) => r['division'] as String)
+          .toSet()
+          .toList();
+    }
+
+    // Filter categories based on selected division
+    if (division != null) {
+      filteredCategories = sourceList
+          .where((r) => r['division'] == division)
+          .map((r) => r['category'] as String)
+          .toSet()
+          .toList();
+    }
   }
 
   // 3️⃣ Filtering logic
@@ -488,17 +511,29 @@ class _PickedRequestsState extends State<PickedRequests> {
                               label: 'Service Category',
                               value: selectedCategory,
                               hint: 'Select Service Category',
-                              items: allCategories,
-                              onChanged: (v) =>
-                                  setModalState(() => selectedCategory = v),
+                              items: filteredCategories.isEmpty
+                                  ? allCategories
+                                  : filteredCategories,
+                              onChanged: (v) {
+                                setModalState(() {
+                                  selectedCategory = v;
+                                  _filterDropdownOptions(v, selectedDivision);
+                                });
+                              },
                             ),
                             _buildDropdownField(
                               label: 'Location',
                               value: selectedDivision,
                               hint: 'Select Location',
-                              items: allDivisions,
-                              onChanged: (v) =>
-                                  setModalState(() => selectedDivision = v),
+                              items: filteredDivisions.isEmpty
+                                  ? allDivisions
+                                  : filteredDivisions,
+                              onChanged: (v) {
+                                setModalState(() {
+                                  selectedDivision = v;
+                                  _filterDropdownOptions(selectedCategory, v);
+                                });
+                              },
                             ),
 
                             const SizedBox(height: 5),
@@ -615,19 +650,32 @@ class _PickedRequestsState extends State<PickedRequests> {
   }
 
   Future<void> _pickDate(BuildContext context, bool isFrom) async {
+    // Determine date constraints
+    DateTime initialDate =
+        isFrom ? (fromDate ?? DateTime.now()) : (toDate ?? DateTime.now());
+
+    // If we're picking the end date and a start date exists,
+    // ensure the initial end date is after the start date
+    if (!isFrom && fromDate != null && initialDate.isBefore(fromDate!)) {
+      initialDate = fromDate!.add(const Duration(days: 1));
+    }
+
+    // Set first and last dates with proper constraints
+    DateTime firstDate = isFrom ? DateTime(2000) : (fromDate ?? DateTime(2000));
+    DateTime lastDate = isFrom ? (toDate ?? DateTime(2100)) : DateTime(2100);
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate:
-          isFrom ? fromDate ?? DateTime.now() : toDate ?? DateTime.now(),
-      firstDate: isFrom ? DateTime(2000) : fromDate ?? DateTime(2000),
-      lastDate: isFrom ? toDate ?? DateTime(2100) : DateTime(2100),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
       helpText: isFrom ? 'Select Start Date' : 'Select End Date',
-      fieldHintText: 'dd/MM/yyyy', // for manual typing
+      fieldHintText: 'dd/MM/yyyy',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: const Color(0xFF007A33), // ← your custom green
+              primary: const Color(0xFF007A33),
             ),
           ),
           child: child!,
@@ -636,64 +684,28 @@ class _PickedRequestsState extends State<PickedRequests> {
     );
 
     if (picked != null) {
+      // This updates the parent widget's state
       setState(() {
         if (isFrom) {
           fromDate = picked;
-          // If fromDate is set, ensure toDate is set too
-          if (toDate == null) {
-            // Optionally show an alert or do something else here to notify the user
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text('Date Required'),
-                  content: Text('Please select the end date.'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('OK'),
-                    ),
-                  ],
-                );
-              },
-            );
+
+          // Auto-adjust end date if it's before start date
+          if (toDate != null && picked.isAfter(toDate!)) {
+            toDate = picked;
           }
         } else {
           toDate = picked;
-          // If toDate is set, ensure fromDate is set too
-          if (fromDate == null) {
-            // Optionally show an alert or do something else here to notify the user
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text('Date Required'),
-                  content: Text('Please select the start date.'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('OK'),
-                    ),
-                  ],
-                );
-              },
-            );
-          }
-        }
 
-        // Auto adjust the other date if one is earlier
-        if (fromDate != null && toDate != null) {
-          if (fromDate!.isAfter(toDate!)) {
-            toDate = fromDate; // auto adjust
-          } else if (toDate!.isBefore(fromDate!)) {
-            fromDate = toDate; // auto adjust
+          // Auto-adjust start date if it's after end date
+          if (fromDate != null && picked.isBefore(fromDate!)) {
+            fromDate = picked;
           }
         }
       });
+
+      // Force the filter dialog to rebuild with updated dates
+      Navigator.of(context).pop();
+      _onFilterPressed();
     }
   }
 
@@ -808,7 +820,10 @@ class _PickedRequestsState extends State<PickedRequests> {
         child: ListView(
           physics:
               const AlwaysScrollableScrollPhysics(), // Forces pull even when not scrollable
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.075,
+          ),
+
           children: [
             const SizedBox(height: 15),
 
@@ -1109,7 +1124,7 @@ class _PickedRequestsState extends State<PickedRequests> {
 
                 _buildButton(
                   context,
-                  "PICK THIS REQUEST",
+                  "START SERVICE",
                   const Color(0xFF007A33),
                   () {
                     // Add action here
@@ -1150,7 +1165,7 @@ class _PickedRequestsState extends State<PickedRequests> {
           ),
         ),
         child: const Text(
-          "PICK THIS REQUEST",
+          "START SERVICE",
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -1333,7 +1348,7 @@ class RequestDetailsModal extends StatelessWidget {
                   const SizedBox(height: 20),
                   buildButton(
                     context,
-                    "PICK THIS REQUEST",
+                    "START SERVICE",
                     const Color(0xFF007A33),
                     () {
                       Navigator.pop(context);
@@ -1351,7 +1366,7 @@ class RequestDetailsModal extends StatelessWidget {
 
 class _DatePickerCard extends StatelessWidget {
   final String label;
-  final DateTime? date; // Make it nullable
+  final DateTime? date;
   final VoidCallback onTap;
 
   const _DatePickerCard({
@@ -1390,11 +1405,12 @@ class _DatePickerCard extends StatelessWidget {
                     Text(
                       date != null
                           ? DateFormat('dd MMM yyyy').format(date!)
-                          : '', // Show nothing if date is null
-                      style: const TextStyle(
-                        color: Colors.black,
+                          : 'Select date', // Show placeholder text
+                      style: TextStyle(
+                        color: date != null ? Colors.black : Colors.grey,
                         fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                            date != null ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],

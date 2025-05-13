@@ -4,27 +4,31 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:servicetracker_app/api_service/completed_request.dart';
+import 'package:servicetracker_app/api_service/ongoing_request.dart';
 import 'package:servicetracker_app/api_service/pendingRequest.dart';
+import 'package:servicetracker_app/api_service/picked_request.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 
-class PendingRequests extends StatefulWidget {
+import '../../auth/sessionmanager.dart';
+
+class CompletedRequests extends StatefulWidget {
   final String currentPage;
 
-  const PendingRequests({Key? key, this.currentPage = 'PendingRequests'})
+  const CompletedRequests({Key? key, this.currentPage = 'CompletedRequests'})
       : super(key: key);
 
   @override
-  _PendingRequestsState createState() => _PendingRequestsState();
+  _CompletedRequestsState createState() => _CompletedRequestsState();
 }
 
-class _PendingRequestsState extends State<PendingRequests> {
+class _CompletedRequestsState extends State<CompletedRequests> {
   final ScrollController _scrollController = ScrollController();
   bool hasReports = true; // Change to false to test empty state
-  List<Map<String, dynamic>> pendingRequests = [];
 
   String? selectedReportCategory;
   String? selectedPriorityCategory;
@@ -51,13 +55,6 @@ class _PendingRequestsState extends State<PendingRequests> {
   DateTime? toDate; // Nullable DateTime
   DateTime lastUpdated = DateTime.now();
 
-  List<String> get allDivisions =>
-      pendingRequests.map((r) => r['division'] as String).toSet().toList();
-
-  List<String> get allRequesters =>
-      pendingRequests.map((r) => r['requester'] as String).toSet().toList();
-  get http => null;
-
   // ─── new filter state ─────────────────────────
   String? selectedCategory;
   String? selectedSubCategory;
@@ -65,18 +62,42 @@ class _PendingRequestsState extends State<PendingRequests> {
   bool isAscending = true; // default sort A→Z
 // put this at the top of your State class
   final DateFormat _dateFormat = DateFormat('MMMM d, y, hh:mm a');
-  List<String> get allCategories => pendingRequests
-      .where((r) => r.containsKey('category'))
-      .map((r) => r['category'] as String)
-      .toSet()
-      .toList();
+// Replace these getters with these updated versions
+  List<String> get allDivisions {
+    List<Map<String, dynamic>> sourceList =
+        isPausedSelected ? pausedRequests : ongoingRequests;
+    return sourceList.map((r) => r['division'] as String).toSet().toList();
+  }
 
-  List<String> get allSubCategories => pendingRequests
-      .where((r) => r.containsKey('subCategory'))
-      .map((r) => r['subCategory'] as String)
-      .toSet()
-      .toList();
+  List<String> get allRequesters {
+    List<Map<String, dynamic>> sourceList =
+        isPausedSelected ? pausedRequests : ongoingRequests;
+    return sourceList.map((r) => r['requester'] as String).toSet().toList();
+  }
 
+  List<String> get allCategories {
+    List<Map<String, dynamic>> sourceList =
+        isPausedSelected ? pausedRequests : ongoingRequests;
+    return sourceList
+        .where((r) => r.containsKey('category'))
+        .map((r) => r['category'] as String)
+        .toSet()
+        .toList();
+  }
+
+  List<String> get allSubCategories {
+    List<Map<String, dynamic>> sourceList =
+        isPausedSelected ? pausedRequests : ongoingRequests;
+    return sourceList
+        .where((r) => r.containsKey('subCategory'))
+        .map((r) => r['subCategory'] as String)
+        .toSet()
+        .toList();
+  }
+
+  List<Map<String, dynamic>> pausedRequests = [];
+  List<Map<String, dynamic>> ongoingRequests = [];
+  bool isPausedSelected = false;
   // Add these new filtered lists to your state class
   List<String> filteredCategories = [];
   List<String> filteredDivisions = [];
@@ -85,42 +106,89 @@ class _PendingRequestsState extends State<PendingRequests> {
   void initState() {
     super.initState();
     // fetchRepairsData();
-    _fetchAndSetPendingRequests();
+    _fetchAndSetOngoingRequests().then((_) {
+      // Initialize filteredRequests based on the default tab
+      setState(() {
+        filteredRequests = isPausedSelected
+            ? List.from(pausedRequests)
+            : List.from(ongoingRequests);
+
+        // Initialize filtered lists
+        filteredCategories = allCategories;
+        filteredDivisions = allDivisions;
+      });
+    });
     searchController.addListener(_applyFilters);
   }
 
-  Future<void> _fetchAndSetPendingRequests() async {
+  Future<void> _fetchAndSetOngoingRequests() async {
     try {
-      final service = PendingRequestService();
-      final List<Map<String, dynamic>> response =
-          await service.fetchPendingRequests();
+      final session = SessionManager();
+      final user = await session.getUser();
+      final philriceId = user?['philrice_id'];
 
-      final List<Map<String, dynamic>> transformedRequests =
-          response.map((request) {
-        return {
-          "title": "${request['ticket']?["ticket_full"] ?? "Unknown Ticket"}",
-          "requester":
-              "${request["requester"]?["name"] ?? "Unknown Requester"}",
-          "division": request["location"] ?? "Unknown Division",
-          "requestedDate": _formatDate(request["created_at"]),
-          "updatedDate": _formatDate(request["updated_at"]), // Add this
-          "description": request["request_description"] ?? "",
-          "category":
-              request["category"]?["category_name"] ?? "Unknown Category",
-          "subCategory": request["sub_category"]?["sub_category_name"] ??
-              "Unknown Subcategory",
-          "contact": request["local_no"] ?? "Unknown Contact",
-        };
-      }).toList();
+      if (philriceId == null) {
+        print('No philrice_id found in session.');
+        return;
+      }
+
+      final service = CompletedRequestService();
+      final data = await service.fetchCompletedRequests();
+
+      final ongoingRaw = data['ongoingRequests'];
+      final pausedRaw = data['pausedRequests'];
+
+      final ongoingFiltered =
+          ongoingRaw.where((r) => r['technician_id'] == philriceId).toList();
+      final pausedFiltered =
+          pausedRaw.where((r) => r['technician_id'] == philriceId).toList();
+
+      final ongoingTransformed = _transformRequests(ongoingFiltered);
+      final pausedTransformed = _transformRequests(pausedFiltered);
+
+      print("=== Ongoing Requests (${ongoingTransformed.length}) ===");
+      for (var req in ongoingTransformed) {
+        print(req);
+      }
+
+      print("=== Paused Requests (${pausedTransformed.length}) ===");
+      for (var req in pausedTransformed) {
+        print(req);
+      }
 
       setState(() {
-        pendingRequests = transformedRequests;
-        filteredRequests = List.from(pendingRequests);
+        ongoingRequests = ongoingTransformed;
+        pausedRequests = pausedTransformed;
+
+        // Initialize filteredRequests based on current tab selection
+        filteredRequests = isPausedSelected
+            ? List.from(pausedRequests)
+            : List.from(ongoingRequests);
+
+        // Apply any current filters
+        _applyFilters();
       });
     } catch (e) {
-      print("Error fetching pending requests: $e");
-      // Optionally, show an error to the user
+      print("Error fetching or filtering picked requests: $e");
     }
+  }
+
+  List<Map<String, dynamic>> _transformRequests(List<dynamic> rawList) {
+    return rawList.map((request) {
+      return {
+        "title": request['ticket']?["ticket_full"] ?? "Unknown Ticket",
+        "requester": request["requester"]?["name"] ?? "Unknown Requester",
+        "division": request["location"] ?? "Unknown Division",
+        "requestedDate": _formatDate(request["created_at"]),
+        "updatedDate": _formatDate(request["updated_at"]),
+        "description": request["request_description"] ?? "",
+        "category": request["category"]?["category_name"] ?? "Unknown Category",
+        "subCategory": request["sub_category"]?["sub_category_name"] ??
+            "Unknown Subcategory",
+        "contact": request["local_no"] ?? "Unknown Contact",
+        "pickedBy": request["technician_name"] ?? "Unknown Picker",
+      };
+    }).toList();
   }
 
   String _formatDate(String dateStr) {
@@ -156,21 +224,6 @@ class _PendingRequestsState extends State<PendingRequests> {
     final suffix = date.hour >= 12 ? "PM" : "AM";
     final minute = date.minute.toString().padLeft(2, '0');
     return "$hour:$minute $suffix";
-  }
-
-  Future<void> fetchRepairsData() async {
-    final response =
-        await http.get(Uri.parse('https://your-api-url.com/repairs'));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        pendingRequests =
-            data['pendingRequests']; // Replace with actual API response key
-      });
-    } else {
-      throw Exception('Failed to load data');
-    }
   }
 
   @override
@@ -299,7 +352,8 @@ class _PendingRequestsState extends State<PendingRequests> {
 
 // Create a method to filter dropdown options
   void _filterDropdownOptions(String? category, String? division) {
-    List<Map<String, dynamic>> sourceList = pendingRequests;
+    List<Map<String, dynamic>> sourceList =
+        isPausedSelected ? pausedRequests : ongoingRequests;
 
     // If both are null, show all options
     if (category == null && division == null) {
@@ -332,8 +386,12 @@ class _PendingRequestsState extends State<PendingRequests> {
     final q = searchController.text.toLowerCase();
 
     setState(() {
-      // Step 1: filter
-      filteredRequests = pendingRequests.where((r) {
+      // Select the correct source list based on current tab
+      List<Map<String, dynamic>> sourceList =
+          isPausedSelected ? pausedRequests : ongoingRequests;
+
+      // Step 1: Filter
+      filteredRequests = sourceList.where((r) {
         // 1️⃣ Search text match
         final title = (r['title'] as String).toLowerCase();
         final requester = (r['requester'] as String).toLowerCase();
@@ -362,7 +420,7 @@ class _PendingRequestsState extends State<PendingRequests> {
         try {
           requestedDate = _dateFormat.parse(dateString);
         } catch (e) {
-          // if parsing fails, exclude it
+          // If parsing fails, exclude it
           return false;
         }
 
@@ -378,7 +436,7 @@ class _PendingRequestsState extends State<PendingRequests> {
             inDateRange;
       }).toList();
 
-      // Step 2: sort
+      // Step 2: Sort
       filteredRequests.sort((a, b) {
         dynamic aVal;
         dynamic bVal;
@@ -416,9 +474,8 @@ class _PendingRequestsState extends State<PendingRequests> {
             : bVal.toString().compareTo(aVal.toString());
       });
     });
-  }
+  } // stub for when you tap the filter button
 
-// stub for when you tap the filter button
   void _onFilterPressed() {
     showDialog(
       context: context,
@@ -704,7 +761,6 @@ class _PendingRequestsState extends State<PendingRequests> {
     }
   }
 
-// Helper for dropdown UI
   Widget _buildDropdownField({
     required String label,
     required String? value,
@@ -754,7 +810,7 @@ class _PendingRequestsState extends State<PendingRequests> {
 
   Future<void> refreshDashboardData() async {
     setState(() {
-      _fetchAndSetPendingRequests();
+      _fetchAndSetOngoingRequests();
       searchController.addListener(_applyFilters);
     });
   }
@@ -791,7 +847,7 @@ class _PendingRequestsState extends State<PendingRequests> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Pending Requests',
+                    'Ongoing Requests',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 30,
@@ -815,10 +871,7 @@ class _PendingRequestsState extends State<PendingRequests> {
         child: ListView(
           physics:
               const AlwaysScrollableScrollPhysics(), // Forces pull even when not scrollable
-          padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * 0.075,
-          ),
-
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
           children: [
             const SizedBox(height: 15),
 
@@ -873,6 +926,125 @@ class _PendingRequestsState extends State<PendingRequests> {
               ),
             ),
 
+            const SizedBox(height: 10),
+
+            /// 🟦 Ongoing / Paused Tabs with Counts
+            /// 🟦 Ongoing / Paused Tabs with Counts
+            Center(
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.85,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFEFEF),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  children: [
+                    // Ongoing Tab
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isPausedSelected =
+                                false; // or true for the paused tab
+                            // Initialize filteredRequests with the correct list
+                            filteredRequests = List.from(isPausedSelected
+                                ? pausedRequests
+                                : ongoingRequests);
+                            // Apply any current filters
+                            _applyFilters();
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: !isPausedSelected
+                                ? const Color(0xFF14213D)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "ONGOING SERVICES",
+                                style: TextStyle(
+                                  color: !isPausedSelected
+                                      ? Colors.white
+                                      : const Color(0xFF14213D),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${!isPausedSelected ? filteredRequests.length : ongoingRequests.length}',
+                                style: TextStyle(
+                                  color: const Color(0xFF50C878),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Paused Tab
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isPausedSelected =
+                                true; // or true for the paused tab
+                            // Initialize filteredRequests with the correct list
+                            filteredRequests = List.from(isPausedSelected
+                                ? pausedRequests
+                                : ongoingRequests);
+                            // Apply any current filters
+                            _applyFilters();
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isPausedSelected
+                                ? const Color(0xFF14213D)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "PAUSED SERVICES",
+                                style: TextStyle(
+                                  color: isPausedSelected
+                                      ? Colors.white
+                                      : const Color(0xFF14213D),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${isPausedSelected ? filteredRequests.length : pausedRequests.length}',
+                                style: const TextStyle(
+                                  color: Color(0xFF50C878),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 10),
 
             /// ℹ️ Last Updated Section
@@ -1080,12 +1252,46 @@ class _PendingRequestsState extends State<PendingRequests> {
                     height: 1.2,
                   ),
                 ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    // Text part
+                    RichText(
+                      text: TextSpan(
+                        text: 'Status: ',
+                        style: TextStyle(fontSize: 14, color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: 'ONGOING SERVICE',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' by',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Avatar part
+                    CircleAvatar(
+                      radius: 10, // small circle
+                      backgroundColor: Colors.grey[400], // gray color
+                      child:
+                          Container(), // empty or put initials/text if needed
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 20),
 
                 _buildButton(
                   context,
-                  "PICK THIS REQUEST",
+                  "UPDATE STATUS",
                   const Color(0xFF007A33),
                   () {
                     // Add action here
@@ -1126,7 +1332,7 @@ class _PendingRequestsState extends State<PendingRequests> {
           ),
         ),
         child: const Text(
-          "PICK THIS REQUEST",
+          "UPDATE STATUS",
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -1272,10 +1478,44 @@ class RequestDetailsModal extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 14, color: Colors.black, height: 1.3),
                   ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      // Text part
+                      RichText(
+                        text: TextSpan(
+                          text: 'Status: ',
+                          style: TextStyle(fontSize: 14, color: Colors.black),
+                          children: [
+                            TextSpan(
+                              text: 'ONGOING SERVICE',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' by',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Avatar part
+                      CircleAvatar(
+                        radius: 10, // small circle
+                        backgroundColor: Colors.grey[400], // gray color
+                        child:
+                            Container(), // empty or put initials/text if needed
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 20),
                   buildButton(
                     context,
-                    "PICK THIS REQUEST",
+                    "UPDATE STATUS",
                     const Color(0xFF007A33),
                     () {
                       Navigator.pop(context);

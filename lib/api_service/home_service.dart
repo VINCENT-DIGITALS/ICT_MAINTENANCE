@@ -24,4 +24,46 @@ class DashboardService {
       throw Exception("Error fetching dashboard data: $e");
     }
   }
+
+  Future<Map<String, dynamic>> fetchFilteredDashboardData(String technicianId) async {
+    // First get all the dashboard data
+    final dashboardData = await fetchDashboardData();
+    
+    // Create a copy of the dashboard data to modify
+    final Map<String, dynamic> filteredData = Map<String, dynamic>.from(dashboardData);
+    
+    // Lists that need to be filtered by technician_id
+    final listsToFilter = [
+      'pickedRequests',
+      'ongoingRequests',
+      'pausedRequests',
+      'completedRequests',
+      'evaluatedRequests',
+      'cancelledRequests',
+      'deniedRequests'
+    ];
+    
+    // Filter each list to only include items where technician_id matches the session ID
+    for (final key in listsToFilter) {
+      if (filteredData.containsKey(key) && filteredData[key] is List) {
+        filteredData[key] = (filteredData[key] as List)
+            .where((request) => 
+                request is Map && 
+                request.containsKey('technician_id') && 
+                request['technician_id'] == technicianId)
+            .toList();
+      }
+    }
+    
+    // Update the counts for each filtered list
+    filteredData['pickedRequestsCount'] = filteredData['pickedRequests']?.length ?? 0;
+    filteredData['ongoingRequestsCount'] = filteredData['ongoingRequests']?.length ?? 0;
+    filteredData['pausedOngoingRequestsCount'] = filteredData['pausedRequests']?.length ?? 0;
+    filteredData['completedRequestsCount'] = filteredData['completedRequests']?.length ?? 0;
+    filteredData['evaluatedRequestsCount'] = filteredData['evaluatedRequests']?.length ?? 0;
+    filteredData['cancelledRequestsCount'] = filteredData['cancelledRequests']?.length ?? 0;
+    filteredData['deniedRequestsCount'] = filteredData['deniedRequests']?.length ?? 0;
+    
+    return filteredData;
+  }
 }

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:servicetracker_app/api_service/home_service.dart';
+import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/services/FormProvider.dart';
@@ -27,13 +28,16 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _dashboardFuture = _dashboardService.fetchDashboardData();
+    toDate = DateTime.now();
+    fromDate = DateTime.now().subtract(const Duration(days: 30));
+    _dashboardFuture = fetchFilteredDashboardData(); // Use filtered data here
     _checkCameraPermission(); // 🔥 Check permissions on start
   }
 
   Future<void> _refreshDashboardData() async {
     setState(() {
-      _dashboardFuture = _dashboardService.fetchDashboardData();
+      _dashboardFuture =
+          fetchFilteredDashboardData(); // Use filtered data when refreshing
     });
   }
 
@@ -126,22 +130,47 @@ class _HomePageState extends State<HomePage> {
 
   Future<Map<String, dynamic>> fetchFilteredDashboardData() async {
     final data = await DashboardService().fetchDashboardData();
+    final SessionManager session = SessionManager();
+    final user = await session.getUser();
+    final String? technicianId = user?['philrice_id'];
 
-    return {
-      "pendingRequests":
-          _filterByDate(data["pendingRequests"], fromDate, toDate),
-      "pickedRequests": _filterByDate(data["pickedRequests"], fromDate, toDate),
-      "ongoingRequests":
-          _filterByDate(data["ongoingRequests"], fromDate, toDate),
-      "pausedRequests": _filterByDate(data["pausedRequests"], fromDate, toDate),
-      "completedRequests":
-          _filterByDate(data["completedRequests"], fromDate, toDate),
-      "evaluatedRequests":
-          _filterByDate(data["evaluatedRequests"], fromDate, toDate),
-      "cancelledRequests":
-          _filterByDate(data["cancelledRequests"], fromDate, toDate),
-      "deniedRequests": _filterByDate(data["deniedRequests"], fromDate, toDate),
-    };
+    // Filter lists that need to be filtered by technician ID
+    List<String> technicianFilteredLists = [
+      'pickedRequests',
+      'ongoingRequests',
+      'pausedRequests',
+      'completedRequests',
+      'evaluatedRequests',
+      'cancelledRequests',
+      'deniedRequests'
+    ];
+
+    Map<String, dynamic> result = {};
+
+    // First filter by date for all lists
+    result['pendingRequests'] =
+        _filterByDate(data['pendingRequests'], fromDate, toDate);
+
+    // For technician lists, filter by date AND technician ID
+    for (var listName in technicianFilteredLists) {
+      if (data[listName] != null) {
+        List<dynamic> dateFiltered =
+            _filterByDate(data[listName], fromDate, toDate);
+
+        // If we have a technician ID, further filter by it
+        if (technicianId != null) {
+          result[listName] = dateFiltered
+              .where((item) => item['technician_id'] == technicianId)
+              .toList();
+        } else {
+          result[listName] = dateFiltered;
+        }
+      } else {
+        result[listName] = [];
+      }
+    }
+
+    return result;
   }
 
   @override
@@ -358,7 +387,7 @@ class _HomePageState extends State<HomePage> {
                                           title: 'ONGOING\nSERVICES',
                                           mainValue: '$ongoingCount',
                                           subValues: ['$pausedCount paused'],
-                                          route: '/ongoing',
+                                          route: '/OngoingRequests',
                                         ),
                                         _StatCard(
                                           title: 'COMPLETED\nSERVICES',
@@ -367,7 +396,7 @@ class _HomePageState extends State<HomePage> {
                                             '$evaluatedCount evaluated',
                                             '$others others',
                                           ],
-                                          route: '/completed',
+                                          route: '/CompletedRequests',
                                         ),
                                       ],
                                     ),
