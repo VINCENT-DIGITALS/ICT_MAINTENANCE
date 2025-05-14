@@ -10,6 +10,7 @@ import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 
 import '../../auth/sessionmanager.dart';
@@ -119,6 +120,7 @@ class _PickedRequestsState extends State<PickedRequests> {
       final List<Map<String, dynamic>> transformedRequests =
           filteredByTech.map((request) {
         return {
+          'id': request['id'] ?? 0,
           "title": request['ticket']?["ticket_full"] ?? "Unknown Ticket",
           "requester": request["requester"]?["name"] ?? "Unknown Requester",
           "division": request["location"] ?? "Unknown Division",
@@ -972,6 +974,8 @@ class _PickedRequestsState extends State<PickedRequests> {
                         showDialog(
                           context: context,
                           barrierDismissible: true,
+                          useRootNavigator:
+                              true, // 👈 This ensures it uses the top-level navigator
                           builder: (context) {
                             return LayoutBuilder(
                               builder: (context, constraints) {
@@ -1122,12 +1126,70 @@ class _PickedRequestsState extends State<PickedRequests> {
 
                 const SizedBox(height: 20),
 
-                _buildButton(
+                _buildButton2v(
                   context,
                   "START SERVICE",
                   const Color(0xFF007A33),
                   () {
-                    // Add action here
+                    // The request data is already available here from the map function
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      useRootNavigator:
+                          true, // 👈 This ensures it uses the top-level navigator
+                      builder: (context) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Center(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // The modal dialog
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 500,
+                                        ),
+                                        child: RequestDetailsModal(
+                                          request:
+                                              request, // This request is from the map function
+                                          buildButton: _buildButton,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // The floating close button
+                                      GestureDetector(
+                                        onTap: () =>
+                                            Navigator.of(context).pop(),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.2),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(Icons.close,
+                                              color: Colors.black, size: 24),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
                   },
                 ),
               ],
@@ -1138,21 +1200,193 @@ class _PickedRequestsState extends State<PickedRequests> {
     );
   }
 
-  Widget _buildButton(
+  Widget _buildButton2v(
       BuildContext context, String text, Color color, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed, // Simply call the provided onPressed callback
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton(
+      BuildContext context, String text, Color color, VoidCallback onRefresh,
+      {Map<String, dynamic>? request}) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => CustomModalPickRequest(
-              title: "Request Added to Your Services",
+            builder: (dialogBuilderContext) => CustomModalPickRequest(
+              title: "PICK THIS REQUEST",
               message:
-                  "Complete the details to add this to your ongoing services",
-              onConfirm: () {
-                Navigator.pop(context);
-                onPressed();
+                  "Are you sure you want to pick this request? This action cannot be undone.",
+              onConfirm: () async {
+                // Use a separate context for the confirmation process
+                Navigator.pop(dialogBuilderContext);
+
+                // Cache the request ID before showing loading dialog
+                final requestId = request != null
+                    ? (int.tryParse(request['id']?.toString() ?? '') ?? 0)
+                    : 0;
+
+                if (requestId == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Invalid request ID'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Show loading indicator using the global context
+                final loadingDialog = showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (loadingContext) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+
+                try {
+                  final session = SessionManager();
+                  final user = await session.getUser();
+                  final userIdNo = user?['philrice_id'];
+
+                  if (userIdNo == null) {
+                    // Close loading dialog safely
+                    Navigator.of(context).pop();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('User ID not found. Please log in again.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Call the API service
+                  final service = PickedRequestsService();
+                  final result =
+                      await service.markAsOngoing(requestId, userIdNo);
+
+// Close loading dialog first (always)
+                  Navigator.of(context).pop();
+
+                  // Change this part in the success dialog section
+                  if (result['success']) {
+                    // Show success dialog with floating close button
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      useRootNavigator:
+                          true, // 👈 This ensures it uses the top-level navigator
+                      builder: (context) => Material(
+                        color: Colors.transparent,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Main dialog content
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: ConstrainedBox(
+                                constraints:
+                                    const BoxConstraints(maxWidth: 400),
+                                child: CustomModalButtonRequest(
+                                  title:
+                                      "Request Added to Your Ongoing Services",
+                                  message:
+                                      "Complete the details to add this to your ongoing services",
+                                  onConfirm: () async {
+                                    Navigator.pop(context);
+
+                                    // Refresh the data ONCE after dialog is closed
+                                    await _fetchAndSetPickedRequests();
+                                  },
+                                ),
+                              ),
+                            ),
+
+                            // The floating close button - UPDATED to also trigger refresh
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () async {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          PickedRequests()), // Navigate to PickedRequests
+                                  ModalRoute.withName(
+                                      '/home'), // Only keep HomePage in the back stack
+                                );
+                                // Also refresh the data when close button is clicked
+                                await _fetchAndSetPickedRequests();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.black,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(result['message']),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  // Always ensure loading dialog is closed on error
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
             ),
           );
@@ -1164,9 +1398,9 @@ class _PickedRequestsState extends State<PickedRequests> {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        child: const Text(
-          "START SERVICE",
-          style: TextStyle(
+        child: Text(
+          text,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -1207,11 +1441,8 @@ class _PickedRequestsState extends State<PickedRequests> {
 class RequestDetailsModal extends StatelessWidget {
   final Map<String, dynamic> request;
   final Widget Function(
-    BuildContext context,
-    String text,
-    Color color,
-    VoidCallback onPressed,
-  ) buildButton;
+      BuildContext context, String text, Color color, VoidCallback onPressed,
+      {Map<String, dynamic>? request}) buildButton;
 
   const RequestDetailsModal({
     super.key,
@@ -1348,11 +1579,12 @@ class RequestDetailsModal extends StatelessWidget {
                   const SizedBox(height: 20),
                   buildButton(
                     context,
-                    "START SERVICE",
+                    "PICK THIS REQUEST",
                     const Color(0xFF007A33),
                     () {
                       Navigator.pop(context);
                     },
+                    request: request, // Pass the request here
                   ),
                 ],
               ),

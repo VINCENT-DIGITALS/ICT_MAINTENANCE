@@ -1291,12 +1291,68 @@ class _OngoingRequestsState extends State<OngoingRequests> {
 
                 const SizedBox(height: 20),
 
-                _buildButton(
+                _buildButton2v(
                   context,
                   "UPDATE STATUS",
                   const Color(0xFF007A33),
                   () {
-                    // Add action here
+                    // The request data is already available here from the map function
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (context) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Center(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // The modal dialog
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 500,
+                                        ),
+                                        child: RequestDetailsModal(
+                                          request:
+                                              request, // This request is from the map function
+                                          buildButton: _buildButton,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // The floating close button
+                                      GestureDetector(
+                                        onTap: () =>
+                                            Navigator.of(context).pop(),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.2),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(Icons.close,
+                                              color: Colors.black, size: 24),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
                   },
                 ),
               ],
@@ -1304,6 +1360,32 @@ class _OngoingRequestsState extends State<OngoingRequests> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildButton2v(
+      BuildContext context, String text, Color color, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed, // Simply call the provided onPressed callback
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
     );
   }
 

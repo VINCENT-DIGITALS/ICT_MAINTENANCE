@@ -10,6 +10,7 @@ import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 
 class PendingRequests extends StatefulWidget {
@@ -1085,14 +1086,69 @@ class _PendingRequestsState extends State<PendingRequests> {
 
                 const SizedBox(height: 20),
 
-                _buildButton(
+                _buildButton2v(
                   context,
                   "PICK THIS REQUEST",
                   const Color(0xFF007A33),
                   () {
-                    // Add action here
+                    // The request data is already available here from the map function
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (context) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Center(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // The modal dialog
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 500,
+                                        ),
+                                        child: RequestDetailsModal(
+                                          request:
+                                              request, // This request is from the map function
+                                          buildButton: _buildButton,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // The floating close button
+                                      GestureDetector(
+                                        onTap: () =>
+                                            Navigator.of(context).pop(),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.2),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(Icons.close,
+                                              color: Colors.black, size: 24),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
                   },
-                  request: request, // Pass the request here
                 ),
               ],
             ),
@@ -1104,6 +1160,31 @@ class _PendingRequestsState extends State<PendingRequests> {
 // In your PendingRequestPage class
 
 // Add this method to handle picking a request
+  Widget _buildButton2v(
+      BuildContext context, String text, Color color, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed, // Simply call the provided onPressed callback
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildButton(
       BuildContext context, String text, Color color, VoidCallback onRefresh,
@@ -1115,9 +1196,9 @@ class _PendingRequestsState extends State<PendingRequests> {
           showDialog(
             context: context,
             builder: (dialogBuilderContext) => CustomModalPickRequest(
-              title: "Request Added to Your Services",
+              title: "PICK THIS REQUEST",
               message:
-                  "Complete the details to add this to your ongoing services",
+                  "Are you sure you want to pick this request? This action cannot be undone.",
               onConfirm: () async {
                 // Use a separate context for the confirmation process
                 Navigator.pop(dialogBuilderContext);
@@ -1170,20 +1251,79 @@ class _PendingRequestsState extends State<PendingRequests> {
                   final result =
                       await service.markAsPicked(requestId, userIdNo);
 
-                  // Close loading dialog first (always)
+// Close loading dialog first (always)
                   Navigator.of(context).pop();
 
+                  // Change this part in the success dialog section
                   if (result['success']) {
-                    // Show success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(result['message']),
-                        backgroundColor: Colors.green,
+                    // Show success dialog with floating close button
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (context) => Material(
+                        color: Colors.transparent,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Main dialog content
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: ConstrainedBox(
+                                constraints:
+                                    const BoxConstraints(maxWidth: 400),
+                                child: CustomModalButtonRequest(
+                                  title: "Request Added to Your Services",
+                                  message:
+                                      "Complete the details to add this to your ongoing services",
+                                  onConfirm: () async {
+                                    Navigator.pop(context);
+                                    // Refresh the data ONCE after dialog is closed
+                                    await _fetchAndSetPendingRequests();
+                                  },
+                                ),
+                              ),
+                            ),
+
+                            // The floating close button - UPDATED to also trigger refresh
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () async {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          PendingRequests()), // Navigate to PickedRequests
+                                  ModalRoute.withName(
+                                      '/home'), // Only keep HomePage in the back stack
+                                );
+                                // Also refresh the data when close button is clicked
+                                await _fetchAndSetPendingRequests();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.black,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
-
-                    // Refresh the data ONCE - use the passed callback ONLY
-                    await _fetchAndSetPendingRequests();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -1225,7 +1365,7 @@ class _PendingRequestsState extends State<PendingRequests> {
         ),
       ),
     );
-  } 
+  }
 
   Widget _buildEmptyPickedState(BuildContext context) {
     return Container(

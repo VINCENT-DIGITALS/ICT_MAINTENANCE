@@ -25,6 +25,22 @@ class _HomePageState extends State<HomePage> {
   DateTime toDate = DateTime.now();
   late Future<Map<String, dynamic>> _dashboardFuture;
   final DashboardService _dashboardService = DashboardService();
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   // Call your refresh method here when the page is rebuilt\
+  //    _dashboardFuture = fetchFilteredDashboardData(); // Use filtered data here
+  //   _refreshPage();
+  // }
+
+  // void _refreshPage() {
+  //   setState(() {
+  //     // Your refresh logic here (fetching data, resetting states, etc.)
+  //   });
+  // }
+
+
   @override
   void initState() {
     super.initState();
