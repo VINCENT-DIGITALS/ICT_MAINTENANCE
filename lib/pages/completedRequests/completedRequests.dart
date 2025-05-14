@@ -847,7 +847,7 @@ class _CompletedRequestsState extends State<CompletedRequests> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Ongoing Requests',
+                    'Completed Requests',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 30,
