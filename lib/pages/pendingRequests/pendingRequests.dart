@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:servicetracker_app/api_service/pendingRequest.dart';
+import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
@@ -98,6 +99,7 @@ class _PendingRequestsState extends State<PendingRequests> {
       final List<Map<String, dynamic>> transformedRequests =
           response.map((request) {
         return {
+          'id': request['id'] ?? 0,
           "title": "${request['ticket']?["ticket_full"] ?? "Unknown Ticket"}",
           "requester":
               "${request["requester"]?["name"] ?? "Unknown Requester"}",
@@ -1090,6 +1092,7 @@ class _PendingRequestsState extends State<PendingRequests> {
                   () {
                     // Add action here
                   },
+                  request: request, // Pass the request here
                 ),
               ],
             ),
@@ -1098,22 +1101,108 @@ class _PendingRequestsState extends State<PendingRequests> {
       }).toList(),
     );
   }
+// In your PendingRequestPage class
+
+// Add this method to handle picking a request
 
   Widget _buildButton(
-      BuildContext context, String text, Color color, VoidCallback onPressed) {
+      BuildContext context, String text, Color color, VoidCallback onRefresh,
+      {Map<String, dynamic>? request}) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => CustomModalPickRequest(
+            builder: (dialogBuilderContext) => CustomModalPickRequest(
               title: "Request Added to Your Services",
               message:
                   "Complete the details to add this to your ongoing services",
-              onConfirm: () {
-                Navigator.pop(context);
-                onPressed();
+              onConfirm: () async {
+                // Use a separate context for the confirmation process
+                Navigator.pop(dialogBuilderContext);
+
+                // Cache the request ID before showing loading dialog
+                final requestId = request != null
+                    ? (int.tryParse(request['id']?.toString() ?? '') ?? 0)
+                    : 0;
+
+                if (requestId == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Invalid request ID'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Show loading indicator using the global context
+                final loadingDialog = showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (loadingContext) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+
+                try {
+                  final session = SessionManager();
+                  final user = await session.getUser();
+                  final userIdNo = user?['philrice_id'];
+
+                  if (userIdNo == null) {
+                    // Close loading dialog safely
+                    Navigator.of(context).pop();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('User ID not found. Please log in again.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Call the API service
+                  final service = PendingRequestService();
+                  final result =
+                      await service.markAsPicked(requestId, userIdNo);
+
+                  // Close loading dialog first (always)
+                  Navigator.of(context).pop();
+
+                  if (result['success']) {
+                    // Show success message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(result['message']),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Refresh the data ONCE - use the passed callback ONLY
+                    await _fetchAndSetPendingRequests();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(result['message']),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  // Always ensure loading dialog is closed on error
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
             ),
           );
@@ -1125,9 +1214,9 @@ class _PendingRequestsState extends State<PendingRequests> {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        child: const Text(
-          "PICK THIS REQUEST",
-          style: TextStyle(
+        child: Text(
+          text,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -1136,9 +1225,8 @@ class _PendingRequestsState extends State<PendingRequests> {
         ),
       ),
     );
-  }
+  } 
 
-  /// 🛠 Shows Empty State when there are no Ongoing Repairs
   Widget _buildEmptyPickedState(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.85, // 90% of screen width
@@ -1168,11 +1256,8 @@ class _PendingRequestsState extends State<PendingRequests> {
 class RequestDetailsModal extends StatelessWidget {
   final Map<String, dynamic> request;
   final Widget Function(
-    BuildContext context,
-    String text,
-    Color color,
-    VoidCallback onPressed,
-  ) buildButton;
+      BuildContext context, String text, Color color, VoidCallback onPressed,
+      {Map<String, dynamic>? request}) buildButton;
 
   const RequestDetailsModal({
     super.key,
@@ -1280,6 +1365,7 @@ class RequestDetailsModal extends StatelessWidget {
                     () {
                       Navigator.pop(context);
                     },
+                    request: request, // Pass the request here
                   ),
                 ],
               ),
