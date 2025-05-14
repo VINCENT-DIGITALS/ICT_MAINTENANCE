@@ -29,7 +29,7 @@ class CompletedRequests extends StatefulWidget {
 class _CompletedRequestsState extends State<CompletedRequests> {
   final ScrollController _scrollController = ScrollController();
   bool hasReports = true; // Change to false to test empty state
-
+  int selectedTabIndex = 0;
   String? selectedReportCategory;
   String? selectedPriorityCategory;
   TextEditingController searchController = TextEditingController();
@@ -64,20 +64,38 @@ class _CompletedRequestsState extends State<CompletedRequests> {
   final DateFormat _dateFormat = DateFormat('MMMM d, y, hh:mm a');
 // Replace these getters with these updated versions
   List<String> get allDivisions {
-    List<Map<String, dynamic>> sourceList =
-        isPausedSelected ? pausedRequests : ongoingRequests;
+    List<Map<String, dynamic>> sourceList;
+    if (selectedTabIndex == 0) {
+      sourceList = completedRequests;
+    } else if (selectedTabIndex == 1) {
+      sourceList = evaluatedRequests;
+    } else {
+      sourceList = [...deniedRequests, ...cancelledRequests];
+    }
     return sourceList.map((r) => r['division'] as String).toSet().toList();
   }
 
   List<String> get allRequesters {
-    List<Map<String, dynamic>> sourceList =
-        isPausedSelected ? pausedRequests : ongoingRequests;
+    List<Map<String, dynamic>> sourceList;
+    if (selectedTabIndex == 0) {
+      sourceList = completedRequests;
+    } else if (selectedTabIndex == 1) {
+      sourceList = evaluatedRequests;
+    } else {
+      sourceList = [...deniedRequests, ...cancelledRequests];
+    }
     return sourceList.map((r) => r['requester'] as String).toSet().toList();
   }
 
   List<String> get allCategories {
-    List<Map<String, dynamic>> sourceList =
-        isPausedSelected ? pausedRequests : ongoingRequests;
+    List<Map<String, dynamic>> sourceList;
+    if (selectedTabIndex == 0) {
+      sourceList = completedRequests;
+    } else if (selectedTabIndex == 1) {
+      sourceList = evaluatedRequests;
+    } else {
+      sourceList = [...deniedRequests, ...cancelledRequests];
+    }
     return sourceList
         .where((r) => r.containsKey('category'))
         .map((r) => r['category'] as String)
@@ -86,8 +104,14 @@ class _CompletedRequestsState extends State<CompletedRequests> {
   }
 
   List<String> get allSubCategories {
-    List<Map<String, dynamic>> sourceList =
-        isPausedSelected ? pausedRequests : ongoingRequests;
+    List<Map<String, dynamic>> sourceList;
+    if (selectedTabIndex == 0) {
+      sourceList = completedRequests;
+    } else if (selectedTabIndex == 1) {
+      sourceList = evaluatedRequests;
+    } else {
+      sourceList = [...deniedRequests, ...cancelledRequests];
+    }
     return sourceList
         .where((r) => r.containsKey('subCategory'))
         .map((r) => r['subCategory'] as String)
@@ -95,9 +119,12 @@ class _CompletedRequestsState extends State<CompletedRequests> {
         .toList();
   }
 
-  List<Map<String, dynamic>> pausedRequests = [];
-  List<Map<String, dynamic>> ongoingRequests = [];
-  bool isPausedSelected = false;
+  List<Map<String, dynamic>> completedRequests = [];
+  List<Map<String, dynamic>> evaluatedRequests = [];
+
+  List<Map<String, dynamic>> deniedRequests = [];
+  List<Map<String, dynamic>> cancelledRequests = [];
+  // bool isPausedSelected = false;
   // Add these new filtered lists to your state class
   List<String> filteredCategories = [];
   List<String> filteredDivisions = [];
@@ -105,14 +132,10 @@ class _CompletedRequestsState extends State<CompletedRequests> {
   @override
   void initState() {
     super.initState();
-    // fetchRepairsData();
     _fetchAndSetOngoingRequests().then((_) {
       // Initialize filteredRequests based on the default tab
       setState(() {
-        filteredRequests = isPausedSelected
-            ? List.from(pausedRequests)
-            : List.from(ongoingRequests);
-
+        filteredRequests = List.from(completedRequests);
         // Initialize filtered lists
         filteredCategories = allCategories;
         filteredDivisions = allDivisions;
@@ -135,41 +158,70 @@ class _CompletedRequestsState extends State<CompletedRequests> {
       final service = CompletedRequestService();
       final data = await service.fetchCompletedRequests();
 
-      final ongoingRaw = data['ongoingRequests'];
-      final pausedRaw = data['pausedRequests'];
+      final completedRaw = data['completedRequests'];
+      final evaluatedRaw = data['evaluatedRequests'];
+      final deniedRaw = data['deniedRequests'];
+      final cancelledRaw = data['cancelledRequests'];
 
-      final ongoingFiltered =
-          ongoingRaw.where((r) => r['technician_id'] == philriceId).toList();
-      final pausedFiltered =
-          pausedRaw.where((r) => r['technician_id'] == philriceId).toList();
+      final completedFiltered =
+          completedRaw.where((r) => r['technician_id'] == philriceId).toList();
+      final evaluatedFiltered =
+          evaluatedRaw.where((r) => r['technician_id'] == philriceId).toList();
 
-      final ongoingTransformed = _transformRequests(ongoingFiltered);
-      final pausedTransformed = _transformRequests(pausedFiltered);
+      final deniedFiltered =
+          deniedRaw.where((r) => r['technician_id'] == philriceId).toList();
+      final cancelledFiltered =
+          cancelledRaw.where((r) => r['technician_id'] == philriceId).toList();
 
-      print("=== Ongoing Requests (${ongoingTransformed.length}) ===");
-      for (var req in ongoingTransformed) {
+      final completedTransformed = _transformRequests(completedFiltered);
+      final evaluatedTransformed = _transformRequests(evaluatedFiltered);
+      final deniedTransformed = _transformRequests(deniedFiltered);
+      final cancelledTransformed = _transformRequests(cancelledFiltered);
+
+      print("=== completed Requests (${completedTransformed.length}) ===");
+      for (var req in completedTransformed) {
         print(req);
       }
 
-      print("=== Paused Requests (${pausedTransformed.length}) ===");
-      for (var req in pausedTransformed) {
+      print("=== evaluated Requests (${evaluatedTransformed.length}) ===");
+      for (var req in evaluatedTransformed) {
+        print(req);
+      }
+
+      print("=== denied Requests (${deniedTransformed.length}) ===");
+      for (var req in deniedTransformed) {
+        print(req);
+      }
+
+      print("=== cancelled Requests (${cancelledTransformed.length}) ===");
+      for (var req in cancelledTransformed) {
         print(req);
       }
 
       setState(() {
-        ongoingRequests = ongoingTransformed;
-        pausedRequests = pausedTransformed;
+        completedRequests = completedTransformed;
+        evaluatedRequests = evaluatedTransformed;
+        deniedRequests = deniedTransformed;
+        cancelledRequests = cancelledTransformed;
 
         // Initialize filteredRequests based on current tab selection
-        filteredRequests = isPausedSelected
-            ? List.from(pausedRequests)
-            : List.from(ongoingRequests);
+        if (selectedTabIndex == 0) {
+          filteredRequests = List.from(completedRequests);
+        } else if (selectedTabIndex == 1) {
+          filteredRequests = List.from(evaluatedRequests);
+        } else {
+          filteredRequests = [...deniedRequests, ...cancelledRequests];
+        }
+
+        // Initialize filtered lists
+        filteredCategories = allCategories;
+        filteredDivisions = allDivisions;
 
         // Apply any current filters
         _applyFilters();
       });
     } catch (e) {
-      print("Error fetching or filtering picked requests: $e");
+      print("Error fetching or filtering requests: $e");
     }
   }
 
@@ -187,6 +239,8 @@ class _CompletedRequestsState extends State<CompletedRequests> {
             "Unknown Subcategory",
         "contact": request["local_no"] ?? "Unknown Contact",
         "pickedBy": request["technician_name"] ?? "Unknown Picker",
+        "statusId":
+            request["latest_status"]?["status_id"] ?? 101, // Add this new field
       };
     }).toList();
   }
@@ -352,8 +406,15 @@ class _CompletedRequestsState extends State<CompletedRequests> {
 
 // Create a method to filter dropdown options
   void _filterDropdownOptions(String? category, String? division) {
-    List<Map<String, dynamic>> sourceList =
-        isPausedSelected ? pausedRequests : ongoingRequests;
+    // Select the appropriate source list based on the selected tab
+    List<Map<String, dynamic>> sourceList;
+    if (selectedTabIndex == 0) {
+      sourceList = completedRequests;
+    } else if (selectedTabIndex == 1) {
+      sourceList = evaluatedRequests;
+    } else {
+      sourceList = [...deniedRequests, ...cancelledRequests];
+    }
 
     // If both are null, show all options
     if (category == null && division == null) {
@@ -387,9 +448,15 @@ class _CompletedRequestsState extends State<CompletedRequests> {
 
     setState(() {
       // Select the correct source list based on current tab
-      List<Map<String, dynamic>> sourceList =
-          isPausedSelected ? pausedRequests : ongoingRequests;
-
+      // Select the correct source list based on current tab
+      List<Map<String, dynamic>> sourceList;
+      if (selectedTabIndex == 0) {
+        sourceList = completedRequests;
+      } else if (selectedTabIndex == 1) {
+        sourceList = evaluatedRequests;
+      } else {
+        sourceList = [...deniedRequests, ...cancelledRequests];
+      }
       // Step 1: Filter
       filteredRequests = sourceList.where((r) {
         // 1️⃣ Search text match
@@ -871,7 +938,10 @@ class _CompletedRequestsState extends State<CompletedRequests> {
         child: ListView(
           physics:
               const AlwaysScrollableScrollPhysics(), // Forces pull even when not scrollable
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.075,
+          ),
+
           children: [
             const SizedBox(height: 15),
 
@@ -928,8 +998,6 @@ class _CompletedRequestsState extends State<CompletedRequests> {
 
             const SizedBox(height: 10),
 
-            /// 🟦 Ongoing / Paused Tabs with Counts
-            /// 🟦 Ongoing / Paused Tabs with Counts
             Center(
               child: Container(
                 width: MediaQuery.of(context).size.width * 0.85,
@@ -940,105 +1008,31 @@ class _CompletedRequestsState extends State<CompletedRequests> {
                 ),
                 child: Row(
                   children: [
-                    // Ongoing Tab
+                    // Completed Tab
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isPausedSelected =
-                                false; // or true for the paused tab
-                            // Initialize filteredRequests with the correct list
-                            filteredRequests = List.from(isPausedSelected
-                                ? pausedRequests
-                                : ongoingRequests);
-                            // Apply any current filters
-                            _applyFilters();
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: !isPausedSelected
-                                ? const Color(0xFF14213D)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "ONGOING SERVICES",
-                                style: TextStyle(
-                                  color: !isPausedSelected
-                                      ? Colors.white
-                                      : const Color(0xFF14213D),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${!isPausedSelected ? filteredRequests.length : ongoingRequests.length}',
-                                style: TextStyle(
-                                  color: const Color(0xFF50C878),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      child: _buildTab(
+                        title: "COMPLETED",
+                        count: completedRequests.length,
+                        isSelected: selectedTabIndex == 0,
+                        onTap: () => _selectTab(0),
                       ),
                     ),
-
-                    // Paused Tab
+                    // Evaluated Tab
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isPausedSelected =
-                                true; // or true for the paused tab
-                            // Initialize filteredRequests with the correct list
-                            filteredRequests = List.from(isPausedSelected
-                                ? pausedRequests
-                                : ongoingRequests);
-                            // Apply any current filters
-                            _applyFilters();
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isPausedSelected
-                                ? const Color(0xFF14213D)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "PAUSED SERVICES",
-                                style: TextStyle(
-                                  color: isPausedSelected
-                                      ? Colors.white
-                                      : const Color(0xFF14213D),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${isPausedSelected ? filteredRequests.length : pausedRequests.length}',
-                                style: const TextStyle(
-                                  color: Color(0xFF50C878),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      child: _buildTab(
+                        title: "EVALUATED",
+                        count: evaluatedRequests.length,
+                        isSelected: selectedTabIndex == 1,
+                        onTap: () => _selectTab(1),
+                      ),
+                    ),
+                    // Others Tab
+                    Expanded(
+                      child: _buildTab(
+                        title: "OTHERS",
+                        count: deniedRequests.length + cancelledRequests.length,
+                        isSelected: selectedTabIndex == 2,
+                        onTap: () => _selectTab(2),
                       ),
                     ),
                   ],
@@ -1262,15 +1256,19 @@ class _CompletedRequestsState extends State<CompletedRequests> {
                         style: TextStyle(fontSize: 14, color: Colors.black),
                         children: [
                           TextSpan(
-                            text: 'ONGOING SERVICE',
+                            text: request['statusId'] == 7
+                                ? 'COMPLETED'
+                                : (request['statusId'] == 8
+                                    ? 'EVALUATED'
+                                    : (request['statusId'] == 100
+                                        ? 'DENIED'
+                                        : (request['statusId'] == 200
+                                            ? 'CANCELLED'
+                                            : 'OTHERS'))),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
                             ),
-                          ),
-                          TextSpan(
-                            text: ' by',
-                            style: TextStyle(color: Colors.black),
                           ),
                         ],
                       ),
@@ -1303,6 +1301,65 @@ class _CompletedRequestsState extends State<CompletedRequests> {
         );
       }).toList(),
     );
+  }
+
+  Widget _buildTab({
+    required String title,
+    required int count,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF14213D) : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? Colors.white : const Color(0xFF14213D),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '$count',
+              style: TextStyle(
+                color: const Color(0xFF50C878),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _selectTab(int index) {
+    setState(() {
+      selectedTabIndex = index;
+
+      // Update filteredRequests based on selected tab
+      if (index == 0) {
+        filteredRequests = List.from(completedRequests);
+      } else if (index == 1) {
+        filteredRequests = List.from(evaluatedRequests);
+      } else {
+        // For "Others" tab, combine denied and cancelled requests
+        filteredRequests = [...deniedRequests, ...cancelledRequests];
+      }
+
+      // Apply current filters
+      _applyFilters();
+    });
   }
 
   Widget _buildButton(
@@ -1488,15 +1545,19 @@ class RequestDetailsModal extends StatelessWidget {
                           style: TextStyle(fontSize: 14, color: Colors.black),
                           children: [
                             TextSpan(
-                              text: 'ONGOING SERVICE',
+                              text: request['statusId'] == 7
+                                  ? 'COMPLETED'
+                                  : (request['statusId'] == 8
+                                      ? 'EVALUATED'
+                                      : (request['statusId'] == 100
+                                          ? 'DENIED'
+                                          : (request['statusId'] == 200
+                                              ? 'CANCELLED'
+                                              : 'OTHERS'))),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
-                            ),
-                            TextSpan(
-                              text: ' by',
-                              style: TextStyle(color: Colors.black),
                             ),
                           ],
                         ),

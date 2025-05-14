@@ -870,7 +870,10 @@ class _OngoingRequestsState extends State<OngoingRequests> {
         child: ListView(
           physics:
               const AlwaysScrollableScrollPhysics(), // Forces pull even when not scrollable
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.075,
+          ),
+
           children: [
             const SizedBox(height: 15),
 
