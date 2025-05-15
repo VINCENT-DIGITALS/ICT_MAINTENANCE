@@ -54,6 +54,7 @@ dependencies:
   camera: ^0.11.0+2
   google_fonts: ^6.2.1
   connectivity_plus: ^6.1.4
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +87,8 @@ flutter:
     - assets/images/LOGOAPP.png
     - assets/images/Maintenance-Login-bg.png
     - google_fonts/
+    - assets/images/message_sent.svg
+    - assets/images/message_sent.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

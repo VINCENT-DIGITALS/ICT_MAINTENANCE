@@ -8,37 +8,39 @@ void showEquipmentInfoModal(
     builder: (context) {
       return LayoutBuilder(
         builder: (context, constraints) {
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              // Dialog Container
-              Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: 400,//MediaQuery.of(context).size.width * 0.85,
-                    maxHeight: MediaQuery.of(context).size.height * 0.6,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Title
-                        const Text(
-                          "Equipment Info",
-                          style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
+          return Center(
+            child: Material(
+              color: Colors.transparent,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // The modal dialog
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width *
+                            0.85, // Set button width
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 10),
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Title
+                            const Text(
+                              "Equipment Info",
+                              style: TextStyle(
+                                  fontSize: 22, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 10),
 
-                        // Scrollable content
-                        Flexible(
-                          child: SingleChildScrollView(
-                            child: Column(
+                            // Scrollable content
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
@@ -72,31 +74,36 @@ void showEquipmentInfoModal(
                                 ),
                               ],
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
 
-              // Floating close button slightly below the modal
-              Positioned(
-                bottom: 30, // Pushes the button a bit below the modal
-                child: SizedBox(
-                  width: 40, // Adjust width
-                  height: 40, // Adjust height
-                  child: FloatingActionButton(
-                    onPressed: () => Navigator.pop(context),
-                    backgroundColor: Colors.white,
-                    shape: const CircleBorder(),
-                    elevation: 4,
-                    child: const Icon(Icons.close,
-                        color: Colors.black, size: 24), // Adjust icon size
-                  ),
+                    // The floating close button with the new design
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.close,
+                            color: Colors.black, size: 24),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           );
         },
       );

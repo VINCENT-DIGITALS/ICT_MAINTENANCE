@@ -12,6 +12,8 @@ import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
+import 'package:servicetracker_app/pages/ongoingRequests/serviceDetails.dart';
+import 'package:servicetracker_app/pages/request/UpdateRequest.dart';
 
 import '../../auth/sessionmanager.dart';
 
@@ -175,6 +177,7 @@ class _OngoingRequestsState extends State<OngoingRequests> {
   List<Map<String, dynamic>> _transformRequests(List<dynamic> rawList) {
     return rawList.map((request) {
       return {
+        'id': request['id'] ?? 0,
         "title": request['ticket']?["ticket_full"] ?? "Unknown Ticket",
         "requester": request["requester"]?["name"] ?? "Unknown Requester",
         "division": request["location"] ?? "Unknown Division",
@@ -1390,23 +1393,21 @@ class _OngoingRequestsState extends State<OngoingRequests> {
   }
 
   Widget _buildButton(
-      BuildContext context, String text, Color color, VoidCallback onPressed) {
+    BuildContext context,
+    String text,
+    Color color,
+    VoidCallback onPressed, {
+    Map<String, dynamic>? request, // ✅ You added this here
+  }) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => CustomModalPickRequest(
-              title: "Request Added to Your Services",
-              message:
-                  "Complete the details to add this to your ongoing services",
-              onConfirm: () {
-                Navigator.pop(context);
-                onPressed();
-              },
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => ServiceDetails(
+              requestData: request, // ✅ Now this will not be null
             ),
-          );
+          ));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
@@ -1461,8 +1462,9 @@ class RequestDetailsModal extends StatelessWidget {
     BuildContext context,
     String text,
     Color color,
-    VoidCallback onPressed,
-  ) buildButton;
+    VoidCallback onPressed, {
+    Map<String, dynamic>? request, // ✅ Add this here too
+  }) buildButton;
 
   const RequestDetailsModal({
     super.key,
@@ -1604,6 +1606,7 @@ class RequestDetailsModal extends StatelessWidget {
                     () {
                       Navigator.pop(context);
                     },
+                    request: request, // ✅ pass the actual request data here
                   ),
                 ],
               ),

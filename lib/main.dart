@@ -9,7 +9,9 @@ import 'package:servicetracker_app/pages/incidentReports/incidentReport.dart';
 import 'package:servicetracker_app/pages/incidentReports/newIncidentReport.dart';
 import 'package:servicetracker_app/pages/incidentReports/newIncidentReportFindings.dart';
 import 'package:servicetracker_app/pages/myServices.dart';
+import 'package:servicetracker_app/pages/ongoingRequests/equipmentDetails.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/ongoingRequests.dart';
+import 'package:servicetracker_app/pages/ongoingRequests/UpdateStatusScreen.dart';
 import 'package:servicetracker_app/pages/pendingRequests/pendingRequests.dart';
 import 'package:servicetracker_app/pages/pickedRequests/pickedRequests.dart';
 import 'package:servicetracker_app/pages/request/UpdateRequest.dart';
@@ -17,7 +19,7 @@ import 'package:servicetracker_app/pages/request/newRequest.dart';
 import 'package:servicetracker_app/pages/request/newRequestManualQR.dart';
 import 'package:servicetracker_app/pages/request/newRequestQR.dart';
 import 'package:servicetracker_app/pages/request/newRequestSave.dart';
-import 'package:servicetracker_app/pages/serviceDetails.dart';
+import 'package:servicetracker_app/pages/ongoingRequests/serviceDetails.dart';
 import 'package:servicetracker_app/pages/signIn.dart';
 import 'package:servicetracker_app/services/FormProvider.dart';
 
@@ -25,11 +27,11 @@ import 'models/splash_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
-void main() async{
+void main() async {
   runApp(
     ChangeNotifierProvider(
       create: (context) => FormProvider(),
-      child:  const MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -49,7 +51,6 @@ class _MyAppState extends State<MyApp> {
 //Navigator.pushNamed(context, '/EditIncidentReport'); //with backoption
 //Navigator.pushReplacementNamed(context, '/newRequest'); //without back options
 // ADD COWORKERS
-
 
   @override
   Widget build(BuildContext context) {
@@ -74,11 +75,14 @@ class _MyAppState extends State<MyApp> {
         '/PendingRequests': (context) => const PendingRequests(),
         '/PickedRequests': (context) => const PickedRequests(),
         '/OngoingRequests': (context) => const OngoingRequests(),
-        '/CompletedRequests': (context) => const CompletedRequests(),
+        // Add this to your MaterialApp routes
+        '/EquipmentDetails': (context) => const EquipmentDetails(),        '/CompletedRequests': (context) => const CompletedRequests(),
         '/IncidentReportDetails': (context) => const IncidentReportDetails(),
         '/NewIncidentReport': (context) => const NewIncidentReport(),
-        '/EditIncidentReport' : (context) => const EditIncidentReport(),
-        '/newIncidentReportFindings' : (context) => const newIncidentReportFindings(),
+        '/EditIncidentReport': (context) => const EditIncidentReport(),
+        '/UpdateStatusScreen': (context) => const UpdateStatusScreen(),
+        '/newIncidentReportFindings': (context) =>
+            const newIncidentReportFindings(),
       },
     );
   }
