@@ -106,6 +106,9 @@ class _PendingRequestsState extends State<PendingRequests> {
               "${request["requester"]?["name"] ?? "Unknown Requester"}",
           "division": request["location"] ?? "Unknown Division",
           "requestedDate": _formatDate(request["created_at"]),
+          "request_completion": request["request_completion"] != null
+              ? _formatDate(request["request_completion"])
+              : "Not specified",
           "updatedDate": _formatDate(request["updated_at"]), // Add this
           "description": request["request_description"] ?? "",
           "category":
@@ -1076,7 +1079,7 @@ class _PendingRequestsState extends State<PendingRequests> {
                   ),
                 ),
                 Text(
-                  "Requested Date of Completion: ${request['requestedDate'] ?? 'N/A'}",
+                  "Requested Date of Completion: ${request['request_completion'] ?? 'N/A'}",
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF707070),
@@ -1279,8 +1282,18 @@ class _PendingRequestsState extends State<PendingRequests> {
                                       "Complete the details to add this to your ongoing services",
                                   onConfirm: () async {
                                     Navigator.pop(context);
-                                    // Refresh the data ONCE after dialog is closed
-                                    await _fetchAndSetPendingRequests();
+                                    // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/home', // First go to home
+                                      (route) =>
+                                          route.settings.name ==
+                                          '/', // Keep only splash screen
+                                    );
+
+                                    // Then navigate to OngoingRequests - this makes Home the previous screen
+                                    Navigator.pushNamed(
+                                        context, '/PendingRequests');
                                   },
                                 ),
                               ),
@@ -1290,15 +1303,19 @@ class _PendingRequestsState extends State<PendingRequests> {
                             const SizedBox(height: 12),
                             GestureDetector(
                               onTap: () async {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          PendingRequests()), // Navigate to PickedRequests
-                                  ModalRoute.withName(
-                                      '/home'), // Only keep HomePage in the back stack
+                                Navigator.pop(context);
+                                // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/home', // First go to home
+                                  (route) =>
+                                      route.settings.name ==
+                                      '/', // Keep only splash screen
                                 );
-                                // Also refresh the data when close button is clicked
-                                await _fetchAndSetPendingRequests();
+
+                                // Then navigate to OngoingRequests - this makes Home the previous screen
+                                Navigator.pushNamed(
+                                    context, '/PendingRequests');
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(8),

@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api_constants.dart';
 
 class DashboardService {
-  final String baseUrl = 'http://192.168.43.128/ServiceTrackerGithub/api';
+  final String baseUrl = kBaseUrl;
 
   Future<Map<String, dynamic>> fetchDashboardData() async {
     final url = Uri.parse('$baseUrl/dashboard');

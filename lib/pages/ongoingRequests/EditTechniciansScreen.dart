@@ -3,8 +3,14 @@ import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/api_service/ongoing_request.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:servicetracker_app/components/messageSentModal.dart';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
+import 'package:servicetracker_app/components/request/PickRequestModal.dart';
+import 'package:servicetracker_app/pages/ongoingRequests/ongoingRequests.dart';
+import 'package:servicetracker_app/pages/ongoingRequests/serviceDetails.dart';
 
 import '../../auth/sessionmanager.dart';
+import '../../api_service/api_constants.dart';
 
 class EditTechniciansScreen extends StatefulWidget {
   final int? requestId; // Change to String? to match API expectations
@@ -55,7 +61,7 @@ class _EditTechniciansScreenState extends State<EditTechniciansScreen> {
 
     try {
       final response = await http.get(Uri.parse(
-          "http://192.168.43.128/ServiceTrackerGithub/api/technicians/available"));
+          "$kBaseUrl/technicians/available"));
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
@@ -110,6 +116,8 @@ class _EditTechniciansScreenState extends State<EditTechniciansScreen> {
 
 // Update the _updateTechnicians method
 
+// Update the _updateTechnicians method
+
   void _updateTechnicians() async {
     // Validate lead technician is selected
     if (selectedLeadTechnician == null || selectedLeadTechnician!.isEmpty) {
@@ -122,74 +130,183 @@ class _EditTechniciansScreenState extends State<EditTechniciansScreen> {
       return;
     }
 
-    setState(() {
-      isUpdating = true;
-    });
+    // Show confirmation dialog first
+    showDialog(
+      context: context,
+      builder: (dialogBuilderContext) => CustomModalPickRequest(
+        title: "TECHNICIANS UPDATED",
+        message:
+            "Are you sure you want to update the technicians for this request?",
+        onConfirm: () async {
+          // Close the dialog first
+          Navigator.pop(dialogBuilderContext);
 
-    try {
-      // Get the ID of the selected lead technician
-      final leadTechId = techNameToIdMap[selectedLeadTechnician] ?? "";
+          // Show loading indicator
+          final loadingDialog = showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (loadingContext) => const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
 
-      // Get IDs of selected co-workers
-      List<String> coWorkerIds = [];
-      for (String name in selectedCoWorkers) {
-        final id = techNameToIdMap[name];
-        if (id != null) coWorkerIds.add(id);
-      }
+          try {
+            // Get the ID of the selected lead technician
+            final leadTechId = techNameToIdMap[selectedLeadTechnician] ?? "";
 
-      // Get current user ID from session or use a default
-      // Replace this with your actual user ID retrieval logic
+            // Get IDs of selected co-workers
+            List<String> coWorkerIds = [];
+            for (String name in selectedCoWorkers) {
+              final id = techNameToIdMap[name];
+              if (id != null) coWorkerIds.add(id);
+            }
 
-      final SessionManager session = SessionManager();
-      final user = await session.getUser();
-      final String technicianId = user?['philrice_id'];
-      final String actingUserId = technicianId ;// Should be replaced with real user ID
-      // Create API service instance
-      final apiService = OngoingRequestService();
+            // Get current user ID from session
+            final SessionManager session = SessionManager();
+            final user = await session.getUser();
+            final String technicianId = user?['philrice_id'] ?? "";
 
-      // Call API to update technicians
-      final result = await apiService.updateTechnicians(
-       requestId: widget.requestId ?? 0,
-        primaryTechnicianId: leadTechId,
-        secondaryTechnicianIds: coWorkerIds,
-        remarks: "Updated from mobile app",
-        actingUserId: actingUserId,
-      );
+            if (technicianId.isEmpty) {
+              // Close loading dialog
+              Navigator.of(context).pop();
 
-      if (context.mounted) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Technicians updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('User ID not found. Please log in again.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
 
-        // Return updated values to previous screen
-        Navigator.pop(context, {
-          'leadTechnician': selectedLeadTechnician,
-          'leadTechnicianId': leadTechId,
-          'coWorkers': selectedCoWorkers,
-          'coWorkerIds': coWorkerIds,
-        });
-      }
-    } catch (e) {
-      if (context.mounted) {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating technicians: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          isUpdating = false;
-        });
-      }
-    }
+            // Create API service instance
+            final apiService = OngoingRequestService();
+
+            // Call API to update technicians
+            final result = await apiService.updateTechnicians(
+              requestId: widget.requestId ?? 0,
+              primaryTechnicianId: leadTechId,
+              secondaryTechnicianIds: coWorkerIds,
+              remarks: "Updated from mobile app",
+              actingUserId: technicianId,
+            );
+
+            // Always close loading dialog first
+            Navigator.of(context).pop();
+
+            if (result['success'] == true) {
+              // Show success dialog with floating close button
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                useRootNavigator: true,
+                builder: (context) => Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Main dialog content
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: CustomMessageSentModal(
+                            title: "Technicians Updated",
+                            message:
+                                "The technicians for this request have been updated",
+                            // Inside the onConfirm method, modify the navigation as follows:
+
+                            onConfirm: () {
+                              Navigator.pop(context);
+                              // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/home', // First go to home
+                                (route) =>
+                                    route.settings.name ==
+                                    '/', // Keep only splash screen
+                              );
+
+                              // Then navigate to OngoingRequests - this makes Home the previous screen
+                              Navigator.pushNamed(context, '/OngoingRequests');
+
+                              // Navigate back to ServiceDetails with the correct parameter
+                              // Replace current screen with ServiceDetails but preserve history
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // Floating close button - also triggers navigation
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context); // Close dialog
+                          // Navigate to OngoingRequests and remove all screens between
+                          // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/home', // First go to home
+                            (route) =>
+                                route.settings.name ==
+                                '/', // Keep only splash screen
+                          );
+
+                          // Then navigate to OngoingRequests - this makes Home the previous screen
+                          Navigator.pushNamed(context, '/OngoingRequests');
+                          
+
+                          // Navigate back to OngoingRequests
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.black,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              // Show error message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(result['message'] ?? 'Unknown error'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e) {
+            // Always ensure loading dialog is closed on error
+            Navigator.of(context).pop();
+
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error updating technicians: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      ),
+    );
   }
 
   void _addCoWorker(String name) {

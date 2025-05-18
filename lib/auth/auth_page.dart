@@ -7,6 +7,7 @@ import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/models/splash_screen.dart';
 import 'package:servicetracker_app/pages/home.dart';
 import 'package:servicetracker_app/pages/signIn.dart';
+import '../api_service/api_constants.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -27,7 +28,7 @@ class _AuthPageState extends State<AuthPage> {
   Future<void> _checkServerConnection() async {
     try {
       final response = await http
-          .get(Uri.parse('http://192.168.43.128/ServiceTrackerGithub/api/ping'))
+          .get(Uri.parse('$kBaseUrl/ping'))
           .timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {

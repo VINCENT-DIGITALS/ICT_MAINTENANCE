@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:servicetracker_app/auth/auth_page.dart';
+import 'package:servicetracker_app/pages/completedRequests/CompleteserviceDetails.dart';
 import 'package:servicetracker_app/pages/completedRequests/completedRequests.dart';
 import 'package:servicetracker_app/pages/home.dart';
+import 'package:servicetracker_app/pages/incidentReportPage.dart';
+
 import 'package:servicetracker_app/pages/incidentReports/editIncidentReport.dart';
 import 'package:servicetracker_app/pages/incidentReports/incidentDetails.dart';
-import 'package:servicetracker_app/pages/incidentReports/incidentReport.dart';
+
 import 'package:servicetracker_app/pages/incidentReports/newIncidentReport.dart';
 import 'package:servicetracker_app/pages/incidentReports/newIncidentReportFindings.dart';
 import 'package:servicetracker_app/pages/myServices.dart';
@@ -71,12 +74,15 @@ class _MyAppState extends State<MyApp> {
         '/NewRequestManualQR': (context) => const NewRequestManualQR(),
         '/UpdateRequest': (context) => const UpdateRequest(),
         '/MyServices': (context) => const MyServices(),
-        '/IncidentReports': (context) => const IncidentReports(),
+        '/IncidentReports': (context) => const IncidentReportPage(),
         '/PendingRequests': (context) => const PendingRequests(),
         '/PickedRequests': (context) => const PickedRequests(),
         '/OngoingRequests': (context) => const OngoingRequests(),
         // Add this to your MaterialApp routes
-        '/EquipmentDetails': (context) => const EquipmentDetails(),        '/CompletedRequests': (context) => const CompletedRequests(),
+        '/EquipmentDetails': (context) => const EquipmentDetails(),    
+        '/CompletedRequests': (context) => const CompletedRequests(),
+        'CompleteServiceDetails' : (context) =>
+            const CompleteServiceDetails(), // Add this to your MaterialApp routes
         '/IncidentReportDetails': (context) => const IncidentReportDetails(),
         '/NewIncidentReport': (context) => const NewIncidentReport(),
         '/EditIncidentReport': (context) => const EditIncidentReport(),

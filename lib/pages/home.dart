@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -39,7 +42,6 @@ class _HomePageState extends State<HomePage> {
   //     // Your refresh logic here (fetching data, resetting states, etc.)
   //   });
   // }
-
 
   @override
   void initState() {
@@ -211,265 +213,306 @@ class _HomePageState extends State<HomePage> {
 // compute the grid’s max width so cards don’t stretch:
     final gridWidth =
         (maxCardWidth * crossAxisCount) + (spacing * (crossAxisCount - 1));
-    return SafeArea(
-      child: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/Maintenance-Login-bg.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: CurvedEdgesAppBar(
-            height: MediaQuery.of(context).size.height * 0.13,
-            showFooter: false,
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: AutoSizeText(
-                      'Mabuhay, Ranniel!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      minFontSize: 12,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+
+    return PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) return;
+
+          final result = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Exit Application'),
+              content: const Text('Are you sure you want to exit the app?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('CANCEL'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF008037),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
-                    icon: const Icon(
-                      Icons.logout,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
+                  child: const Text('EXIT'),
+                ),
+              ],
             ),
-          ),
-          body: Container(
+          );
+
+          if (result == true) {
+            if (Platform.isAndroid) {
+              SystemNavigator.pop();
+            } else if (Platform.isIOS) {
+              exit(0); // Import 'dart:io' for this
+            }
+          }
+        },
+        child: SafeArea(
+          child: Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/images/Maintenance-Login-bg.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            child: SafeArea(
-              child: RefreshIndicator(
-                onRefresh: _refreshDashboardData,
-                child: ListView(
-                  physics:
-                      const AlwaysScrollableScrollPhysics(), // 👈 Forces scroll
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  children: [
-                    SingleChildScrollView(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: CurvedEdgesAppBar(
+                height: MediaQuery.of(context).size.height * 0.13,
+                showFooter: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 15.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: AutoSizeText(
+                          'Mabuhay, Ranniel!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          minFontSize: 12,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        icon: const Icon(
+                          Icons.logout,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              body: Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Maintenance-Login-bg.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: SafeArea(
+                  child: RefreshIndicator(
+                    onRefresh: _refreshDashboardData,
+                    child: ListView(
+                      physics:
+                          const AlwaysScrollableScrollPhysics(), // 👈 Forces scroll
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Date pickers row (responsive)
-                          // Date pickers row (responsive)
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final isWide = constraints.maxWidth >
-                                  500; // adjust as needed
+                      children: [
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Date pickers row (responsive)
+                              // Date pickers row (responsive)
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final isWide = constraints.maxWidth >
+                                      500; // adjust as needed
 
-                              Widget dateRow = Row(
-                                children: [
-                                  Expanded(
-                                    child: _DatePickerCard(
-                                      label: 'From',
-                                      date: fromDate,
-                                      onTap: () => _pickDate(context, true),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _DatePickerCard(
-                                      label: 'To',
-                                      date: toDate,
-                                      onTap: () => _pickDate(context, false),
-                                    ),
-                                  ),
-                                ],
-                              );
-
-                              return isWide
-                                  ? Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: ConstrainedBox(
-                                        constraints:
-                                            const BoxConstraints(maxWidth: 280),
-                                        child: dateRow,
+                                  Widget dateRow = Row(
+                                    children: [
+                                      Expanded(
+                                        child: _DatePickerCard(
+                                          label: 'From',
+                                          date: fromDate,
+                                          onTap: () => _pickDate(context, true),
+                                        ),
                                       ),
-                                    )
-                                  : dateRow;
-                            },
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Responsive Grid
-                          Center(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: gridWidth),
-                              child: FutureBuilder<Map<String, dynamic>>(
-                                future: _dashboardFuture,
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Center(
-                                        child: CircularProgressIndicator());
-                                  }
-
-                                  if (snapshot.hasError) {
-                                    return Center(
-                                        child:
-                                            Text('Error: ${snapshot.error}'));
-                                  }
-
-                                  final data = snapshot.data!;
-
-                                  final pendingCount =
-                                      (data['pendingRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final pickedCount =
-                                      (data['pickedRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final ongoingCount =
-                                      (data['ongoingRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final pausedCount =
-                                      (data['pausedRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final completedCount =
-                                      (data['completedRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final evaluatedCount =
-                                      (data['evaluatedRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final cancelledCount =
-                                      (data['cancelledRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final deniedCount =
-                                      (data['deniedRequests'] as List?)
-                                              ?.length ??
-                                          0;
-                                  final others = deniedCount + cancelledCount;
-
-                                  return ConstrainedBox(
-                                    constraints:
-                                        BoxConstraints(maxWidth: gridWidth),
-                                    child: GridView.count(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      crossAxisCount: crossAxisCount,
-                                      crossAxisSpacing: spacing,
-                                      mainAxisSpacing: spacing,
-                                      childAspectRatio:
-                                          maxCardWidth / (maxCardWidth * .8),
-                                      children: [
-                                        _StatCard(
-                                          title: 'PENDING\nREQUESTS',
-                                          mainValue: '$pendingCount',
-                                          route: '/PendingRequests',
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _DatePickerCard(
+                                          label: 'To',
+                                          date: toDate,
+                                          onTap: () =>
+                                              _pickDate(context, false),
                                         ),
-                                        _StatCard(
-                                          title: 'PICKED\nREQUESTS',
-                                          mainValue: '$pickedCount',
-                                          route: '/PickedRequests',
-                                        ),
-                                        _StatCard(
-                                          title: 'ONGOING\nSERVICES',
-                                          mainValue: '$ongoingCount',
-                                          subValues: ['$pausedCount paused'],
-                                          route: '/OngoingRequests',
-                                        ),
-                                        _StatCard(
-                                          title: 'COMPLETED\nSERVICES',
-                                          mainValue: '$completedCount',
-                                          subValues: [
-                                            '$evaluatedCount evaluated',
-                                            '$others others',
-                                          ],
-                                          route: '/CompletedRequests',
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   );
+
+                                  return isWide
+                                      ? Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: ConstrainedBox(
+                                            constraints: const BoxConstraints(
+                                                maxWidth: 280),
+                                            child: dateRow,
+                                          ),
+                                        )
+                                      : dateRow;
                                 },
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 5),
 
-                          _buildButtons(
-                            "ADD NEW SERVICE REQUEST",
-                            () => Navigator.pushNamed(context, '/newRequest'),
-                            context,
-                            textColor: const Color(0xFF004D1E),
-                            buttonColor: const Color(0xFF45CF7F),
-                          ),
+                              const SizedBox(height: 24),
 
-                          _buildButtons(
-                            "INCIDENT REPORTS",
-                            () => Navigator.pushNamed(
-                                context, '/IncidentReports'),
-                            context,
-                            textColor: const Color(0xFFFFFFFF),
-                            buttonColor: const Color(0xFF007A33),
-                          ),
+                              // Responsive Grid
+                              Center(
+                                child: ConstrainedBox(
+                                  constraints:
+                                      BoxConstraints(maxWidth: gridWidth),
+                                  child: FutureBuilder<Map<String, dynamic>>(
+                                    future: _dashboardFuture,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const Center(
+                                            child: CircularProgressIndicator());
+                                      }
 
-                          _buildButtons(
-                            "ADD NEW INCIDENT",
-                            () => Navigator.pushNamed(
-                                context, '/PendingRequests'),
-                            context,
-                            textColor: const Color(0xFF004D1E),
-                            buttonColor: const Color(0xFF45CF7F),
-                          ),
+                                      if (snapshot.hasError) {
+                                        return Center(
+                                            child: Text(
+                                                'Error: ${snapshot.error}'));
+                                      }
 
-                          // Action buttons (you can add the buttons back here as needed)
-                          // _ActionButton(
-                          //     text: 'ADD NEW SERVICE REQUEST',
-                          //     onTap: _onAddService),
-                          // const SizedBox(height: 12),
-                          // _ActionButton(
-                          //     text: 'INCIDENT REPORTS', onTap: _onIncidentReports),
-                          // const SizedBox(height: 12),
-                          // _ActionButton(
-                          //     text: 'ADD NEW INCIDENT', onTap: _onAddIncident),
-                        ],
-                      ),
+                                      final data = snapshot.data!;
+
+                                      final pendingCount =
+                                          (data['pendingRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final pickedCount =
+                                          (data['pickedRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final ongoingCount =
+                                          (data['ongoingRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final pausedCount =
+                                          (data['pausedRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final completedCount =
+                                          (data['completedRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final evaluatedCount =
+                                          (data['evaluatedRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final cancelledCount =
+                                          (data['cancelledRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final deniedCount =
+                                          (data['deniedRequests'] as List?)
+                                                  ?.length ??
+                                              0;
+                                      final others =
+                                          deniedCount + cancelledCount;
+
+                                      return ConstrainedBox(
+                                        constraints:
+                                            BoxConstraints(maxWidth: gridWidth),
+                                        child: GridView.count(
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: spacing,
+                                          mainAxisSpacing: spacing,
+                                          childAspectRatio: maxCardWidth /
+                                              (maxCardWidth * .8),
+                                          children: [
+                                            _StatCard(
+                                              title: 'PENDING\nREQUESTS',
+                                              mainValue: '$pendingCount',
+                                              route: '/PendingRequests',
+                                            ),
+                                            _StatCard(
+                                              title: 'PICKED\nREQUESTS',
+                                              mainValue: '$pickedCount',
+                                              route: '/PickedRequests',
+                                            ),
+                                            _StatCard(
+                                              title: 'ONGOING\nSERVICES',
+                                              mainValue: '$ongoingCount',
+                                              subValues: [
+                                                '$pausedCount paused'
+                                              ],
+                                              route: '/OngoingRequests',
+                                            ),
+                                            _StatCard(
+                                              title: 'COMPLETED\nSERVICES',
+                                              mainValue: '$completedCount',
+                                              subValues: [
+                                                '$evaluatedCount evaluated',
+                                                '$others others',
+                                              ],
+                                              route: '/CompletedRequests',
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+
+                              _buildButtons(
+                                "ADD NEW SERVICE REQUEST",
+                                () =>
+                                    Navigator.pushNamed(context, '/newRequest'),
+                                context,
+                                textColor: const Color(0xFF004D1E),
+                                buttonColor: const Color(0xFF45CF7F),
+                              ),
+
+                              _buildButtons(
+                                "INCIDENT REPORTS",
+                                () => Navigator.pushNamed(
+                                    context, '/IncidentReports'),
+                                context,
+                                textColor: const Color(0xFFFFFFFF),
+                                buttonColor: const Color(0xFF007A33),
+                              ),
+
+                              _buildButtons(
+                                "ADD NEW INCIDENT",
+                                () => Navigator.pushNamed(
+                                    context, '/PendingRequests'),
+                                context,
+                                textColor: const Color(0xFF004D1E),
+                                buttonColor: const Color(0xFF45CF7F),
+                              ),
+
+                              // Action buttons (you can add the buttons back here as needed)
+                              // _ActionButton(
+                              //     text: 'ADD NEW SERVICE REQUEST',
+                              //     onTap: _onAddService),
+                              // const SizedBox(height: 12),
+                              // _ActionButton(
+                              //     text: 'INCIDENT REPORTS', onTap: _onIncidentReports),
+                              // const SizedBox(height: 12),
+                              // _ActionButton(
+                              //     text: 'ADD NEW INCIDENT', onTap: _onAddIncident),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   /// 🛠 Bottom Section with Buttons

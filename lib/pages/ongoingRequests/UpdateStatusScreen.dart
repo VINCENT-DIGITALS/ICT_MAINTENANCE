@@ -1,8 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/buildtextField.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
+import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/EditTechniciansScreen.dart';
 import 'package:servicetracker_app/api_service/ongoing_request.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,6 +25,8 @@ class UpdateStatusScreen extends StatefulWidget {
 
 class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
   String selectedStatus = "ONGOING"; // Default selected status
+  String currentStatus =
+      "ONGOING"; // Added to store the current status from the request
   final TextEditingController _remarksController = TextEditingController();
   bool isSendingUpdate = false;
   final OngoingRequestService _apiService = OngoingRequestService();
@@ -41,10 +47,53 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
   String? scannedLocation;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
+
   @override
   void initState() {
     super.initState();
-    // _fetchProblemsAndActions();
+    _fetchProblemsAndActions();
+    // Get the current status from the request data
+    if (widget.requestData != null &&
+        widget.requestData!['latest_status'] != null) {
+      // Check if status is in the nested structure (new format)
+      if (widget.requestData!['latest_status']['status'] != null &&
+          widget.requestData!['latest_status']['status']['status_name'] !=
+              null) {
+        // Set the current status based on nested status object
+        currentStatus = widget.requestData!['latest_status']['status']
+                ['status_name']
+            .toString()
+            .toUpperCase();
+      }
+      // Fallback to older format if needed
+      else if (widget.requestData!['latest_status']['status'] != null) {
+        currentStatus = widget.requestData!['latest_status']['status']
+            .toString()
+            .toUpperCase();
+      }
+      // Set the selected status to a different status than the current one
+      selectDefaultStatus();
+    }
+  }
+
+  // Helper method to select a default status that isn't the current one
+  void selectDefaultStatus() {
+    final List<String> statusOptions = [
+      "ONGOING",
+      "PAUSED",
+      "DENIED",
+      "CANCELLED",
+      "COMPLETED"
+    ];
+
+    // Remove the current status from options to find a valid default
+    statusOptions.remove(currentStatus);
+    if (statusOptions.isNotEmpty) {
+      setState(() {
+        selectedStatus =
+            statusOptions.first; // Select the first available status
+      });
+    }
   }
 
 // Add this method to handle QR scanning
@@ -62,19 +111,19 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
   }
 
   // Fetch problems and actions from API
-  // Future<void> _fetchProblemsAndActions() async {
-  //   try {
-  //     final problemsList = await _apiService.fetchProblems();
-  //     final actionsList = await _apiService.fetchActions();
+  Future<void> _fetchProblemsAndActions() async {
+    try {
+      final problemsList = await _apiService.fetchProblems();
+      final actionsList = await _apiService.fetchActions();
 
-  //     setState(() {
-  //       problems = problemsList;
-  //       actions = actionsList;
-  //     });
-  //   } catch (e) {
-  //     print('Error fetching problems and actions: $e');
-  //   }
-  // }
+      setState(() {
+        problems = problemsList;
+        actions = actionsList;
+      });
+    } catch (e) {
+      print('Error fetching problems and actions: $e');
+    }
+  }
 
   // Pick image for documentation
   Future<void> _pickImage() async {
@@ -98,11 +147,23 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
 
   // This method will handle the status update
   void _updateStatus() async {
+    // First perform validation checks
     if (_remarksController.text.trim().isEmpty) {
-      // Show validation error if remarks are empty
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter remarks for this status update'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Check if trying to update to the same status
+    if (selectedStatus == currentStatus) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Cannot update to the same status. Please select a different status.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -122,116 +183,207 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
       return;
     }
 
-    setState(() {
-      isSendingUpdate = true;
-    });
+    // All validation passed, show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (dialogBuilderContext) => CustomModalPickRequest(
+        title: "UPDATE STATUS",
+        message:
+            "Are you sure you want to update this service request to ${selectedStatus.toUpperCase()}? This action cannot be undone.",
+        onConfirm: () async {
+          // Close the confirmation dialog
+          Navigator.pop(dialogBuilderContext);
 
-    try {
-      // Get the request ID from data
-      final requestId = widget.requestData?['id']?.toString() ?? '';
-      // For demonstration, using a hardcoded user ID
-      const philriceId =
-          'TECH001'; // In a real app, get this from user authentication
-
-      // Call the appropriate API method based on selected status
-      Map<String, dynamic> result;
-
-      switch (selectedStatus) {
-        case "COMPLETED":
-          result = await _apiService.markAsCompleted(
-            requestId: requestId,
-            philriceId: philriceId,
-            remarks: _remarksController.text,
-            problemId: selectedProblemId,
-            actionId: selectedActionId,
-            documentationImage: documentationImage,
-            location: scannedLocation,
-          );
-          break;
-        case "PAUSED":
-          result = await _apiService.markAsPaused(
-            requestId: requestId,
-            philriceId: philriceId,
-            remarks: _remarksController.text,
-            problemId: selectedProblemId,
-            actionId: selectedActionId,
-            documentationImage: documentationImage,
-            location: scannedLocation,
-          );
-          break;
-        case "DENIED":
-          result = await _apiService.markAsDenied(
-            requestId: requestId,
-            philriceId: philriceId,
-            remarks: _remarksController.text,
-            problemId: selectedProblemId,
-            actionId: selectedActionId,
-            documentationImage: documentationImage,
-            location: scannedLocation,
-          );
-          break;
-        case "CANCELLED":
-          result = await _apiService.markAsCancelled(
-            requestId: requestId,
-            philriceId: philriceId,
-            remarks: _remarksController.text,
-            problemId: selectedProblemId,
-            actionId: selectedActionId,
-            documentationImage: documentationImage,
-            location: scannedLocation,
-          );
-          break;
-        case "ONGOING":
-        default:
-          result = await _apiService.markAsOngoing(
-            requestId: requestId,
-            philriceId: philriceId,
-            remarks: _remarksController.text,
-            documentationImage: documentationImage,
-            location: scannedLocation,
-          );
-          break;
-      }
-
-      if (result['success']) {
-        // Show success message
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: Colors.green,
+          // Show loading indicator
+          final loadingDialog = showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (loadingContext) => const Center(
+              child: CircularProgressIndicator(),
             ),
           );
-          // Navigate back to previous screen after successful update
-          Navigator.pop(context);
-        }
-      } else {
-        // Show error message
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating status: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          isSendingUpdate = false;
-        });
-      }
-    }
+
+          try {
+            // Get the request ID from data
+            final requestId = widget.requestData?['id']?.toString() ?? '';
+
+            // Get current user ID from session
+            final SessionManager session = SessionManager();
+            final user = await session.getUser();
+            final String philriceId = user?['philrice_id'] ?? "";
+
+            // Call the appropriate API method based on selected status
+            Map<String, dynamic> result;
+
+            switch (selectedStatus) {
+              case "COMPLETED":
+                result = await _apiService.markAsCompleted(
+                  requestId: requestId,
+                  philriceId: philriceId,
+                  remarks: _remarksController.text,
+                  problemId: selectedProblemId,
+                  actionId: selectedActionId,
+                  documentationImage: documentationImage,
+                  location: scannedLocation,
+                );
+                break;
+              case "PAUSED":
+                result = await _apiService.markAsPaused(
+                  requestId: requestId,
+                  philriceId: philriceId,
+                  remarks: _remarksController.text,
+                  problemId: selectedProblemId,
+                  actionId: selectedActionId,
+                  documentationImage: documentationImage,
+                  location: scannedLocation,
+                );
+                break;
+              case "DENIED":
+                result = await _apiService.markAsDenied(
+                  requestId: requestId,
+                  philriceId: philriceId,
+                  remarks: _remarksController.text,
+                  problemId: selectedProblemId,
+                  actionId: selectedActionId,
+                  documentationImage: documentationImage,
+                  location: scannedLocation,
+                );
+                break;
+              case "CANCELLED":
+                result = await _apiService.markAsCancelled(
+                  requestId: requestId,
+                  philriceId: philriceId,
+                  remarks: _remarksController.text,
+                  problemId: selectedProblemId,
+                  actionId: selectedActionId,
+                  documentationImage: documentationImage,
+                  location: scannedLocation,
+                );
+                break;
+              case "ONGOING":
+              default:
+                result = await _apiService.markAsOngoing(
+                  requestId: requestId,
+                  philriceId: philriceId,
+                  remarks: _remarksController.text,
+                  problemId: selectedProblemId,
+                  actionId: selectedActionId,
+                  documentationImage: documentationImage,
+                  location: scannedLocation,
+                );
+                break;
+            }
+
+            // Always close loading dialog first
+            Navigator.of(context).pop();
+
+            if (result['success']) {
+              // Show success dialog with floating close button
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                useRootNavigator: true,
+                builder: (context) => Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Main dialog content
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: CustomModalButtonRequest(
+                            title: "Status Updated Successfully",
+                            message:
+                                "The service request status has been updated to ${selectedStatus}",
+                            onConfirm: () {
+                              Navigator.pop(context); // Close the dialog first
+
+                              // Navigate to OngoingRequests but keep the home screen in history
+                              // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/home', // First go to home
+                                (route) =>
+                                    route.settings.name ==
+                                    '/', // Keep only splash screen
+                              );
+
+                              // Then navigate to OngoingRequests - this makes Home the previous screen
+                              Navigator.pushNamed(context, '/OngoingRequests');
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // Floating close button
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context); // Close the dialog first
+
+                          // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/home', // First go to home
+                            (route) =>
+                                route.settings.name ==
+                                '/', // Keep only splash screen
+                          );
+
+                          // Then navigate to OngoingRequests - this makes Home the previous screen
+                          Navigator.pushNamed(context, '/OngoingRequests');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.black,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              // Show error message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(result['message']),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e) {
+            // Always ensure loading dialog is closed on error
+            Navigator.of(context).pop();
+
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error updating status: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      ),
+    );
   }
 
   @override
@@ -381,7 +533,18 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                   _buildLocationSection(),
 
                   const SizedBox(height: 30),
-
+                  buildTextField(
+                    "Remarks",
+                    _remarksController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Remarks cannot be empty';
+                      }
+                      return null;
+                    },
+                    maxLines: 10,
+                  ),
+                  const SizedBox(height: 30),
                   // Update Status Button
                   SizedBox(
                     width: double.infinity,
@@ -417,173 +580,182 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
   }
 
 // Update the Technician section
-Widget _buildTechnicianSection() {
-  // Get primary technician from request data
-  final primaryTechnicianData = widget.requestData?['primary_technician'];
-  final primaryTechnicianId = primaryTechnicianData?['technician_emp_id'];
-  final primaryTechnicianName = primaryTechnicianData?['technician_name'] ?? "";
+  Widget _buildTechnicianSection() {
+    // Get primary technician from request data
+    final primaryTechnicianData = widget.requestData?['primary_technician'];
+    final primaryTechnicianId = primaryTechnicianData?['technician_emp_id'];
+    final primaryTechnicianName =
+        primaryTechnicianData?['technician_name'] ?? "";
 
-  // Get service request ID for later use
-  final serviceRequestId = widget.requestData?['id']?.toString() ?? "";
+    // Get service request ID for later use
+    final serviceRequestId = widget.requestData?['id']?.toString() ?? "";
 
-  // Get secondary technicians from request data
-  final secondaryTechnicians = widget.requestData?['secondary_technicians'] ?? [];
+    // Get secondary technicians from request data
+    final secondaryTechnicians =
+        widget.requestData?['secondary_technicians'] ?? [];
 
-  return Container(
-    width: double.infinity,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header row with title and edit button
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "Technician/s",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () => _showAddTechnicianModal(context),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: Size(50, 30),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: const Text(
-                "Edit Technicians",
+    return Container(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row with title and edit button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Technician/s",
                 style: TextStyle(
-                  color: Color(0xFF008037),
-                  fontSize: 14,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => _showAddTechnicianModal(context),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size(50, 30),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  "Edit Technicians",
+                  style: TextStyle(
+                    color: Color(0xFF008037),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
 
-        // Lead Technician - Simplified UI
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Lead Technician",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-                fontWeight: FontWeight.normal,
+          // Lead Technician - Simplified UI
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Lead Technician",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.grey.shade400,
-                    radius: 14,
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    primaryTechnicianName.isNotEmpty
-                        ? primaryTechnicianName
-                        : "No Lead Technician",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 16),
-
-        // Co-workers - Simplified UI
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Co-workers",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (secondaryTechnicians.isNotEmpty)
-              ...secondaryTechnicians.map((technicianData) {
-                final technicianName = technicianData['technician_name'] ?? "";
-                return Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.grey.shade400,
-                        radius: 14,
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        technicianName.isNotEmpty ? technicianName : "No Name",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList()
-            else
+              const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  "No co-workers assigned",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey,
-                  ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.grey.shade400,
+                      radius: 14,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      primaryTechnicianName.isNotEmpty
+                          ? primaryTechnicianName
+                          : "No Lead Technician",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Co-workers - Simplified UI
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Co-workers",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (secondaryTechnicians.isNotEmpty)
+                ...secondaryTechnicians.map((technicianData) {
+                  final technicianName =
+                      technicianData['technician_name'] ?? "";
+                  return Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.grey.shade400,
+                          radius: 14,
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          technicianName.isNotEmpty
+                              ? technicianName
+                              : "No Name",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList()
+              else
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    "No co-workers assigned",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 // Add this for the Documentation section
   Widget _buildDocumentationSection() {
     return Container(
@@ -722,130 +894,179 @@ Widget _buildTechnicianSection() {
             ],
           ),
 
-          // Only show Technician Findings fields for non-ONGOING statuses
-          if (selectedStatus != "ONGOING") ...[
-            const SizedBox(height: 20),
-            const Text(
-              "Technician Findings",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+          // Technician Findings fields (now shown for all statuses)
+          const SizedBox(height: 20),
+          const Text(
+            "Technician Findings",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Problems Encountered field
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Problems Encountered",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            // Problems Encountered field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Problems Encountered",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 6),
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: selectedProblemId,
-                      icon: Icon(Icons.keyboard_arrow_down,
-                          color: Colors.grey[600]),
-                      isExpanded: true,
-                      hint: const Text("Select Problem"),
-                      onChanged: (int? newValue) {
-                        setState(() {
-                          selectedProblemId = newValue;
-                          // Find the problem text for the selected ID
-                          if (newValue != null) {
-                            final selectedProblem = problems.firstWhere(
-                              (problem) => problem['id'] == newValue,
-                              orElse: () => {'description': 'Unknown Problem'},
+                child: problems.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Loading problems...",
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.grey),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: selectedProblemId,
+                          icon: Icon(Icons.keyboard_arrow_down,
+                              color: Colors.grey[600]),
+                          isExpanded: true,
+                          hint: const Text("Select Problem"),
+                          onChanged: (int? newValue) {
+                            setState(() {
+                              selectedProblemId = newValue;
+                              // Find the problem text for the selected ID
+                              if (newValue != null) {
+                                final selectedProblem = problems.firstWhere(
+                                  (problem) => problem['id'] == newValue,
+                                  orElse: () =>
+                                      {'description': 'Unknown Problem'},
+                                );
+                                selectedProblemText =
+                                    selectedProblem['description'];
+                              }
+                            });
+                          },
+                          items: problems.map<DropdownMenuItem<int>>((problem) {
+                            return DropdownMenuItem<int>(
+                              value: problem['id'],
+                              child: Text(
+                                problem['description'] ?? '',
+                                style: const TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             );
-                            selectedProblemText =
-                                selectedProblem['description'];
-                          }
-                        });
-                      },
-                      items: problems.map<DropdownMenuItem<int>>((problem) {
-                        return DropdownMenuItem<int>(
-                          value: problem['id'],
-                          child: Text(
-                            problem['description'] ?? '',
-                            style: const TextStyle(fontSize: 16),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                          }).toList(),
+                        ),
+                      ),
+              ),
+            ],
+          ),
+
+          // Actions Taken field
+          const SizedBox(height: 15),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Actions Taken",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
                 ),
-              ],
-            ),
-            const SizedBox(height: 15),
-            // Actions Taken field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Actions Taken",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 6),
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: selectedActionId,
-                      icon: Icon(Icons.keyboard_arrow_down,
-                          color: Colors.grey[600]),
-                      isExpanded: true,
-                      hint: const Text("Select Action"),
-                      onChanged: (int? newValue) {
-                        setState(() {
-                          selectedActionId = newValue;
-                          // Find the action text for the selected ID
-                          if (newValue != null) {
-                            final selectedAction = actions.firstWhere(
-                              (action) => action['id'] == newValue,
-                              orElse: () => {'description': 'Unknown Action'},
+                child: actions.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Loading actions...",
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.grey),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: selectedActionId,
+                          icon: Icon(Icons.keyboard_arrow_down,
+                              color: Colors.grey[600]),
+                          isExpanded: true,
+                          hint: const Text("Select Action"),
+                          onChanged: (int? newValue) {
+                            setState(() {
+                              selectedActionId = newValue;
+                              // Find the action text for the selected ID
+                              if (newValue != null) {
+                                final selectedAction = actions.firstWhere(
+                                  (action) => action['id'] == newValue,
+                                  orElse: () =>
+                                      {'description': 'Unknown Action'},
+                                );
+                                selectedActionText =
+                                    selectedAction['description'];
+                              }
+                            });
+                          },
+                          items: actions.map<DropdownMenuItem<int>>((action) {
+                            return DropdownMenuItem<int>(
+                              value: action['id'],
+                              child: Text(
+                                action['description'] ?? '',
+                                style: const TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             );
-                            selectedActionText = selectedAction['description'];
-                          }
-                        });
-                      },
-                      items: actions.map<DropdownMenuItem<int>>((action) {
-                        return DropdownMenuItem<int>(
-                          value: action['id'],
-                          child: Text(
-                            action['description'] ?? '',
-                            style: const TextStyle(fontSize: 16),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                          }).toList(),
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -896,7 +1117,7 @@ Widget _buildTechnicianSection() {
       try {
         // Fetch updated request data after technician changes
         final updatedData = await _apiService
-            .fetchRequestWithHistoryAndWorkingTime(serviceRequestId);
+            .fetchRequestWithHistoryAndWorkingTime(serviceRequestId.toString());
 
         // Update the UI with fresh data
         setState(() {
@@ -957,44 +1178,66 @@ Widget _buildTechnicianSection() {
 
   Widget _buildStatusButton(String status, Color color) {
     bool isSelected = selectedStatus == status;
+    bool isDisabled =
+        status == currentStatus; // Disable if it's the current status
 
-    // Define colors based on selection state
-    Color bgColor = isSelected
-        ? const Color(0xFF008037) // Green for selected status
-        : const Color(0xFF14213D); // Navy blue for non-selected status
+    // Define colors based on selection and disabled state
+    Color bgColor;
+    if (isDisabled) {
+      bgColor = Colors.grey; // Grey for disabled (current) status
+    } else if (isSelected) {
+      bgColor = const Color(0xFF008037); // Green for selected status
+    } else {
+      bgColor = const Color(0xFF14213D); // Navy blue for non-selected status
+    }
+
     Color textColor = Colors.white;
 
     return InkWell(
-      onTap: () {
-        setState(() {
-          selectedStatus = status;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _getIconForStatus(status),
-              color: textColor,
-              size: 20,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              status,
-              style: TextStyle(
+      onTap: isDisabled
+          ? null
+          : () {
+              setState(() {
+                selectedStatus = status;
+              });
+            },
+      child: Opacity(
+        opacity: isDisabled ? 0.6 : 1.0, // Reduce opacity if disabled
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _getIconForStatus(status),
                 color: textColor,
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
+                size: 20,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                status,
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (isDisabled)
+                const Text(
+                  "(current)",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -9,24 +9,25 @@ import 'package:servicetracker_app/components/imageViewer.dart';
 import 'package:servicetracker_app/components/request/saveProgressModal.dart';
 import 'package:servicetracker_app/components/serviceHistoryModal.dart';
 import 'package:servicetracker_app/components/serviceStatus.dart';
+import 'package:servicetracker_app/components/showrequestdetails.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/equipmentDetails.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/messageClient.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/UpdateStatusScreen.dart';
 
-class ServiceDetails extends StatefulWidget {
+class CompleteServiceDetails extends StatefulWidget {
   final Map<String, dynamic>? requestData;
   final int? requestId;
-  const ServiceDetails({
+  const CompleteServiceDetails({
     Key? key,
     this.requestData,
     this.requestId,
   }) : super(key: key);
 
   @override
-  _ServiceDetailsState createState() => _ServiceDetailsState();
+  _CompleteServiceDetailsState createState() => _CompleteServiceDetailsState();
 }
 
-class _ServiceDetailsState extends State<ServiceDetails> {
+class _CompleteServiceDetailsState extends State<CompleteServiceDetails> {
   final requestService = OngoingRequestService();
   Map<String, dynamic>? serviceRequest;
   List<dynamic> history = [];
@@ -62,52 +63,10 @@ class _ServiceDetailsState extends State<ServiceDetails> {
         serviceRequest = details['serviceRequest'];
         history = details['statusHistory'];
         workingTime = details['workingTimeFormatted'];
-
-        // Parse the formatted time to get initial seconds
-        _elapsedTime = _parseFormattedTime(details['workingTimeFormatted']);
-
-        // Start the timer to continue counting
-        _startTimer();
       });
     } catch (e) {
       print("Failed to load request details: $e");
     }
-  }
-
-// Parse the formatted time (HH:MM:SS) into Duration
-  Duration _parseFormattedTime(String? formattedTime) {
-    if (formattedTime == null) return Duration.zero;
-
-    try {
-      // Split the formatted time (assumes format is HH:MM:SS)
-      List<String> parts = formattedTime.split(':');
-      if (parts.length == 3) {
-        int hours = int.tryParse(parts[0]) ?? 0;
-        int minutes = int.tryParse(parts[1]) ?? 0;
-        int seconds = int.tryParse(parts[2]) ?? 0;
-
-        return Duration(hours: hours, minutes: minutes, seconds: seconds);
-      }
-    } catch (e) {
-      print("Error parsing formatted time: $e");
-    }
-
-    return Duration.zero;
-  }
-
-// Start timer to continue counting from the current elapsed time
-  void _startTimer() {
-    // Cancel existing timer if any
-    _timer?.cancel();
-
-    // Set up timer to update every second
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        // Simply increment the elapsed time by 1 second
-        _elapsedTime = _elapsedTime + Duration(seconds: 1);
-        workingTime = _formatDuration(_elapsedTime);
-      });
-    });
   }
 
   // Format duration to readable string (hh:mm:ss)
@@ -185,7 +144,7 @@ class _ServiceDetailsState extends State<ServiceDetails> {
               children: [
                 IconButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/OngoingRequests');
+                    Navigator.pushNamed(context, '/CompletedRequests');
                   },
                   icon: const Icon(
                     Icons.arrow_back,
@@ -296,19 +255,21 @@ class _ServiceDetailsState extends State<ServiceDetails> {
                                     fontSize: 14, color: Colors.black),
                                 children: [
                                   const TextSpan(
-                                    text: 'Requested Date of Completion: ',
+                                    text: 'Date Completed: ',
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                   TextSpan(
-                                    text: serviceRequest?['request_completion'] != null
+                                    text: serviceRequest?['completion_date'] !=
+                                            null
                                         ? _formatDate(
-                                            serviceRequest!['request_completion'])
+                                            serviceRequest!['completion_date'])
                                         : 'No Date Available',
                                   ),
                                 ],
                               ),
                             ),
+
                             const SizedBox(height: 15),
                             RichText(
                               text: TextSpan(
@@ -329,6 +290,41 @@ class _ServiceDetailsState extends State<ServiceDetails> {
                             ),
                             const SizedBox(height: 15),
 
+                            RichText(
+                              text: TextSpan(
+                                text: "Rating: ",
+                                style: const TextStyle(
+                                    fontSize: 14, color: Colors.grey),
+                                children: [
+                                  TextSpan(
+                                    text: workingTime ?? 'N/A',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            RichText(
+                              text: TextSpan(
+                                text: "Rating Recievd: ",
+                                style: const TextStyle(
+                                    fontSize: 14, color: Colors.grey),
+                                children: [
+                                  TextSpan(
+                                    text: workingTime ?? 'N/A',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
                             // Subject of request container
                             Container(
                               padding: const EdgeInsets.all(12),
@@ -381,11 +377,11 @@ class _ServiceDetailsState extends State<ServiceDetails> {
                                     alignment: Alignment.bottomRight,
                                     child: GestureDetector(
                                       onTap: () {
-                                        Navigator.pushNamed(context,
-                                            '/EditRequest'); // or your route
+                                        showRequestDetailsModal(
+                                            context, serviceRequest!);
                                       },
                                       child: const Text(
-                                        'Edit Request',
+                                        'See Request Details',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.green,
@@ -589,36 +585,36 @@ class _ServiceDetailsState extends State<ServiceDetails> {
                             const SizedBox(height: 20),
 
                             // Update Status Button
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width *
-                                  0.85, // Set button width
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => UpdateStatusScreen(
-                                        requestData: serviceRequest,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green[400],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                                child: const Text(
-                                  "UPDATE STATUS",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
+                            // SizedBox(
+                            //   width: MediaQuery.of(context).size.width *
+                            //       0.85, // Set button width
+                            //   child: ElevatedButton(
+                            //     onPressed: () {
+                            //       Navigator.push(
+                            //         context,
+                            //         MaterialPageRoute(
+                            //           builder: (context) => UpdateStatusScreen(
+                            //             requestData: serviceRequest,
+                            //           ),
+                            //         ),
+                            //       );
+                            //     },
+                            //     style: ElevatedButton.styleFrom(
+                            //       backgroundColor: Colors.green[400],
+                            //       shape: RoundedRectangleBorder(
+                            //         borderRadius: BorderRadius.circular(8),
+                            //       ),
+                            //       padding:
+                            //           const EdgeInsets.symmetric(vertical: 12),
+                            //     ),
+                            //     child: const Text(
+                            //       "UPDATE STATUS",
+                            //       style: TextStyle(
+                            //           color: Colors.white,
+                            //           fontWeight: FontWeight.bold),
+                            //     ),
+                            //   ),
+                            // ),
                             const SizedBox(height: 20),
                           ]))),
             ],

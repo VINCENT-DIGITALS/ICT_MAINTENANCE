@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api_constants.dart';
 
 class PickedRequestsService {
-  final String baseUrl =
-      "http://192.168.43.128/ServiceTrackerGithub/api"; // Replace with your actual base URL
+  final String baseUrl = kBaseUrl; // Use kBaseUrl from api_constants.dart
 
   Future<List<Map<String, dynamic>>> fetchPickedRequests() async {
     try {

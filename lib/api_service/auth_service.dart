@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api_constants.dart';
 
 class AuthService {
-  final String baseUrl = "http://192.168.43.128/ServiceTrackerGithub/api/login";
+  final String baseUrl = "${kBaseUrl}/login";
 
   Future<Map<String, dynamic>> login(String philriceId, String password) async {
     final response = await http.post(
-      Uri.parse("http://192.168.43.128/ServiceTrackerGithub/api/login"),
+      Uri.parse("${kBaseUrl}/login"),
       body: jsonEncode({
         "philrice_id": philriceId,
         "password": password,

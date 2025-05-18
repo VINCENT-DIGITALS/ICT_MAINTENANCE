@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api_constants.dart';
 
 class ClientMessageService {
-  final String baseUrl = "http://192.168.43.128/ServiceTrackerGithub/api";
+  final String baseUrl = kBaseUrl;
 
   /// Send a message to a client
   Future<Map<String, dynamic>> sendMessageToClient({
@@ -13,7 +14,7 @@ class ClientMessageService {
     String? ticketNumber,
     required int technicianId,
   }) async {
-    final url = Uri.parse("$baseUrl/ongoing/sendMessageToClient");
+    final url = Uri.parse("${baseUrl}/ongoing/sendMessageToClient");
 
     try {
       // Create the request body

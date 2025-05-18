@@ -182,6 +182,9 @@ class _OngoingRequestsState extends State<OngoingRequests> {
         "requester": request["requester"]?["name"] ?? "Unknown Requester",
         "division": request["location"] ?? "Unknown Division",
         "requestedDate": _formatDate(request["created_at"]),
+    "request_completion": request["request_completion"] != null 
+    ? _formatDate(request["request_completion"]) 
+    : "Not specified",
         "updatedDate": _formatDate(request["updated_at"]),
         "description": request["request_description"] ?? "",
         "category": request["category"]?["category_name"] ?? "Unknown Category",
@@ -1250,7 +1253,7 @@ class _OngoingRequestsState extends State<OngoingRequests> {
                   ),
                 ),
                 Text(
-                  "Requested Date of Completion: ${request['requestedDate'] ?? 'N/A'}",
+                  "Requested Date of Completion: ${request['request_completion'] ?? 'N/A'}",
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF707070),
@@ -1527,7 +1530,7 @@ class RequestDetailsModal extends StatelessWidget {
                         fontSize: 14, color: Colors.black, height: 1.3),
                   ),
                   Text(
-                    "Requested Date of Completion: ${request['completionDate'] ?? 'N/A'}",
+                    "Requested Date of Completion: ${request['request_completion'] ?? 'N/A'}",
                     style: const TextStyle(
                         fontSize: 14, color: Colors.black, height: 1.3),
                   ),

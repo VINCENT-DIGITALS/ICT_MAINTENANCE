@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'api_constants.dart';
 
 class OngoingRequestService {
-  final String baseUrl =
-      "http://192.168.43.128/ServiceTrackerGithub/api/ongoing";
+  final String baseUrl = "${kBaseUrl}/ongoing";
 
   Future<Map<String, dynamic>> fetchOngoingAndPausedRequests() async {
     try {
@@ -66,8 +66,7 @@ class OngoingRequestService {
 // Method to fetch available technicians for selection
   Future<List<Map<String, dynamic>>> fetchTechnicians() async {
     try {
-      final response = await http.get(Uri.parse(
-          "http://192.168.43.128/ServiceTrackerGithub/api/technicians"));
+      final response = await http.get(Uri.parse("${kBaseUrl}/technicians"));
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
@@ -99,7 +98,7 @@ class OngoingRequestService {
 
       // Prepare request body according to API expectations
       final requestBody = {
-        'request_id': requestId , // Convert to int as required by API
+        'request_id': requestId, // Convert to int as required by API
         'primary_technician_id': primaryTechnicianId,
         'secondary_technician_ids': secondaryTechnicianIds,
         'remarks': remarks ?? 'Updated via mobile app',
@@ -307,49 +306,72 @@ class OngoingRequestService {
     );
   }
 
-  // Method to fetch available problems for selection
-  // Future<List<Map<String, dynamic>>> fetchProblems() async {
-  //   try {
-  //     final response = await http.get(Uri.parse("$baseUrl/problems"));
+// Method to fetch available problems for selection
+  Future<List<Map<String, dynamic>>> fetchProblems() async {
+    try {
+      final response =
+          await http.get(Uri.parse("$baseUrl/problems-encountered"));
 
-  //     if (response.statusCode == 200) {
-  //       final jsonResponse = json.decode(response.body);
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
 
-  //       if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
-  //         return List<Map<String, dynamic>>.from(jsonResponse['data']);
-  //       } else {
-  //         throw Exception("Invalid response format or no data.");
-  //       }
-  //     } else {
-  //       throw Exception("Failed to fetch problems: ${response.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     throw Exception("Error fetching problems: $e");
-  //   }
-  // }
+        if (jsonResponse['success'] == true &&
+            jsonResponse['data'] != null &&
+            jsonResponse['data']['problems'] != null) {
+          // Convert the structure to match what your UI expects
+          final problems =
+              List<Map<String, dynamic>>.from(jsonResponse['data']['problems']);
 
-  // // Method to fetch available actions for selection
-  // Future<List<Map<String, dynamic>>> fetchActions() async {
-  //   try {
-  //     final response = await http.get(Uri.parse("$baseUrl/actions"));
+          // Transform the data to have the expected field names
+          return problems
+              .map((problem) => {
+                    'id': problem['id'],
+                    'description': problem['encountered_problem_name'],
+                    'abbr': problem['encountered_problem_abbr']
+                  })
+              .toList();
+        } else {
+          throw Exception("Invalid response format or no data.");
+        }
+      } else {
+        throw Exception("Failed to fetch problems: ${response.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Error fetching problems: $e");
+    }
+  }
 
-  //     if (response.statusCode == 200) {
-  //       final jsonResponse = json.decode(response.body);
+// Method to fetch available actions for selection
+  Future<List<Map<String, dynamic>>> fetchActions() async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/actions-taken"));
 
-  //       if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
-  //         return List<Map<String, dynamic>>.from(jsonResponse['data']);
-  //       } else {
-  //         throw Exception("Invalid response format or no data.");
-  //       }
-  //     } else {
-  //       throw Exception("Failed to fetch actions: ${response.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     throw Exception("Error fetching actions: $e");
-  //   }
-  // }
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
 
+        if (jsonResponse['success'] == true &&
+            jsonResponse['data'] != null &&
+            jsonResponse['data']['actions'] != null) {
+          // Convert the structure to match what your UI expects
+          final actions =
+              List<Map<String, dynamic>>.from(jsonResponse['data']['actions']);
 
-
-
+          // Transform the data to have the expected field names
+          return actions
+              .map((action) => {
+                    'id': action['id'],
+                    'description': action['action_name'],
+                    'abbr': action['action_abbr']
+                  })
+              .toList();
+        } else {
+          throw Exception("Invalid response format or no data.");
+        }
+      } else {
+        throw Exception("Failed to fetch actions: ${response.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Error fetching actions: $e");
+    }
+  }
 }

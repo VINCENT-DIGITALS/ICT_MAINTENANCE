@@ -57,12 +57,7 @@ class _LoginPageState extends State<LoginPage>
       setState(() {
         isLoading = false;
       });
-      if (context.mounted) {
-        // setState(() {
-        //   isLoading = false;
-        // });
-        Navigator.pushReplacementNamed(context, '/auth');
-      }
+   
     }
   }
 

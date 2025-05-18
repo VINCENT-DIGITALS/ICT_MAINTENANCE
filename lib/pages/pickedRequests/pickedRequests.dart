@@ -126,6 +126,9 @@ class _PickedRequestsState extends State<PickedRequests> {
           "division": request["location"] ?? "Unknown Division",
           "requestedDate": _formatDate(request["created_at"]),
           "updatedDate": _formatDate(request["updated_at"]),
+          "request_completion": request["request_completion"] != null
+              ? _formatDate(request["request_completion"])
+              : "Not specified",
           "description": request["request_description"] ?? "",
           "category":
               request["category"]?["category_name"] ?? "Unknown Category",
@@ -1082,7 +1085,7 @@ class _PickedRequestsState extends State<PickedRequests> {
                   ),
                 ),
                 Text(
-                  "Requested Date of Completion: ${request['requestedDate'] ?? 'N/A'}",
+                  "Requested Date of Completion: ${request['request_completion'] ?? 'N/A'}",
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF707070),
@@ -1322,9 +1325,18 @@ class _PickedRequestsState extends State<PickedRequests> {
                                       "Complete the details to add this to your ongoing services",
                                   onConfirm: () async {
                                     Navigator.pop(context);
+                                    // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/home', // First go to home
+                                      (route) =>
+                                          route.settings.name ==
+                                          '/', // Keep only splash screen
+                                    );
 
-                                    // Refresh the data ONCE after dialog is closed
-                                    await _fetchAndSetPickedRequests();
+                                    // Then navigate to OngoingRequests - this makes Home the previous screen
+                                    Navigator.pushNamed(
+                                        context, '/PickedRequests');
                                   },
                                 ),
                               ),
@@ -1334,15 +1346,17 @@ class _PickedRequestsState extends State<PickedRequests> {
                             const SizedBox(height: 12),
                             GestureDetector(
                               onTap: () async {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          PickedRequests()), // Navigate to PickedRequests
-                                  ModalRoute.withName(
-                                      '/home'), // Only keep HomePage in the back stack
+                                // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/home', // First go to home
+                                  (route) =>
+                                      route.settings.name ==
+                                      '/', // Keep only splash screen
                                 );
-                                // Also refresh the data when close button is clicked
-                                await _fetchAndSetPickedRequests();
+
+                                // Then navigate to OngoingRequests - this makes Home the previous screen
+                                Navigator.pushNamed(context, '/PickedRequests');
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(8),
@@ -1505,7 +1519,7 @@ class RequestDetailsModal extends StatelessWidget {
                         fontSize: 14, color: Colors.black, height: 1.3),
                   ),
                   Text(
-                    "Requested Date of Completion: ${request['completionDate'] ?? 'N/A'}",
+                    "Requested Date of Completion: ${request['request_completion'] ?? 'N/A'}",
                     style: const TextStyle(
                         fontSize: 14, color: Colors.black, height: 1.3),
                   ),

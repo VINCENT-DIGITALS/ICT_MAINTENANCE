@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api_constants.dart';
 
 class CompletedRequestService {
-  final String baseUrl =
-      "http://192.168.43.128/ServiceTrackerGithub/api/completed"; // Replace with your actual base URL
+  final String baseUrl = "${kBaseUrl}/completed"; // Replace with your actual base URL
 
   Future<Map<String, dynamic>> fetchCompletedRequests() async {
     try {

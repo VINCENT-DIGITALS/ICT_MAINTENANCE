@@ -13,6 +13,8 @@ import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
+import 'package:servicetracker_app/pages/completedRequests/CompleteserviceDetails.dart';
+import 'package:servicetracker_app/pages/ongoingRequests/serviceDetails.dart';
 
 import '../../auth/sessionmanager.dart';
 
@@ -228,10 +230,17 @@ class _CompletedRequestsState extends State<CompletedRequests> {
   List<Map<String, dynamic>> _transformRequests(List<dynamic> rawList) {
     return rawList.map((request) {
       return {
+        'id': request['id'] ?? 0,
         "title": request['ticket']?["ticket_full"] ?? "Unknown Ticket",
         "requester": request["requester"]?["name"] ?? "Unknown Requester",
         "division": request["location"] ?? "Unknown Division",
         "requestedDate": _formatDate(request["created_at"]),
+        "request_completion": request["request_completion"] != null
+            ? _formatDate(request["request_completion"])
+            : "Not specified",
+        "completion_date": request["completion_date"] != null
+            ? _formatDate(request["completion_date"])
+            : "Not specified",
         "updatedDate": _formatDate(request["updated_at"]),
         "description": request["request_description"] ?? "",
         "category": request["category"]?["category_name"] ?? "Unknown Category",
@@ -876,10 +885,22 @@ class _CompletedRequestsState extends State<CompletedRequests> {
   }
 
   Future<void> refreshDashboardData() async {
+    // Update the lastUpdated timestamp to current time
     setState(() {
-      _fetchAndSetOngoingRequests();
-      searchController.addListener(_applyFilters);
+      lastUpdated = DateTime.now();
     });
+
+    // Continue with existing refresh logic
+    _fetchAndSetOngoingRequests().then((_) {
+      // Initialize filteredRequests based on the default tab
+      setState(() {
+        filteredRequests = List.from(completedRequests);
+        // Initialize filtered lists
+        filteredCategories = allCategories;
+        filteredDivisions = allDivisions;
+      });
+    });
+    searchController.addListener(_applyFilters);
   }
 
   @override
@@ -1239,7 +1260,7 @@ class _CompletedRequestsState extends State<CompletedRequests> {
                   ),
                 ),
                 Text(
-                  "Requested Date of Completion: ${request['requestedDate'] ?? 'N/A'}",
+                  "Completed Date: ${request['completion_date'] ?? 'N/A'}",
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF707070),
@@ -1287,12 +1308,68 @@ class _CompletedRequestsState extends State<CompletedRequests> {
 
                 const SizedBox(height: 20),
 
-                _buildButton(
+                _buildButton2v(
                   context,
-                  "UPDATE STATUS",
+                  "VIEW STATUS HISTORY",
                   const Color(0xFF007A33),
                   () {
-                    // Add action here
+                    // The request data is already available here from the map function
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (context) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Center(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // The modal dialog
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 500,
+                                        ),
+                                        child: RequestDetailsModal(
+                                          request:
+                                              request, // This request is from the map function
+                                          buildButton: _buildButton,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // The floating close button
+                                      GestureDetector(
+                                        onTap: () =>
+                                            Navigator.of(context).pop(),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.2),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(Icons.close,
+                                              color: Colors.black, size: 24),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
                   },
                 ),
               ],
@@ -1362,24 +1439,48 @@ class _CompletedRequestsState extends State<CompletedRequests> {
     });
   }
 
-  Widget _buildButton(
+  Widget _buildButton2v(
       BuildContext context, String text, Color color, VoidCallback onPressed) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
+        onPressed: onPressed, // Simply call the provided onPressed callback
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton(
+    BuildContext context,
+    String text,
+    Color color,
+    VoidCallback onPressed, {
+    Map<String, dynamic>? request, // ✅ You added this here
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => CustomModalPickRequest(
-              title: "Request Added to Your Services",
-              message:
-                  "Complete the details to add this to your ongoing services",
-              onConfirm: () {
-                Navigator.pop(context);
-                onPressed();
-              },
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => CompleteServiceDetails(
+              requestData: request, // ✅ Now this will not be null
             ),
-          );
+          ));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
@@ -1389,7 +1490,7 @@ class _CompletedRequestsState extends State<CompletedRequests> {
           ),
         ),
         child: const Text(
-          "UPDATE STATUS",
+          "VIEW STATUS HISTORY",
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -1434,8 +1535,9 @@ class RequestDetailsModal extends StatelessWidget {
     BuildContext context,
     String text,
     Color color,
-    VoidCallback onPressed,
-  ) buildButton;
+    VoidCallback onPressed, {
+    Map<String, dynamic>? request, // ✅ Add this here too
+  }) buildButton;
 
   const RequestDetailsModal({
     super.key,
@@ -1498,7 +1600,7 @@ class RequestDetailsModal extends StatelessWidget {
                         fontSize: 14, color: Colors.black, height: 1.3),
                   ),
                   Text(
-                    "Requested Date of Completion: ${request['completionDate'] ?? 'N/A'}",
+                    "Requested Date of Completion: ${request['request_completion'] ?? 'N/A'}",
                     style: const TextStyle(
                         fontSize: 14, color: Colors.black, height: 1.3),
                   ),
@@ -1545,19 +1647,15 @@ class RequestDetailsModal extends StatelessWidget {
                           style: TextStyle(fontSize: 14, color: Colors.black),
                           children: [
                             TextSpan(
-                              text: request['statusId'] == 7
-                                  ? 'COMPLETED'
-                                  : (request['statusId'] == 8
-                                      ? 'EVALUATED'
-                                      : (request['statusId'] == 100
-                                          ? 'DENIED'
-                                          : (request['statusId'] == 200
-                                              ? 'CANCELLED'
-                                              : 'OTHERS'))),
+                              text: 'ONGOING SERVICE',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
+                            ),
+                            TextSpan(
+                              text: ' by',
+                              style: TextStyle(color: Colors.black),
                             ),
                           ],
                         ),
@@ -1576,11 +1674,12 @@ class RequestDetailsModal extends StatelessWidget {
                   const SizedBox(height: 20),
                   buildButton(
                     context,
-                    "UPDATE STATUS",
+                    "VIEW STATUS HISTORY",
                     const Color(0xFF007A33),
                     () {
                       Navigator.pop(context);
                     },
+                    request: request, // ✅ pass the actual request data here
                   ),
                 ],
               ),

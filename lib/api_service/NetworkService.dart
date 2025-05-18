@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
-
+import 'api_constants.dart';
 
 class NetworkService {
-  static const String baseUrl = "http://192.168.43.128/ServiceTrackerGithub/api";
+  static const String baseUrl = kBaseUrl;
   static const Duration timeout = Duration(seconds: 5);
 
   /// Checks if the device is connected to any network

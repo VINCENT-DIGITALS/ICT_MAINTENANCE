@@ -14,6 +14,18 @@ class IncidentReportDetails extends StatefulWidget {
 }
 
 class _IncidentReportDetailsState extends State<IncidentReportDetails> {
+  Map<String, dynamic>? incidentData;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Get the arguments passed from IncidentReportPage
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is Map<String, dynamic>) {
+      incidentData = args;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(

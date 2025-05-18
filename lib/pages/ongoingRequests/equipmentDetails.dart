@@ -221,7 +221,7 @@ class _EquipmentDetailsState extends State<EquipmentDetails> {
                                   "\n\nAction Taken: ${item['action_name']}";
                             }
 
-// Problem encountered
+                            // Problem encountered
                             if (item['encountered_problem_name'] != null &&
                                 item['encountered_problem_name']
                                     .toString()
@@ -230,9 +230,17 @@ class _EquipmentDetailsState extends State<EquipmentDetails> {
                                   "\n\nProblem Encountered: ${item['encountered_problem_name']}";
                             }
 
-                            // Call statusItem without the imagePath parameter
+                            // Check for documentation image
+                            String? imagePath;
+                            if (item['documentation'] != null && 
+                                item['documentation'].toString().isNotEmpty) {
+                              // Use the full image path from the API
+                              imagePath = item['documentation'];
+                            }
+
+                            // Call statusItem with the imagePath parameter if available
                             return statusItem(
-                                context, formattedDate, statusText);
+                                context, formattedDate, statusText, imagePath: imagePath);
                           }).toList();
                         })(),
 
