@@ -437,217 +437,215 @@ class _PickedRequestsState extends State<PickedRequests> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Center(
-              child: Material(
-                color: Colors.transparent,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFEEEEEE),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        constraints: BoxConstraints(maxWidth: 500),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.filter_alt,
-                                  color: Color(0xFF14213D),
-                                  size: 24,
-                                ),
-                                const SizedBox(
-                                    width:
-                                        8), // Add space between icon and text
-                                Text(
-                                  'Filters',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF14213D),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 2),
-
-                            // Date range pickers
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Date Range',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _DatePickerCard(
-                                    label: 'From',
-                                    date: fromDate,
-                                    onTap: () => _pickDate(context, true),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _DatePickerCard(
-                                    label: 'To',
-                                    date: toDate,
-                                    onTap: () => _pickDate(context, false),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Dropdowns
-                            _buildDropdownField(
-                              label: 'Service Category',
-                              value: selectedCategory,
-                              hint: 'Select Service Category',
-                              items: filteredCategories.isEmpty
-                                  ? allCategories
-                                  : filteredCategories,
-                              onChanged: (v) {
-                                setModalState(() {
-                                  selectedCategory = v;
-                                  _filterDropdownOptions(v, selectedDivision);
-                                });
-                              },
-                            ),
-                            _buildDropdownField(
-                              label: 'Location',
-                              value: selectedDivision,
-                              hint: 'Select Location',
-                              items: filteredDivisions.isEmpty
-                                  ? allDivisions
-                                  : filteredDivisions,
-                              onChanged: (v) {
-                                setModalState(() {
-                                  selectedDivision = v;
-                                  _filterDropdownOptions(selectedCategory, v);
-                                });
-                              },
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            // Sort by radios (this is what needs to update visually)
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Sort by',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-
-                            Column(
-                              children: [
-                                _buildRadioTile(
-                                  title: 'Service Request No.',
-                                  value: 'serviceRequest',
-                                  groupValue: sortBy,
-                                  onChanged: (val) =>
-                                      setModalState(() => sortBy = val),
-                                ),
-                                _buildRadioTile(
-                                  title: 'Date Requested',
-                                  value: 'dateRequested',
-                                  groupValue: sortBy,
-                                  onChanged: (val) =>
-                                      setModalState(() => sortBy = val),
-                                ),
-                                _buildRadioTile(
-                                  title: 'Date Updated',
-                                  value: 'dateUpdated',
-                                  groupValue: sortBy,
-                                  onChanged: (val) =>
-                                      setModalState(() => sortBy = val),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Apply button
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  selectedDateRange = DateTimeRange(
-                                    start: fromDate ?? DateTime.now(),
-                                    end: toDate ?? DateTime.now(),
-                                  );
-                                  _applyFilters(); // You can use the updated sortBy
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFF007A33),
-                                  padding: EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: Text(
-                                  'APPLY FILTER',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                child: Material(
+              color: Colors.transparent,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFEEEEEE),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      // Close button
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                      constraints: BoxConstraints(maxWidth: 500),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.filter_alt,
+                                color: Color(0xFF14213D),
+                                size: 24,
+                              ),
+                              const SizedBox(
+                                  width: 8), // Add space between icon and text
+                              Text(
+                                'Filters',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF14213D),
+                                ),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.black,
-                            size: 28,
+
+                          const SizedBox(height: 2),
+
+                          // Date range pickers
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Date Range',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _DatePickerCard(
+                                  label: 'From',
+                                  date: fromDate,
+                                  onTap: () => _pickDate(context, true),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _DatePickerCard(
+                                  label: 'To',
+                                  date: toDate,
+                                  onTap: () => _pickDate(context, false),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Dropdowns
+                          _buildDropdownField(
+                            label: 'Service Category',
+                            value: selectedCategory,
+                            hint: 'Select Service Category',
+                            items: filteredCategories.isEmpty
+                                ? allCategories
+                                : filteredCategories,
+                            onChanged: (v) {
+                              setModalState(() {
+                                selectedCategory = v;
+                                _filterDropdownOptions(v, selectedDivision);
+                              });
+                            },
+                          ),
+                          _buildDropdownField(
+                            label: 'Location',
+                            value: selectedDivision,
+                            hint: 'Select Location',
+                            items: filteredDivisions.isEmpty
+                                ? allDivisions
+                                : filteredDivisions,
+                            onChanged: (v) {
+                              setModalState(() {
+                                selectedDivision = v;
+                                _filterDropdownOptions(selectedCategory, v);
+                              });
+                            },
+                          ),
+
+                          const SizedBox(height: 5),
+
+                          // Sort by radios (this is what needs to update visually)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Sort by',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+
+                          Column(
+                            children: [
+                              _buildRadioTile(
+                                title: 'Service Request No.',
+                                value: 'serviceRequest',
+                                groupValue: sortBy,
+                                onChanged: (val) =>
+                                    setModalState(() => sortBy = val),
+                              ),
+                              _buildRadioTile(
+                                title: 'Date Requested',
+                                value: 'dateRequested',
+                                groupValue: sortBy,
+                                onChanged: (val) =>
+                                    setModalState(() => sortBy = val),
+                              ),
+                              _buildRadioTile(
+                                title: 'Date Updated',
+                                value: 'dateUpdated',
+                                groupValue: sortBy,
+                                onChanged: (val) =>
+                                    setModalState(() => sortBy = val),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Apply button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                selectedDateRange = DateTimeRange(
+                                  start: fromDate ?? DateTime.now(),
+                                  end: toDate ?? DateTime.now(),
+                                );
+                                _applyFilters(); // You can use the updated sortBy
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF007A33),
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'APPLY FILTER',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Close button
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.black,
+                          size: 28,
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 8),
-                    ],
-                  ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ),
-            );
+            ));
           },
         );
       },
@@ -1237,173 +1235,189 @@ class _PickedRequestsState extends State<PickedRequests> {
       child: ElevatedButton(
         onPressed: () {
           showDialog(
-            context: context,
-            builder: (dialogBuilderContext) => CustomModalPickRequest(
-              title: "PICK THIS REQUEST",
-              message:
-                  "Are you sure you want to pick this request? This action cannot be undone.",
-              onConfirm: () async {
-                // Use a separate context for the confirmation process
-                Navigator.pop(dialogBuilderContext);
+              context: context,
+              builder: (dialogBuilderContext) => CustomModalPickRequest(
+                    title: "PICK THIS REQUEST",
+                    message:
+                        "Are you sure you want to pick this request? This action cannot be undone.",
+                    onConfirm: () async {
+                      // Use a separate context for the confirmation process
+                      Navigator.pop(dialogBuilderContext);
 
-                // Cache the request ID before showing loading dialog
-                final requestId = request != null
-                    ? (int.tryParse(request['id']?.toString() ?? '') ?? 0)
-                    : 0;
+                      // Cache the request ID before showing loading dialog
+                      final requestId = request != null
+                          ? (int.tryParse(request['id']?.toString() ?? '') ?? 0)
+                          : 0;
 
-                if (requestId == 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Invalid request ID'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
+                      if (requestId == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Invalid request ID'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
 
-                // Show loading indicator using the global context
-                final loadingDialog = showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (loadingContext) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+                      // Show loading indicator using the global context
+                      final loadingDialog = showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (loadingContext) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
 
-                try {
-                  final session = SessionManager();
-                  final user = await session.getUser();
-                  final userIdNo = user?['philrice_id'];
+                      try {
+                        final session = SessionManager();
+                        final user = await session.getUser();
+                        final userIdNo = user?['philrice_id'];
 
-                  if (userIdNo == null) {
-                    // Close loading dialog safely
-                    Navigator.of(context).pop();
+                        if (userIdNo == null) {
+                          // Close loading dialog safely
+                          Navigator.of(context).pop();
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('User ID not found. Please log in again.'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'User ID not found. Please log in again.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
 
-                  // Call the API service
-                  final service = PickedRequestsService();
-                  final result =
-                      await service.markAsOngoing(requestId, userIdNo);
+                        // Call the API service
+                        final service = PickedRequestsService();
+                        final result =
+                            await service.markAsOngoing(requestId, userIdNo);
 
 // Close loading dialog first (always)
-                  Navigator.of(context).pop();
+                        Navigator.of(context).pop();
 
-                  // Change this part in the success dialog section
-                  if (result['success']) {
-                    // Show success dialog with floating close button
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      useRootNavigator:
-                          true, // 👈 This ensures it uses the top-level navigator
-                      builder: (context) => Material(
-                        color: Colors.transparent,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Main dialog content
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 400),
-                                child: CustomModalButtonRequest(
-                                  title:
-                                      "Request Added to Your Ongoing Services",
-                                  message:
-                                      "Complete the details to add this to your ongoing services",
-                                  onConfirm: () async {
-                                    Navigator.pop(context);
-                                    // First navigate to home, then to OngoingRequests to ensure proper back navigation
-                                    Navigator.pushNamedAndRemoveUntil(
-                                      context,
-                                      '/home', // First go to home
-                                      (route) =>
-                                          route.settings.name ==
-                                          '/', // Keep only splash screen
-                                    );
+                        // Change this part in the success dialog section
+                        if (result['success']) {
+                          // Show success dialog with floating close button
+                          showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              useRootNavigator: true,
+                              builder: (context) => PopScope(
+                                    // Handle system back button with PopScope instead of WillPopScope
+                                    canPop: false,
+                                    onPopInvoked: (didPop) {
+                                      if (!didPop) {
+                                        // Perform the same actions as the close button
+                                        Navigator.pushNamedAndRemoveUntil(
+                                          context,
+                                          '/home',
+                                          (route) => route.settings.name == '/',
+                                        );
+                                        Navigator.pushNamed(context, '/PickedRequests');
+                                      }
+                                    },
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          // Main dialog content
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 20),
+                                            child: ConstrainedBox(
+                                              constraints: const BoxConstraints(
+                                                  maxWidth: 400),
+                                              child: CustomModalButtonRequest(
+                                                title:
+                                                    "Request Added to Your Ongoing Services",
+                                                message:
+                                                    "Complete the details to add this to your ongoing services",
+                                                onConfirm: () async {
+                                                  Navigator.pop(context);
+                                                  // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                                  Navigator
+                                                      .pushNamedAndRemoveUntil(
+                                                    context,
+                                                    '/home', // First go to home
+                                                    (route) =>
+                                                        route.settings.name ==
+                                                        '/', // Keep only splash screen
+                                                  );
 
-                                    // Then navigate to OngoingRequests - this makes Home the previous screen
-                                    Navigator.pushNamed(
-                                        context, '/PickedRequests');
-                                  },
-                                ),
-                              ),
-                            ),
+                                                  // Then navigate to OngoingRequests - this makes Home the previous screen
+                                                  Navigator.pushNamed(context,
+                                                      '/PickedRequests');
+                                                },
+                                              ),
+                                            ),
+                                          ),
 
-                            // The floating close button - UPDATED to also trigger refresh
-                            const SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: () async {
-                                // First navigate to home, then to OngoingRequests to ensure proper back navigation
-                                Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  '/home', // First go to home
-                                  (route) =>
-                                      route.settings.name ==
-                                      '/', // Keep only splash screen
-                                );
+                                          // The floating close button - UPDATED to also trigger refresh
+                                          const SizedBox(height: 12),
+                                          GestureDetector(
+                                            onTap: () async {
+                                              // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                              Navigator.pushNamedAndRemoveUntil(
+                                                context,
+                                                '/home', // First go to home
+                                                (route) =>
+                                                    route.settings.name ==
+                                                    '/', // Keep only splash screen
+                                              );
 
-                                // Then navigate to OngoingRequests - this makes Home the previous screen
-                                Navigator.pushNamed(context, '/PickedRequests');
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
+                                              // Then navigate to OngoingRequests - this makes Home the previous screen
+                                              Navigator.pushNamed(
+                                                  context, '/PickedRequests');
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.2),
+                                                    blurRadius: 4,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Icon(
+                                                Icons.close,
+                                                color: Colors.black,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.close,
-                                  color: Colors.black,
-                                  size: 24,
-                                ),
-                              ),
+                                  ));
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(result['message']),
+                              backgroundColor: Colors.red,
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(result['message']),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  // Always ensure loading dialog is closed on error
-                  Navigator.of(context).pop();
+                          );
+                        }
+                      } catch (e) {
+                        // Always ensure loading dialog is closed on error
+                        Navigator.of(context).pop();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-            ),
-          );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  ));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: color,

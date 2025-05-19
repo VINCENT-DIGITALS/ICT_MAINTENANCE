@@ -284,86 +284,103 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                   context: context,
                   barrierDismissible: true,
                   useRootNavigator: true,
-                  builder: (context) => Material(
-                        color: Colors.transparent,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Main dialog content
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 400),
-                                child: CustomModalButtonRequest(
-                                  title: "Status Updated Successfully",
-                                  message:
-                                      "The service request status has been updated to ${selectedStatus}",
-                                  onConfirm: () {
-                                    Navigator.pop(
-                                        context); // Close the dialog first
+                  builder: (context) => PopScope(
+                        canPop: false, // Prevent default back button behavior
+                        onPopInvoked: (didPop) {
+                          if (!didPop) {
+                            // Execute same actions as close button when back is pressed
+                            Navigator.pop(context); // Close the dialog first
+                            
+                            // Navigate to home, then to OngoingRequests
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/home',
+                              (route) => route.settings.name == '/',
+                            );
+                            Navigator.pushNamed(context, '/OngoingRequests');
+                          }
+                        },
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Main dialog content
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 400),
+                                  child: CustomModalButtonRequest(
+                                    title: "Status Updated Successfully",
+                                    message:
+                                        "The service request status has been updated to ${selectedStatus}",
+                                    onConfirm: () {
+                                      Navigator.pop(
+                                          context); // Close the dialog first
 
-                                    // Navigate to OngoingRequests but keep the home screen in history
-                                    // First navigate to home, then to OngoingRequests to ensure proper back navigation
-                                    Navigator.pushNamedAndRemoveUntil(
-                                      context,
-                                      '/home', // First go to home
-                                      (route) =>
-                                          route.settings.name ==
-                                          '/', // Keep only splash screen
-                                    );
+                                      // Navigate to OngoingRequests but keep the home screen in history
+                                      // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                      Navigator.pushNamedAndRemoveUntil(
+                                        context,
+                                        '/home', // First go to home
+                                        (route) =>
+                                            route.settings.name ==
+                                            '/', // Keep only splash screen
+                                      );
 
-                                    // Then navigate to OngoingRequests - this makes Home the previous screen
-                                    Navigator.pushNamed(
-                                        context, '/OngoingRequests');
-                                  },
+                                      // Then navigate to OngoingRequests - this makes Home the previous screen
+                                      Navigator.pushNamed(
+                                          context, '/OngoingRequests');
+                                    },
+                                  ),
                                 ),
                               ),
-                            ),
 
-                            // Floating close button
-                            const SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.pop(
-                                    context); // Close the dialog first
+                              // Floating close button
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(
+                                      context); // Close the dialog first
 
-                                // First navigate to home, then to OngoingRequests to ensure proper back navigation
-                                Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  '/home', // First go to home
-                                  (route) =>
-                                      route.settings.name ==
-                                      '/', // Keep only splash screen
-                                );
+                                  // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    '/home', // First go to home
+                                    (route) =>
+                                        route.settings.name ==
+                                        '/', // Keep only splash screen
+                                  );
 
-                                // Then navigate to OngoingRequests - this makes Home the previous screen
-                                Navigator.pushNamed(
-                                    context, '/OngoingRequests');
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.close,
-                                  color: Colors.black,
-                                  size: 24,
+                                  // Then navigate to OngoingRequests - this makes Home the previous screen
+                                  Navigator.pushNamed(
+                                      context, '/OngoingRequests');
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.black,
+                                    size: 24,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ));
             } else {
@@ -1162,8 +1179,10 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
 
   Widget _buildStatusButton(String status, Color color) {
     bool isSelected = selectedStatus == status;
-    bool isDisabled =
-        status == currentStatus; // Disable if it's the current status
+    
+    // Disable if it's the current status OR if current status is PAUSED and trying to select COMPLETED
+    bool isPausedAndTryingComplete = currentStatus == "PAUSED" && status == "COMPLETED";
+    bool isDisabled = status == currentStatus || isPausedAndTryingComplete;
 
     // Define colors based on selection and disabled state
     Color bgColor;
@@ -1212,9 +1231,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                 textAlign: TextAlign.center,
               ),
               if (isDisabled)
-                const Text(
-                  "(current)",
-                  style: TextStyle(
+                Text(
+                  isPausedAndTryingComplete ? "(unavailable)" : "(current)",
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 10,
                   ),

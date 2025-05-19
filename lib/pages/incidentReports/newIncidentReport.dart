@@ -9,6 +9,8 @@ import 'package:servicetracker_app/components/customRadio.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/request/saveProgressModal.dart';
 import 'package:servicetracker_app/components/request/submitIncidentModal.dart';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
+import 'package:servicetracker_app/api_service/incident_report_service.dart';
 
 class NewIncidentReport extends StatefulWidget {
   const NewIncidentReport({Key? key}) : super(key: key);
@@ -18,79 +20,71 @@ class NewIncidentReport extends StatefulWidget {
 }
 
 class _NewIncidentReportState extends State<NewIncidentReport> {
+  final IncidentReportService _apiService = IncidentReportService();
+  bool isSubmitting = false;
+  
   String? selectedLocation;
+  String? selectedVerifier;  // New variable for "Verified by"
+  String? selectedApprover;  // New variable for "Approved by"
   bool isRepair = false;
   String selectedStatus = "none"; // Default selected value
   DateTime? selectedDate;
   bool isAdditional = false; // Checkbox state
   TimeOfDay? selectedTime;
   final List<String> Locations = [
-    "Computer & Peripheral Services",
-    "Network Services",
-    "Software Support",
-    "Hardware Repair",
+    "Plant Breeding and Biotechnology",
+    "Agronomy, Soils and Plant Physiology",
+    "Crop Protection",
+    "Genetic Resources",
+    "Rice Engineering and Mechanization",
+    "Rice Chemistry and Food Science",
+    "Socioeconomics",
+    "Development Communication",
+    "Technology Management and Services",
+    "Administrative",
+    "Finance",
+    "Information Systems"
   ];
-  TextEditingController notesController = TextEditingController();
-  List<String> technicians = ['Ranniel F. Lauriaga'];
+  
+  // Updated controllers for each form field
+  TextEditingController incidentNameController = TextEditingController();
+  TextEditingController subjectController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController natureController = TextEditingController();
+  TextEditingController impactsController = TextEditingController();
+  TextEditingController affectedAreasController = TextEditingController();
+  
+  // Updated list with names from database
+  final List<String> technicians = [
+    'John Doe',
+    'John Deer',
+    'Jane Smith',
+    'Mark Johnson',
+    'Emily Davis',
+    'Michael Brown',
+    'Sarah Wilson',
+    'Daniel Martinez',
+    'Laura Garcia',
+    'James Anderson'
+  ];
+  
+  // Lists for signatories based on roles
+  final List<String> verifiers = [
+    'Mark Johnson',
+    'Michael Brown',
+    'Sarah Wilson',
+    'Laura Garcia'
+  ];
+  
+  final List<String> approvers = [
+    'John Doe',
+    'John Deer',
+    'Jane Smith',
+    'Emily Davis'
+  ];
+  
   final AutoSizeGroup radioTextGroup = AutoSizeGroup(); // ✅ Shared Group
   final List<String> priorityLevels = ["Low", "Normal", "High"];
-
-  /// 🔹 **Show Modal for Adding Technician**
-  void _showAddTechnicianModal(BuildContext context) {
-    List<String> availableTechnicians = [
-      "Ranniel F. Lauriaga",
-      "Dennis Cargamento",
-      "Christian Sicat",
-      "Christian 2",
-      "Christian 3",
-      "Christian 4",
-      "Christian 5",
-      "Christian 6",
-      "Christian 7",
-      "Christian 8",
-      "Christian 9",
-    ];
-
-    showCustomSelectionModal(
-      context: context,
-      title: "Add Technicians",
-      options: availableTechnicians,
-      selectedOptions: technicians, // Use your existing list
-      onConfirm: (List<String> selectedTechs) {
-        setState(() {
-          technicians = selectedTechs; // Update state with selected items
-        });
-      },
-    );
-  }
-
-  void _showRemoveTechnicianDialog(BuildContext context, String techName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Remove Technician"),
-          content: Text("Are you sure you want to remove $techName?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context), // Close dialog
-              child: const Text("CANCEL"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  technicians.remove(techName); // Remove technician
-                });
-                Navigator.pop(context); // Close dialog
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text("REMOVE"),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Widget _buildDropdownField(String label, String? value, List<String> options,
       Function(String) onSelect) {
@@ -170,6 +164,188 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
         );
       },
     );
+  }
+
+  // Reset all form fields
+  void _resetForm() {
+    setState(() {
+      incidentNameController.clear();
+      subjectController.clear();
+      descriptionController.clear();
+      natureController.clear();
+      impactsController.clear();
+      affectedAreasController.clear();
+      selectedStatus = "none";
+      selectedLocation = null;
+      selectedDate = null;
+      selectedTime = null;
+      isAdditional = false;
+    });
+  }
+
+  // Helper method to validate form fields
+  bool _validateForm() {
+    if (selectedStatus == "none") {
+      _showErrorSnackBar("Please select a priority level");
+      return false;
+    }
+    if (incidentNameController.text.isEmpty) {
+      _showErrorSnackBar("Incident name is required");
+      return false;
+    }
+    if (natureController.text.isEmpty) {
+      _showErrorSnackBar("Nature of incident is required");
+      return false;
+    }
+    if (selectedDate == null) {
+      _showErrorSnackBar("Date of incident is required");
+      return false;
+    }
+    if (selectedTime == null) {
+      _showErrorSnackBar("Time of incident is required");
+      return false;
+    }
+    if (selectedLocation == null) {
+      _showErrorSnackBar("Location of incident is required");
+      return false;
+    }
+    
+    return true;
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  // Submit incident report to the API
+  Future<void> _submitIncidentReport() async {
+    if (!_validateForm()) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      // Map verifier name to ID (in a real app, you would look up the actual ID)
+      String? verifierId;
+      if (selectedVerifier != null) {
+        // This is a simplified example - you should map the name to actual ID
+        verifierId = (verifiers.indexOf(selectedVerifier!) + 1).toString();
+      }
+
+      // Map approver name to ID (in a real app, you would look up the actual ID)
+      String? approverId;
+      if (selectedApprover != null) {
+        // This is a simplified example - you should map the name to actual ID
+        approverId = (approvers.indexOf(selectedApprover!) + 1).toString();
+      }
+
+      final response = await _apiService.submitIncidentReport(
+        priorityLevel: selectedStatus,
+        incidentName: incidentNameController.text,
+        incidentNature: natureController.text,
+        incidentDate: selectedDate!,
+        incidentTime: selectedTime!,
+        location: selectedLocation!,
+        subject: subjectController.text,
+        description: descriptionController.text,
+        impact: impactsController.text,
+        affectedAreas: affectedAreasController.text,
+        verifierId: verifierId,
+        approverId: approverId,
+      );
+
+      // Show success dialog
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => PopScope(
+          // Handle system back button with PopScope instead of WillPopScope
+          canPop: false,
+          onPopInvoked: (didPop) {
+            if (!didPop) {
+              // Perform the same actions as the close button
+              _resetForm();
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (route) => route.settings.name == '/',
+              );
+            }
+          },
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: CustomModalButtonRequest(
+                      title: "Incident report submitted successfully",
+                      message: "Your incident report has been submitted successfully.",
+                      onConfirm: () async {
+                        Navigator.pop(context);
+                        _resetForm();
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/home',
+                          (route) => route.settings.name == '/',
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    _resetForm();
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                      (route) => route.settings.name == '/',
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      _showErrorSnackBar("Error submitting incident report: $e");
+    } finally {
+      setState(() {
+        isSubmitting = false;
+      });
+    }
   }
 
   @override
@@ -270,24 +446,24 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: buildTextField(
                         'Incident Name',
-                        notesController,
+                        incidentNameController,
                       ),
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: buildTextField(
                         'Subject',
-                        notesController,
+                        subjectController,
                       ),
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: buildTextField(
                         'Description',
-                        notesController,
+                        descriptionController,
                       ),
                     ),
-// Inside your build method
+                    // Inside your build method
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
                       child: buildDatePickerField(
@@ -315,7 +491,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: buildTextField(
                         'Nature of Incident',
-                        notesController,
+                        natureController,
                       ),
                     ),
                     Padding(
@@ -330,7 +506,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: buildTextField(
                         'Impact/s',
-                        notesController,
+                        impactsController,
                       ),
                     ),
 
@@ -338,7 +514,7 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: buildTextField(
                         'Affected Area/s',
-                        notesController,
+                        affectedAreasController,
                       ),
                     ),
 
@@ -359,16 +535,16 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: buildDropdownField(context, "Incident Verifier",
-                          selectedLocation, Locations, (value) {
-                        setState(() => selectedLocation = value);
+                      child: buildDropdownField(context, "Verified by",
+                          selectedVerifier, verifiers, (value) {
+                        setState(() => selectedVerifier = value);
                       }),
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                      child: buildDropdownField(context, "Verifier Position",
-                          selectedLocation, Locations, (value) {
-                        setState(() => selectedLocation = value);
+                      child: buildDropdownField(context, "Approved by",
+                          selectedApprover, approvers, (value) {
+                        setState(() => selectedApprover = value);
                       }),
                     ),
                     isAdditional
@@ -441,30 +617,24 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.9,
       child: ElevatedButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => CustomModalIncidentModal(
-              title: "Incident report added successfully",
-              onConfirm: () {
-                Navigator.pop(context); // Close modal first
-                onPressed(); // Then navigate
-              },
-            ),
-          );
-        },
+        onPressed: isSubmitting 
+          ? null 
+          : () => _submitIncidentReport(),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
+          disabledBackgroundColor: Colors.grey,
           padding: const EdgeInsets.symmetric(vertical: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        child: Text(
-          text,
-          style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+        child: isSubmitting
+          ? const CircularProgressIndicator(color: Colors.white)
+          : Text(
+              text,
+              style: const TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
       ),
     );
   }

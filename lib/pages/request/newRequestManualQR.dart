@@ -89,6 +89,8 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
       'cellphone': formProvider.cellphoneNo ?? '',
       'client': formProvider.actualClient ?? '',
       'philrice_id': philriceId ?? '',
+      'serial_number': serialNumberController.text, // Add serial number
+      'accountable': accountableController.text, // Add accountable person
     };
 
     // Print request data for debugging
@@ -102,81 +104,129 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
         showDialog(
           context: context,
           barrierDismissible: true,
-          builder: (context) => Material(
-            color: Colors.transparent,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: CustomModalButtonRequest(
-                      title: "Request Submitted",
-                      message: "Your request has been submitted successfully.",
-                      onConfirm: () async {
-                        Navigator.pop(context);
-                        serialNumberController.clear();
-                        accountableController.clear();
-                        setState(() => selectedDivision = null);
-                        formProvider.resetForm();
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/home',
-                          (route) => route.settings.name == '/',
-                        );
-                        Navigator.pushNamed(context, '/PendingRequests');
-                      },
+          builder: (context) => PopScope(
+            canPop: false, // Prevent default back button behavior
+            onPopInvoked: (didPop) {
+              if (!didPop) {
+                // Perform the same actions as the close button when back button is pressed
+                serialNumberController.clear();
+                accountableController.clear();
+                setState(() => selectedDivision = null);
+                formProvider.resetForm();
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/home',
+                  (route) => route.settings.name == '/',
+                );
+                Navigator.pushNamed(context, '/PendingRequests');
+              }
+            },
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: CustomModalButtonRequest(
+                        title: "Request Submitted",
+                        message: "Your request has been submitted successfully.",
+                        onConfirm: () async {
+                          Navigator.pop(context);
+                          serialNumberController.clear();
+                          accountableController.clear();
+                          setState(() => selectedDivision = null);
+                          formProvider.resetForm();
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/home',
+                            (route) => route.settings.name == '/',
+                          );
+                          Navigator.pushNamed(context, '/PendingRequests');
+                        },
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: () async {
-                    Navigator.pop(context);
-                    serialNumberController.clear();
-                    accountableController.clear();
-                    setState(() => selectedDivision = null);
-                    formProvider.resetForm();
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/home',
-                      (route) => route.settings.name == '/',
-                    );
-                    Navigator.pushNamed(context, '/PendingRequests');
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.black,
-                      size: 24,
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(context);
+                      serialNumberController.clear();
+                      accountableController.clear();
+                      setState(() => selectedDivision = null);
+                      formProvider.resetForm();
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => route.settings.name == '/',
+                      );
+                      Navigator.pushNamed(context, '/PendingRequests');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.black,
+                        size: 24,
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+        );
+      } else {
+        // Error modal with PopScope instead of WillPopScope
+        showDialog(
+          context: context,
+          builder: (context) => PopScope(
+            canPop: false, // Prevent default back button behavior
+            onPopInvoked: (didPop) {
+              if (!didPop) {
+                Navigator.pop(context); // Handle back button manually
+              }
+            },
+            child: AlertDialog(
+              title: const Text("Error"),
+              content: Text(response['data']?['message'] ?? "Failed to submit request."),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("OK"),
                 ),
               ],
             ),
           ),
         );
-      } else {
-        // Error modal
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => PopScope(
+          canPop: false, // Prevent default back button behavior
+          onPopInvoked: (didPop) {
+            if (!didPop) {
+              Navigator.pop(context); // Handle back button manually
+            }
+          },
+          child: AlertDialog(
             title: const Text("Error"),
-            content: Text(response['data']?['message'] ?? "Failed to submit request."),
+            content: Text("Failed to submit request: $e"),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -184,20 +234,6 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
               ),
             ],
           ),
-        );
-      }
-    } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text("Error"),
-          content: Text("Failed to submit request: $e"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
-          ],
         ),
       );
     }

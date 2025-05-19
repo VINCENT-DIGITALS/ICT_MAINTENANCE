@@ -65,59 +65,74 @@ class _IncidentReportResolvedPageState
       context: context,
       barrierDismissible: true,
       useRootNavigator: true,
-      builder: (context) => Material(
-        color: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: CustomModalButtonRequest(
-                  title: "Incident Resolved Successfully",
-                  message: message,
-                  onConfirm: () {
-                    Navigator.pop(context); // Close the dialog first
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/home',
-                      (route) => route.settings.name == '/',
-                    );
-                    Navigator.pushNamed(context, '/IncidentReports');
-                  },
+      builder: (context) => PopScope(
+        canPop: false, // Prevent default back button behavior
+        onPopInvoked: (didPop) {
+          if (!didPop) {
+            // Handle back button press with same behavior as close button
+            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => route.settings.name == '/',
+            );
+            Navigator.pushNamed(context, '/IncidentReports');
+          }
+        },
+        child: Material(
+          color: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: CustomModalButtonRequest(
+                    title: "Incident Resolved Successfully",
+                    message: message,
+                    onConfirm: () {
+                      Navigator.pop(context); // Close the dialog first
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => route.settings.name == '/',
+                      );
+                      Navigator.pushNamed(context, '/IncidentReports');
+                    },
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context); // Close the dialog first
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/home',
-                  (route) => route.settings.name == '/',
-                );
-                Navigator.pushNamed(context, '/IncidentReports');
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context); // Close the dialog first
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/home',
+                    (route) => route.settings.name == '/',
+                  );
+                  Navigator.pushNamed(context, '/IncidentReports');
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.close, color: Colors.black, size: 24),
                 ),
-                child: const Icon(Icons.close, color: Colors.black, size: 24),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
