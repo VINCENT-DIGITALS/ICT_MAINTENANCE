@@ -14,7 +14,7 @@ import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/serviceDetails.dart';
-import 'package:servicetracker_app/pages/request/UpdateRequest.dart';
+import 'package:servicetracker_app/pages/dumpPages/UpdateRequest.dart';
 
 import '../../auth/sessionmanager.dart';
 import 'IncidentReportResolvedPage.dart';
@@ -1037,8 +1037,7 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
           padding: const EdgeInsets.only(bottom: 15),
           child: GestureDetector(
             onTap: () {
-              Navigator.pushNamed(context, '/IncidentReportDetails',
-                  arguments: incident);
+            
             },
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
@@ -1172,6 +1171,7 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                                         IncidentReportResolvedPage(
                                       incidentNumber:
                                           incident['id']?.toString() ?? 'N/A',
+                                      incidentName: incident['incident_name'] ?? 'Unnamed Incident',
                                       isResolved:
                                           incident['status'] == 'Resolved',
                                     ),
@@ -1272,23 +1272,40 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Close the modal and navigate to the details screen
-                            Navigator.of(context).pop();
-                            Navigator.pushNamed(
-                                context, '/IncidentReportDetails',
-                                arguments: incident);
-                          },
+                          onPressed: incident['status'] == 'Resolved'
+                              ? null // Disable button if already resolved
+                              : () {
+                                  // Close the modal first
+                                  Navigator.of(context).pop();
+                                  // Navigate to resolution page
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          IncidentReportResolvedPage(
+                                        incidentNumber:
+                                            incident['id']?.toString() ?? 'N/A',
+                                        incidentName: incident['incident_name'] ?? 'Unnamed Incident',
+                                        isResolved: false,
+                                      ),
+                                    ),
+                                  );
+                                },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF007A33),
+                            backgroundColor: incident['status'] == 'Resolved'
+                                ? Colors.grey // Grey if resolved
+                                : const Color(
+                                    0xFF007A33), // Green if not resolved
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            "VIEW FULL DETAILS",
-                            style: TextStyle(
+                          child: Text(
+                            incident['status'] == 'Resolved'
+                                ? "ALREADY RESOLVED"
+                                : "MARK AS RESOLVED",
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,

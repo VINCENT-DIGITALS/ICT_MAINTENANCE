@@ -4,6 +4,7 @@ import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/buildtextField.dart';
+import 'package:servicetracker_app/components/buildDropdownField.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
@@ -280,86 +281,91 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             if (result['success']) {
               // Show success dialog with floating close button
               showDialog(
-                context: context,
-                barrierDismissible: true,
-                useRootNavigator: true,
-                builder: (context) => Material(
-                  color: Colors.transparent,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Main dialog content
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 400),
-                          child: CustomModalButtonRequest(
-                            title: "Status Updated Successfully",
-                            message:
-                                "The service request status has been updated to ${selectedStatus}",
-                            onConfirm: () {
-                              Navigator.pop(context); // Close the dialog first
+                  context: context,
+                  barrierDismissible: true,
+                  useRootNavigator: true,
+                  builder: (context) => Material(
+                        color: Colors.transparent,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Main dialog content
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: ConstrainedBox(
+                                constraints:
+                                    const BoxConstraints(maxWidth: 400),
+                                child: CustomModalButtonRequest(
+                                  title: "Status Updated Successfully",
+                                  message:
+                                      "The service request status has been updated to ${selectedStatus}",
+                                  onConfirm: () {
+                                    Navigator.pop(
+                                        context); // Close the dialog first
 
-                              // Navigate to OngoingRequests but keep the home screen in history
-                              // First navigate to home, then to OngoingRequests to ensure proper back navigation
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/home', // First go to home
-                                (route) =>
-                                    route.settings.name ==
-                                    '/', // Keep only splash screen
-                              );
+                                    // Navigate to OngoingRequests but keep the home screen in history
+                                    // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/home', // First go to home
+                                      (route) =>
+                                          route.settings.name ==
+                                          '/', // Keep only splash screen
+                                    );
 
-                              // Then navigate to OngoingRequests - this makes Home the previous screen
-                              Navigator.pushNamed(context, '/OngoingRequests');
-                            },
-                          ),
-                        ),
-                      ),
-
-                      // Floating close button
-                      const SizedBox(height: 12),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context); // Close the dialog first
-
-                          // First navigate to home, then to OngoingRequests to ensure proper back navigation
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/home', // First go to home
-                            (route) =>
-                                route.settings.name ==
-                                '/', // Keep only splash screen
-                          );
-
-                          // Then navigate to OngoingRequests - this makes Home the previous screen
-                          Navigator.pushNamed(context, '/OngoingRequests');
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                                    // Then navigate to OngoingRequests - this makes Home the previous screen
+                                    Navigator.pushNamed(
+                                        context, '/OngoingRequests');
+                                  },
+                                ),
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.black,
-                            size: 24,
-                          ),
+                            ),
+
+                            // Floating close button
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(
+                                    context); // Close the dialog first
+
+                                // First navigate to home, then to OngoingRequests to ensure proper back navigation
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/home', // First go to home
+                                  (route) =>
+                                      route.settings.name ==
+                                      '/', // Keep only splash screen
+                                );
+
+                                // Then navigate to OngoingRequests - this makes Home the previous screen
+                                Navigator.pushNamed(
+                                    context, '/OngoingRequests');
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.black,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+                      ));
             } else {
               // Show error message
               ScaffoldMessenger.of(context).showSnackBar(
@@ -473,7 +479,6 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             ),
           ),
         ),
-        // ...existing code...
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Center(
@@ -849,22 +854,64 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
               Expanded(
                 flex: 3,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  height: 60,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Color(0xFFB0B0B0),
+                      width: 2,
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
                     children: [
-                      Text(
-                        scannedLocation != null
-                            ? scannedLocation!
-                            : "Scan Location",
-                        style: TextStyle(fontSize: 16),
+                      // Animated floating label
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 200),
+                        left: 0,
+                        top: scannedLocation != null &&
+                                scannedLocation!.isNotEmpty
+                            ? 10
+                            : 19,
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 200),
+                          style: TextStyle(
+                            fontSize: scannedLocation != null &&
+                                    scannedLocation!.isNotEmpty
+                                ? 12
+                                : 16,
+                            color: scannedLocation != null &&
+                                    scannedLocation!.isNotEmpty
+                                ? Colors.black87.withOpacity(0.7)
+                                : Colors.black87,
+                          ),
+                          child: const Text("Location"),
+                        ),
                       ),
-                      Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
+
+                      // Location value
+                      if (scannedLocation != null &&
+                          scannedLocation!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            scannedLocation!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+
+                      // Dropdown icon
+                      Positioned(
+                        right: 0,
+                        child: Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -873,13 +920,14 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
               Expanded(
                 flex: 1,
                 child: ElevatedButton(
-                  onPressed: _showQRScannerModal, // Call QR scanner modal
+                  onPressed: _showQRScannerModal,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF008037),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    minimumSize: const Size(0, 60),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                   ),
                   child: const Text(
                     "SCAN QR",
@@ -905,168 +953,104 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Problems Encountered field
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Problems Encountered",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: problems.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Loading problems...",
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.grey),
-                            ),
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.grey),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: selectedProblemId,
-                          icon: Icon(Icons.keyboard_arrow_down,
-                              color: Colors.grey[600]),
-                          isExpanded: true,
-                          hint: const Text("Select Problem"),
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              selectedProblemId = newValue;
-                              // Find the problem text for the selected ID
-                              if (newValue != null) {
-                                final selectedProblem = problems.firstWhere(
-                                  (problem) => problem['id'] == newValue,
-                                  orElse: () =>
-                                      {'description': 'Unknown Problem'},
-                                );
-                                selectedProblemText =
-                                    selectedProblem['description'];
-                              }
-                            });
-                          },
-                          items: problems.map<DropdownMenuItem<int>>((problem) {
-                            return DropdownMenuItem<int>(
-                              value: problem['id'],
-                              child: Text(
-                                problem['description'] ?? '',
-                                style: const TextStyle(fontSize: 16),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
+          // Problems Encountered field - now using buildDropdownField
+          problems.isEmpty
+              ? Container(
+                  height: 60,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Color(0xFFB0B0B0),
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Loading problems...",
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.grey),
                         ),
                       ),
-              ),
-            ],
-          ),
+                    ],
+                  ),
+                )
+              : buildDropdownField(
+                  context,
+                  "Problems Encountered",
+                  selectedProblemText,
+                  problems.map((problem) => problem['description'].toString()).toList(),
+                  (value) {
+                    setState(() {
+                      // Find the problem ID based on selected description
+                      final selectedProblem = problems.firstWhere(
+                        (problem) => problem['description'] == value,
+                        orElse: () => {'id': null, 'description': ''},
+                      );
+                      selectedProblemId = selectedProblem['id'];
+                      selectedProblemText = value;
+                    });
+                  },
+                ),
 
-          // Actions Taken field
+          // Actions Taken field - now using buildDropdownField
           const SizedBox(height: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Actions Taken",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: actions.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Loading actions...",
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.grey),
-                            ),
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.grey),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: selectedActionId,
-                          icon: Icon(Icons.keyboard_arrow_down,
-                              color: Colors.grey[600]),
-                          isExpanded: true,
-                          hint: const Text("Select Action"),
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              selectedActionId = newValue;
-                              // Find the action text for the selected ID
-                              if (newValue != null) {
-                                final selectedAction = actions.firstWhere(
-                                  (action) => action['id'] == newValue,
-                                  orElse: () =>
-                                      {'description': 'Unknown Action'},
-                                );
-                                selectedActionText =
-                                    selectedAction['description'];
-                              }
-                            });
-                          },
-                          items: actions.map<DropdownMenuItem<int>>((action) {
-                            return DropdownMenuItem<int>(
-                              value: action['id'],
-                              child: Text(
-                                action['description'] ?? '',
-                                style: const TextStyle(fontSize: 16),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
+          actions.isEmpty
+              ? Container(
+                  height: 60,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Color(0xFFB0B0B0),
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Loading actions...",
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.grey),
                         ),
                       ),
-              ),
-            ],
-          ),
+                    ],
+                  ),
+                )
+              : buildDropdownField(
+                  context,
+                  "Actions Taken",
+                  selectedActionText,
+                  actions.map((action) => action['description'].toString()).toList(),
+                  (value) {
+                    setState(() {
+                      // Find the action ID based on selected description
+                      final selectedAction = actions.firstWhere(
+                        (action) => action['description'] == value,
+                        orElse: () => {'id': null, 'description': ''},
+                      );
+                      selectedActionId = selectedAction['id'];
+                      selectedActionText = value;
+                    });
+                  },
+                ),
         ],
       ),
     );

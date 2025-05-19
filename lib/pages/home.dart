@@ -8,9 +8,14 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:servicetracker_app/api_service/home_service.dart';
 import 'package:servicetracker_app/auth/sessionmanager.dart';
+import 'package:servicetracker_app/components/AddRequestModal.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/messageSentModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/services/FormProvider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
 
 class HomePage extends StatefulWidget {
   final String currentPage;
@@ -467,8 +472,34 @@ class _HomePageState extends State<HomePage> {
 
                               _buildButtons(
                                 "ADD NEW SERVICE REQUEST",
-                                () =>
-                                    Navigator.pushNamed(context, '/newRequest'),
+                                () async {
+                                  final formProvider = Provider.of<FormProvider>(context, listen: false);
+                                  formProvider.resetForm();
+                                  
+                                  // Print user details from session for testing
+                                  final SessionManager session = SessionManager();
+                                  final user = await session.getUser();
+                                  print('==== USER DETAILS FROM SESSION ====');
+                                  print('User: ${user.toString()}');
+                                  if (user != null) {
+                                    print('Philrice ID: ${user['philrice_id']}');
+                                    print('Name: ${user['name']}');
+                                    print('Email: ${user['email']}');
+                                    print('Role: ${user['role']}');
+                                  } else {
+                                    print('No user data found in session');
+                                  }
+                                  print('==================================');
+                                  
+                                  final reachedLimit = await DashboardService().checkPendingRequestsLimitAndPrompt(context);
+                                  print('Reached Limit: $reachedLimit');
+                                  if (reachedLimit) {
+                                    // The detailed message is now handled inside the checkPendingRequestsLimitAndPrompt method
+                                    // No need to show another dialog here
+                                    return;
+                                  }
+                                  Navigator.pushNamed(context, '/newRequest');
+                                },
                                 context,
                                 textColor: const Color(0xFF004D1E),
                                 buttonColor: const Color(0xFF45CF7F),
@@ -486,7 +517,7 @@ class _HomePageState extends State<HomePage> {
                               _buildButtons(
                                 "ADD NEW INCIDENT",
                                 () => Navigator.pushNamed(
-                                    context, '/PendingRequests'),
+                                    context, '/NewIncidentReport'),
                                 context,
                                 textColor: const Color(0xFF004D1E),
                                 buttonColor: const Color(0xFF45CF7F),
@@ -811,8 +842,7 @@ class _StatCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+    ));
   }
 }
 

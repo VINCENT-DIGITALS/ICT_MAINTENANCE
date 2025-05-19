@@ -13,7 +13,7 @@ import 'package:servicetracker_app/components/equipmentInfoModal.dart';
 import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/serviceDetails.dart';
-import 'package:servicetracker_app/pages/request/UpdateRequest.dart';
+import 'package:servicetracker_app/pages/dumpPages/UpdateRequest.dart';
 
 import '../../auth/sessionmanager.dart';
 

@@ -305,48 +305,6 @@ class _NewRequestSaveState extends State<NewRequestSave> {
                             ),
                           ),
                         ),
-                        Container(
-                          // width: MediaQuery.of(context).size.width * 0.85,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: buildDropdownField(
-                                  context,
-                                  "Location",
-                                  selectedLocation,
-                                  Locations,
-                                  (value) {
-                                    setState(() => selectedLocation = value);
-                                  },
-                                  validator: (value) =>
-                                      value == null || value.isEmpty
-                                          ? "Location is required"
-                                          : null,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: _showQRScannerModal,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      const Color(0xFF007A33), // Updated color
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 20),
-                                ),
-                                child: const Text(
-                                  "SCAN QR",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                         const SizedBox(height: 10),
                         buildTextField(
                           "Notes",

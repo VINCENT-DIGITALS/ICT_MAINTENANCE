@@ -8,11 +8,13 @@ import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 class IncidentReportResolvedPage extends StatefulWidget {
   final String incidentNumber;
   final bool isResolved;
+  final String incidentName;
 
   const IncidentReportResolvedPage({
     Key? key,
     required this.incidentNumber,
     this.isResolved = false,
+    required this.incidentName,
   }) : super(key: key);
 
   @override
@@ -48,7 +50,8 @@ class _IncidentReportResolvedPageState
       barrierDismissible: true,
       builder: (dialogContext) => CustomModalPickRequest(
         title: "MARK AS RESOLVED",
-        message: "Are you sure you want to mark this incident as resolved? This action cannot be undone.",
+        message:
+            "Are you sure you want to mark this incident as resolved? This action cannot be undone.",
         onConfirm: () async {
           Navigator.pop(dialogContext); // Close confirmation
           _submit();
@@ -132,7 +135,8 @@ class _IncidentReportResolvedPageState
           findings: findingsController.text.trim(),
           recommendations: recommendationController.text.trim(),
         );
-        await _showSuccessModal(result['data']?['message'] ?? 'Incident marked as resolved!');
+        await _showSuccessModal(
+            result['data']?['message'] ?? 'Incident marked as resolved!');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -165,15 +169,20 @@ class _IncidentReportResolvedPageState
                     ),
                   ],
                 ),
-                Center(
-                  child: Text(
-                    widget.incidentNumber,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.incidentName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -239,14 +248,18 @@ class _IncidentReportResolvedPageState
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.isResolved ? Colors.grey : Colors.green[800],
+                      backgroundColor:
+                          widget.isResolved ? Colors.grey : Colors.green[800],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: widget.isResolved ? null : _showResolveConfirmation,
+                    onPressed:
+                        widget.isResolved ? null : _showResolveConfirmation,
                     child: Text(
-                      widget.isResolved ? 'ALREADY RESOLVED' : 'MARK AS RESOLVED',
+                      widget.isResolved
+                          ? 'ALREADY RESOLVED'
+                          : 'MARK AS RESOLVED',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

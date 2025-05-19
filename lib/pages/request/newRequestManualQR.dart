@@ -2,10 +2,14 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:servicetracker_app/auth/sessionmanager.dart';
 import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/buildDropdownField.dart';
 import 'package:servicetracker_app/components/buildtextField.dart';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
+import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 import 'package:servicetracker_app/services/FormProvider.dart';
+import 'package:servicetracker_app/api_service/home_service.dart';
 
 class NewRequestManualQR extends StatefulWidget {
   const NewRequestManualQR({Key? key}) : super(key: key);
@@ -24,10 +28,18 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
   String? selectedDivision;
 
   final List<String> divisions = [
-    "Information Systems Divwwwwwwwwwwwwwwwwwwision",
-    "HR Division",
-    "Finance Division",
-    "Operations Division",
+    "Plant Breeding and Biotechnology",
+    "Agronomy, Soils and Plant Physiology",
+    "Crop Protection",
+    "Genetic Resources",
+    "Rice Engineering and Mechanization",
+    "Rice Chemistry and Food Science",
+    "Socioeconomics",
+    "Development Communication",
+    "Technology Management and Services",
+    "Administrative",
+    "Finance",
+    "Information Systems"
   ];
 
   @override
@@ -60,6 +72,137 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
     });
   }
 
+  Future<void> _submitServiceRequest(BuildContext context) async {
+    final formProvider = Provider.of<FormProvider>(context, listen: false);
+    final session = await SessionManager().getUser();
+    final String? philriceId = session?['philrice_id'];
+
+    // You may need to adjust these keys to match your backend
+    final Map<String, dynamic> requestData = {
+      'category': formProvider.selectedCategoryId ?? '', // int or string
+      'subcategory': formProvider.selectedSubcategoryId ?? '', // int or string
+      'subject': formProvider.subject ?? '',
+      'description': formProvider.description ?? '',
+      'location': formProvider.location ?? '',
+      'requested_date': formProvider.requestedCompletionDate?.toIso8601String(),
+      'telephone': formProvider.telephoneNo ?? '',
+      'cellphone': formProvider.cellphoneNo ?? '',
+      'client': formProvider.actualClient ?? '',
+      'philrice_id': philriceId ?? '',
+    };
+
+    // Print request data for debugging
+    print('Submitting service request with data:');
+    print(requestData);
+
+    try {
+      final response = await DashboardService().storeNewRequest(requestData);
+      if (response['status'] == true) {
+        // Success modal
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: CustomModalButtonRequest(
+                      title: "Request Submitted",
+                      message: "Your request has been submitted successfully.",
+                      onConfirm: () async {
+                        Navigator.pop(context);
+                        serialNumberController.clear();
+                        accountableController.clear();
+                        setState(() => selectedDivision = null);
+                        formProvider.resetForm();
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/home',
+                          (route) => route.settings.name == '/',
+                        );
+                        Navigator.pushNamed(context, '/PendingRequests');
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    serialNumberController.clear();
+                    accountableController.clear();
+                    setState(() => selectedDivision = null);
+                    formProvider.resetForm();
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                      (route) => route.settings.name == '/',
+                    );
+                    Navigator.pushNamed(context, '/PendingRequests');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        // Error modal
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Error"),
+            content: Text(response['data']?['message'] ?? "Failed to submit request."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Error"),
+          content: Text("Failed to submit request: $e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final formProvider = Provider.of<FormProvider>(context);
@@ -68,20 +211,18 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
         appBar: CurvedEdgesAppBar(
           height: MediaQuery.of(context).size.height * 0.13,
           showFooter: false,
+          backgroundColor: const Color(0xFF14213D),
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
             child: Stack(
-              alignment: Alignment.center, // Centers the text
+              alignment: Alignment.center, // Keeps everything centered
               children: [
                 // 🔹 Back Icon (Left)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
-                    onPressed: () {
-                      controller?.pauseCamera();
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                     icon: const Icon(
                       Icons.arrow_back,
                       color: Colors.white,
@@ -90,7 +231,7 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
                   ),
                 ),
 
-                // 🔹 Title (Centered)
+                // 🔹 Title with Icon (Centered & Resizable)
                 Row(
                   mainAxisSize:
                       MainAxisSize.min, // Prevents unnecessary stretching
@@ -194,6 +335,8 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
                             divisions,
                             (value) {
                               setState(() => selectedDivision = value);
+                              Provider.of<FormProvider>(context, listen: false)
+                                  .accountableDivision = value;
                             },
                             validator: (value) => value == null || value.isEmpty
                                 ? "Division is required"
@@ -204,17 +347,44 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
 
                           /// **Description Box**
                           Container(
-                            width: MediaQuery.of(context).size.width *
-                                0.85, // Set width for all children
-                            padding: const EdgeInsets.all(12),
+                            width: MediaQuery.of(context).size.width * 0.85,
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
+                              color: Colors.grey.shade100,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
-                              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonumy eirmod tempor.",
-                              style:
-                                  TextStyle(fontSize: 14, color: Colors.black),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Date Acquired Section
+                                const Text(
+                                  "Date Acquired: January 5, 2019",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+
+                                // Item Description Section
+                                const Text(
+                                  "Item Description:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
 
@@ -227,26 +397,18 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
                               width: MediaQuery.of(context).size.width *
                                   0.85, // Set width for all children
                               child: ElevatedButton(
-                                onPressed: () {
-                                  if (formProvider
-                                      .requestFormKeyStep2.currentState!
-                                      .validate()) {
-                                    // ✅ Proceed to next page
-                                    controller?.pauseCamera();
-                                    Navigator.pushNamed(
-                                            context, '/NewRequestSave')
-                                        .then((_) {
-                                      controller?.resumeCamera();
-                                    });
-                                  } else {
+                                onPressed: () async {
+                                  // Validate form before proceeding
+                                  if (!formProvider.requestFormKeyStep2.currentState!.validate()) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text(
-                                            "Please fill all required fields"),
+                                        content: Text("Please fill all required fields"),
                                         backgroundColor: Colors.red,
                                       ),
                                     );
+                                    return;
                                   }
+                                  await _submitServiceRequest(context);
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF007A33),
@@ -257,10 +419,8 @@ class _NewRequestManualQRState extends State<NewRequestManualQR> {
                                   ),
                                 ),
                                 child: const Text(
-                                  "NEXT",
+                                  "SUBMIT",
                                   style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
                                       color: Colors.white),
                                 ),
                               ),

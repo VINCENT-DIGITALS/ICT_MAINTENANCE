@@ -4,6 +4,7 @@ import 'package:servicetracker_app/components/appbar.dart';
 import 'package:servicetracker_app/components/buildDatePickerField.dart';
 import 'package:servicetracker_app/components/buildDropdownField.dart';
 import 'package:servicetracker_app/components/buildTimePickerField.dart';
+import 'package:servicetracker_app/components/buildtextField.dart';
 import 'package:servicetracker_app/components/customRadio.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/request/saveProgressModal.dart';
@@ -32,6 +33,8 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
   TextEditingController notesController = TextEditingController();
   List<String> technicians = ['Ranniel F. Lauriaga'];
   final AutoSizeGroup radioTextGroup = AutoSizeGroup(); // ✅ Shared Group
+  final List<String> priorityLevels = ["Low", "Normal", "High"];
+
   /// 🔹 **Show Modal for Adding Technician**
   void _showAddTechnicianModal(BuildContext context) {
     List<String> availableTechnicians = [
@@ -176,10 +179,11 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
       appBar: CurvedEdgesAppBar(
         height: MediaQuery.of(context).size.height * 0.13,
         showFooter: false,
+        backgroundColor: const Color(0xFF14213D),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
           child: Stack(
-            alignment: Alignment.center, // Centers the text
+            alignment: Alignment.center, // Keeps everything centered
             children: [
               // 🔹 Back Icon (Left)
               Align(
@@ -194,15 +198,29 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                 ),
               ),
 
-              // 🔹 Title (Centered)
-              const Text(
-                'New Incident Report',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              // 🔹 Title with Icon (Centered & Resizable)
+              Row(
+                mainAxisSize:
+                    MainAxisSize.min, // Prevents unnecessary stretching
+                children: [
+                  const SizedBox(width: 8), // Space between icon and text
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width *
+                        0.5, // Responsive width
+                    child: AutoSizeText(
+                      'New Incident',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30, // Max size
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      minFontSize: 12, // Shrinks if needed
+                      overflow: TextOverflow.ellipsis, // Prevents overflow
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -227,49 +245,6 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         alignment: Alignment
                             .centerLeft, // Aligns only the text to the left
                         child: Text(
-                          "Priority level",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
-                      child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomRadioButton(
-                              label: "Normal",
-                              value: "Normal",
-                              groupValue: selectedStatus,
-                              onChanged: (value) =>
-                                  setState(() => selectedStatus = value),
-                              textGroup: radioTextGroup, // ✅ Pass AutoSizeGroup
-                            ),
-                            CustomRadioButton(
-                              label: "High Priority",
-                              value: "High",
-                              groupValue: selectedStatus,
-                              onChanged: (value) =>
-                                  setState(() => selectedStatus = value),
-                              textGroup: radioTextGroup, // ✅ Pass AutoSizeGroup
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(0, 25, 0, 10),
-                      child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
-                        child: Text(
                           "Incident Details",
                           style: TextStyle(
                             fontSize: 24,
@@ -279,7 +254,39 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                       ),
                     ),
                     // Inside your StatefulWidget
-
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildDropdownField(
+                        context,
+                        "Priority Level",
+                        selectedStatus == "none" ? null : selectedStatus,
+                        priorityLevels,
+                        (value) {
+                          setState(() => selectedStatus = value);
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Incident Name',
+                        notesController,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Subject',
+                        notesController,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Description',
+                        notesController,
+                      ),
+                    ),
 // Inside your build method
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
@@ -304,13 +311,12 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         },
                       ),
                     ),
-
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                      child: buildDropdownField(context, "Incident Type",
-                          selectedLocation, Locations, (value) {
-                        setState(() => selectedLocation = value);
-                      }),
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Nature of Incident',
+                        notesController,
+                      ),
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
@@ -319,146 +325,51 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                         setState(() => selectedLocation = value);
                       }),
                     ),
+
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Impact/s',
+                        notesController,
+                      ),
+                    ),
+
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Affected Area/s',
+                        notesController,
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: Align(
+                        alignment: Alignment
+                            .centerLeft, // Aligns only the text to the left
+                        child: Text(
+                          "Signatories",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildDropdownField(context, "Incident Verifier",
+                          selectedLocation, Locations, (value) {
+                        setState(() => selectedLocation = value);
+                      }),
+                    ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 1, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Subject',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 3, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Problem Description',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 1, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Impact/s',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 1, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Affected Area/s',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: isAdditional,
-                            activeColor: Color(0xFF007A33),
-                            onChanged: (bool? value) {
-                              setState(() {
-                                isAdditional = value!;
-                              });
-                            },
-                          ),
-                          Text("Additional Details",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              )),
-                        ],
-                      ),
+                      child: buildDropdownField(context, "Verifier Position",
+                          selectedLocation, Locations, (value) {
+                        setState(() => selectedLocation = value);
+                      }),
                     ),
                     isAdditional
                         ? Padding(
@@ -466,32 +377,9 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                             child: Column(
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Incident Verifier",
-                                      selectedLocation,
-                                      Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                                Padding(
                                   padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Verifier Position",
-                                      selectedLocation,
-                                      Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Approver",
-                                      selectedLocation,
-                                      Locations, (value) {
+                                  child: buildDropdownField(context, "Approver",
+                                      selectedLocation, Locations, (value) {
                                     setState(() => selectedLocation = value);
                                   }),
                                 ),
@@ -509,45 +397,6 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                             ),
                           )
                         : const SizedBox.shrink(),
-
-                    // : const SizedBox(height: 10),
-                    /// 📷 **Photo Documentation**
-                    /// 📸 **Centered Documentation**
-                    ///
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(0, 5, 0, 10),
-                      child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
-                        child: Text(
-                          "Documentaion",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 100,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.camera_alt,
-                                size: 40, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text("Add photo documentation."),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
 
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 25),

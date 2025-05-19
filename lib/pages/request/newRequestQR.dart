@@ -63,20 +63,18 @@ class _NewRequestQRState extends State<NewRequestQR> {
           appBar: CurvedEdgesAppBar(
             height: MediaQuery.of(context).size.height * 0.13,
             showFooter: false,
+            backgroundColor: const Color(0xFF14213D),
             child: Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
               child: Stack(
-                alignment: Alignment.center,
+                alignment: Alignment.center, // Keeps everything centered
                 children: [
-                  // 🔹 Back Icon
+                  // 🔹 Back Icon (Left)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      onPressed: () {
-                        controller?.pauseCamera();
-                        Navigator.pop(context);
-                      },
+                      onPressed: () => Navigator.pop(context),
                       icon: const Icon(
                         Icons.arrow_back,
                         color: Colors.white,
@@ -84,7 +82,7 @@ class _NewRequestQRState extends State<NewRequestQR> {
                       ),
                     ),
                   ),
-                  // 🔹 Title
+
                   // 🔹 Title with Icon (Centered & Resizable)
                   Row(
                     mainAxisSize:
@@ -120,11 +118,23 @@ class _NewRequestQRState extends State<NewRequestQR> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Equipment Info Title - moved higher up
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 0, 16),
+                    child: Text(
+                      "Equipment Info",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+
                   /// Wrap all form fields inside a SizedBox
                   Center(
                     child: SizedBox(
-                      width: MediaQuery.of(context).size.width *
-                          0.85, // Set width for all children
+                      width: MediaQuery.of(context).size.width * 0.85,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
