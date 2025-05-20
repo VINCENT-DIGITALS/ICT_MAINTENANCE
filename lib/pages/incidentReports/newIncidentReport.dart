@@ -54,34 +54,13 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
   TextEditingController impactsController = TextEditingController();
   TextEditingController affectedAreasController = TextEditingController();
   
-  // Updated list with names from database
-  final List<String> technicians = [
-    'John Doe',
-    'John Deer',
-    'Jane Smith',
-    'Mark Johnson',
-    'Emily Davis',
-    'Michael Brown',
-    'Sarah Wilson',
-    'Daniel Martinez',
-    'Laura Garcia',
-    'James Anderson'
-  ];
+  // Replace hardcoded lists with dynamic lists that will be populated from API
+  List<Map<String, dynamic>> technicians = [];
+  List<String> verifierNames = []; // List of verifier names for dropdown
+  List<String> approverNames = []; // List of approver names for dropdown
   
-  // Lists for signatories based on roles
-  final List<String> verifiers = [
-    'Mark Johnson',
-    'Michael Brown',
-    'Sarah Wilson',
-    'Laura Garcia'
-  ];
-  
-  final List<String> approvers = [
-    'John Doe',
-    'John Deer',
-    'Jane Smith',
-    'Emily Davis'
-  ];
+  // Map to store technicians by their name for easy lookup
+  Map<String, int> technicianIdMap = {};
   
   final AutoSizeGroup radioTextGroup = AutoSizeGroup(); // ✅ Shared Group
   final List<String> priorityLevels = ["Low", "Normal", "High"];
@@ -231,20 +210,19 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
     });
 
     try {
-      // Map verifier name to ID (in a real app, you would look up the actual ID)
+      // Get verifier ID from the map instead of hardcoding
       String? verifierId;
       if (selectedVerifier != null) {
-        // This is a simplified example - you should map the name to actual ID
-        verifierId = (verifiers.indexOf(selectedVerifier!) + 1).toString();
+        verifierId = technicianIdMap[selectedVerifier]?.toString();
       }
 
-      // Map approver name to ID (in a real app, you would look up the actual ID)
+      // Get approver ID from the map instead of hardcoding
       String? approverId;
       if (selectedApprover != null) {
-        // This is a simplified example - you should map the name to actual ID
-        approverId = (approvers.indexOf(selectedApprover!) + 1).toString();
+        approverId = technicianIdMap[selectedApprover]?.toString();
       }
 
+      // Call the API with the real IDs
       final response = await _apiService.submitIncidentReport(
         priorityLevel: selectedStatus,
         incidentName: incidentNameController.text,
@@ -348,6 +326,55 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // Fetch technicians from API
+    _fetchTechnicians();
+  }
+  
+  // Fetch technicians from API
+  Future<void> _fetchTechnicians() async {
+    try {
+      final response = await _apiService.fetchIncidentReports();
+      setState(() {
+        // Store all technicians
+        technicians = List<Map<String, dynamic>>.from(response['technicians'] ?? []);
+        
+        // Create map of technician names to IDs for easy lookup
+        for (var tech in technicians) {
+          if (tech['name'] != null) {
+            technicianIdMap[tech['name']] = tech['id'];
+          }
+        }
+        
+        // For this example, let's assume the first few technicians are verifiers
+        // and the rest are approvers - in a real app, you might have roles defined
+        List<Map<String, dynamic>> verifierMaps = technicians.take(4).toList();
+        List<Map<String, dynamic>> approverMaps = technicians.skip(4).take(4).toList();
+        
+        // Extract just the names for dropdown display
+        verifierNames = verifierMaps.map((v) => v['name'] as String).toList();
+        approverNames = approverMaps.map((a) => a['name'] as String).toList();
+        
+        // If the lists are empty, provide default values for testing
+        if (verifierNames.isEmpty) {
+          verifierNames = ['Mark Johnson', 'Michael Brown', 'Sarah Wilson', 'Laura Garcia'];
+        }
+        if (approverNames.isEmpty) {
+          approverNames = ['John Doe', 'John Deer', 'Jane Smith', 'Emily Davis'];
+        }
+      });
+    } catch (e) {
+      print("Error fetching technicians: $e");
+      // Set default values if API fails
+      setState(() {
+        verifierNames = ['Mark Johnson', 'Michael Brown', 'Sarah Wilson', 'Laura Garcia'];
+        approverNames = ['John Doe', 'John Deer', 'Jane Smith', 'Emily Davis'];
+      });
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -536,44 +563,18 @@ class _NewIncidentReportState extends State<NewIncidentReport> {
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: buildDropdownField(context, "Verified by",
-                          selectedVerifier, verifiers, (value) {
+                          selectedVerifier, verifierNames, (value) {
                         setState(() => selectedVerifier = value);
                       }),
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
                       child: buildDropdownField(context, "Approved by",
-                          selectedApprover, approvers, (value) {
+                          selectedApprover, approverNames, (value) {
                         setState(() => selectedApprover = value);
                       }),
                     ),
-                    isAdditional
-                        ? Padding(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                                  child: buildDropdownField(context, "Approver",
-                                      selectedLocation, Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Approver Position",
-                                      selectedLocation,
-                                      Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                              ],
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-
+                  
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 25),
                       child: _buildButton(context, "SUBMIT INCIDENT REPORT",

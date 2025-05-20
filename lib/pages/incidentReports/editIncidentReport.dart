@@ -54,32 +54,13 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
   TextEditingController impactsController = TextEditingController();
   TextEditingController affectedAreasController = TextEditingController();
 
-  final List<String> technicians = [
-    'John Doe',
-    'John Deer',
-    'Jane Smith',
-    'Mark Johnson',
-    'Emily Davis',
-    'Michael Brown',
-    'Sarah Wilson',
-    'Daniel Martinez',
-    'Laura Garcia',
-    'James Anderson'
-  ];
-
-  final List<String> verifiers = [
-    'Mark Johnson',
-    'Michael Brown',
-    'Sarah Wilson',
-    'Laura Garcia'
-  ];
-
-  final List<String> approvers = [
-    'John Doe',
-    'John Deer',
-    'Jane Smith',
-    'Emily Davis'
-  ];
+  // Replace hardcoded lists with dynamic lists that will be populated from API
+  List<Map<String, dynamic>> technicians = [];
+  List<Map<String, dynamic>> verifiers = [];
+  List<Map<String, dynamic>> approvers = [];
+  
+  // Map to store technicians by their name for easy lookup
+  Map<String, int> technicianIdMap = {};
 
   final AutoSizeGroup radioTextGroup = AutoSizeGroup();
   final List<String> priorityLevels = ["Low", "Normal", "High"];
@@ -118,6 +99,47 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
     // TODO: Replace this with your actual session/user id retrieval logic
     // For example, from a provider or secure storage
     currentUserId = "123"; // Example user id
+
+    // Fetch technicians from API
+    _fetchTechnicians();
+  }
+
+  // Fetch technicians from API
+  Future<void> _fetchTechnicians() async {
+    try {
+      final response = await _apiService.fetchIncidentReports();
+      setState(() {
+        // Store all technicians
+        technicians = List<Map<String, dynamic>>.from(response['technicians'] ?? []);
+        
+        // Make all technicians available as both verifiers and approvers
+        verifiers = technicians;
+        approvers = technicians;
+        
+        // Create map of technician names to IDs for easy lookup
+        for (var tech in technicians) {
+          if (tech['name'] != null && tech['id'] != null) {
+            technicianIdMap[tech['name']] = tech['id'];
+          }
+        }
+        
+        print("Raw technicians data: $technicians");
+        print("Name to ID map: $technicianIdMap");
+        
+        // Re-initialize selected values to match new data structure
+        if (widget.incident['verifier_name'] != null) {
+          selectedVerifier = widget.incident['verifier_name'];
+          print("Selected verifier: $selectedVerifier (ID in map: ${technicianIdMap[selectedVerifier]})");
+        }
+        
+        if (widget.incident['approver_name'] != null) {
+          selectedApprover = widget.incident['approver_name'];
+          print("Selected approver: $selectedApprover (ID in map: ${technicianIdMap[selectedApprover]})");
+        }
+      });
+    } catch (e) {
+      print("Error fetching technicians: $e");
+    }
   }
 
   // Reset form fields to initial values
@@ -211,28 +233,22 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
     });
 
     try {
-      // Better way to handle verifier and approver IDs
+      // Get verifier ID from the map instead of hardcoding
       String? verifierId;
       if (selectedVerifier != null && selectedVerifier!.isNotEmpty) {
-        // Find the correct index in a safer way
-        int verifierIndex = verifiers.indexOf(selectedVerifier!);
-        if (verifierIndex >= 0) {
-          // Add 1 only if we found a valid index
-          verifierId = (verifierIndex + 1).toString();
-        } else {
-          // Handle case where verifier name isn't in the list
+        verifierId = technicianIdMap[selectedVerifier]?.toString();
+        if (verifierId == null) {
           _showErrorSnackBar("Selected verifier not found in system. Please choose another.");
           setState(() => isSubmitting = false);
           return;
         }
       }
 
+      // Get approver ID from the map instead of hardcoding
       String? approverId;
       if (selectedApprover != null && selectedApprover!.isNotEmpty) {
-        int approverIndex = approvers.indexOf(selectedApprover!);
-        if (approverIndex >= 0) {
-          approverId = (approverIndex + 1).toString();
-        } else {
+        approverId = technicianIdMap[selectedApprover]?.toString();
+        if (approverId == null) {
           _showErrorSnackBar("Selected approver not found in system. Please choose another.");
           setState(() => isSubmitting = false);
           return;
@@ -343,8 +359,24 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
       print('Error type: ${e.runtimeType}');
       print('Error details: $e');
       print('Incident ID: ${widget.incident['id']}');
-      print('Verifier: $selectedVerifier (ID: ${selectedVerifier != null ? verifiers.indexOf(selectedVerifier!) + 1 : "null"})');
-      print('Approver: $selectedApprover (ID: ${selectedApprover != null ? approvers.indexOf(selectedApprover!) + 1 : "null"})');
+      
+      // Fix type errors in debug logs - use proper lookup for Map objects
+      String verifierId = "null";
+      if (selectedVerifier != null) {
+        // Find the index of the map with name matching selectedVerifier
+        int index = verifiers.indexWhere((v) => v['name'] == selectedVerifier);
+        verifierId = index >= 0 ? verifiers[index]['id'].toString() : "not found";
+      }
+      
+      String approverId = "null";
+      if (selectedApprover != null) {
+        // Find the index of the map with name matching selectedApprover
+        int index = approvers.indexWhere((a) => a['name'] == selectedApprover);
+        approverId = index >= 0 ? approvers[index]['id'].toString() : "not found";
+      }
+      
+      print('Verifier: $selectedVerifier (ID: $verifierId)');
+      print('Approver: $selectedApprover (ID: $approverId)');
       print('============ END ERROR LOG =============');
       
       // Show more specific error message based on the error
@@ -567,7 +599,7 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
                         context, 
                         "Verified by",
                         selectedVerifier, 
-                        verifiers, 
+                        verifiers.map((v) => v['name'] as String).toList(), 
                         (value) {
                           setState(() => selectedVerifier = value);
                         }
@@ -581,7 +613,7 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
                         context, 
                         "Approved by",
                         selectedApprover, 
-                        approvers, 
+                        approvers.map((a) => a['name'] as String).toList(), 
                         (value) {
                           setState(() => selectedApprover = value);
                         }
