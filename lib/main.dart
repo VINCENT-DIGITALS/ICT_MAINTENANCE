@@ -4,13 +4,10 @@ import 'package:servicetracker_app/auth/auth_page.dart';
 import 'package:servicetracker_app/pages/completedRequests/CompleteserviceDetails.dart';
 import 'package:servicetracker_app/pages/completedRequests/completedRequests.dart';
 import 'package:servicetracker_app/pages/home.dart';
-import 'package:servicetracker_app/pages/incidentReportPage.dart';
-
-import 'package:servicetracker_app/pages/incidentReports/editIncidentReport.dart';
-import 'package:servicetracker_app/pages/incidentReports/incidentDetails.dart';
-
+import 'package:servicetracker_app/pages/incidentReports/incidentReportPage.dart';
 import 'package:servicetracker_app/pages/incidentReports/newIncidentReport.dart';
-import 'package:servicetracker_app/pages/incidentReports/newIncidentReportFindings.dart';
+
+ 
 import 'package:servicetracker_app/pages/myServices.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/equipmentDetails.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/ongoingRequests.dart';
@@ -77,16 +74,13 @@ class _MyAppState extends State<MyApp> {
         '/PickedRequests': (context) => const PickedRequests(),
         '/OngoingRequests': (context) => const OngoingRequests(),
         // Add this to your MaterialApp routes
-        '/EquipmentDetails': (context) => const EquipmentDetails(),    
+        '/EquipmentDetails': (context) => const EquipmentDetails(),
         '/CompletedRequests': (context) => const CompletedRequests(),
-        'CompleteServiceDetails' : (context) =>
+        'CompleteServiceDetails': (context) =>
             const CompleteServiceDetails(), // Add this to your MaterialApp routes
-        '/IncidentReportDetails': (context) => const IncidentReportDetails(),
-        '/NewIncidentReport': (context) => const NewIncidentReport(),
-        '/EditIncidentReport': (context) => const EditIncidentReport(),
         '/UpdateStatusScreen': (context) => const UpdateStatusScreen(),
-        '/newIncidentReportFindings': (context) =>
-            const newIncidentReportFindings(),
+        '/NewIncidentReport': (context) =>
+            const NewIncidentReport(), // Add this to your MaterialApp routes
       },
     );
   }

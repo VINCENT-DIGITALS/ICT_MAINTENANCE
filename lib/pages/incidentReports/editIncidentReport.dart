@@ -1,170 +1,363 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:servicetracker_app/components/appbar.dart';
+import 'package:servicetracker_app/components/buildDatePickerField.dart';
 import 'package:servicetracker_app/components/buildDropdownField.dart';
+import 'package:servicetracker_app/components/buildTimePickerField.dart';
+import 'package:servicetracker_app/components/buildtextField.dart';
 import 'package:servicetracker_app/components/customRadio.dart';
 import 'package:servicetracker_app/components/customSelectionModal.dart';
 import 'package:servicetracker_app/components/request/saveProgressModal.dart';
 import 'package:servicetracker_app/components/request/submitIncidentModal.dart';
+import 'package:servicetracker_app/components/request/ButtonRequestModal.dart';
+import 'package:servicetracker_app/api_service/incident_report_service.dart';
 
 class EditIncidentReport extends StatefulWidget {
-  const EditIncidentReport({Key? key}) : super(key: key);
+  final Map<String, dynamic> incident;
+  const EditIncidentReport({Key? key, required this.incident}) : super(key: key);
 
   @override
   _EditIncidentReportState createState() => _EditIncidentReportState();
 }
 
 class _EditIncidentReportState extends State<EditIncidentReport> {
+  final IncidentReportService _apiService = IncidentReportService();
+  bool isSubmitting = false;
+
   String? selectedLocation;
+  String? selectedVerifier;
+  String? selectedApprover;
   bool isRepair = false;
-  String selectedStatus = "none"; // Default selected value
-
-  bool isAdditional = false; // Checkbox state
-
+  String selectedStatus = "none";
+  DateTime? selectedDate;
+  bool isAdditional = false;
+  TimeOfDay? selectedTime;
   final List<String> Locations = [
-    "Computer & Peripheral Services",
-    "Network Services",
-    "Software Support",
-    "Hardware Repair",
+    "Plant Breeding and Biotechnology",
+    "Agronomy, Soils and Plant Physiology",
+    "Crop Protection",
+    "Genetic Resources",
+    "Rice Engineering and Mechanization",
+    "Rice Chemistry and Food Science",
+    "Socioeconomics",
+    "Development Communication",
+    "Technology Management and Services",
+    "Administrative",
+    "Finance",
+    "Information Systems"
   ];
-  TextEditingController notesController = TextEditingController();
-  List<String> technicians = ['Ranniel F. Lauriaga'];
-  final AutoSizeGroup radioTextGroup = AutoSizeGroup(); // ✅ Shared Group
-  /// 🔹 **Show Modal for Adding Technician**
-  void _showAddTechnicianModal(BuildContext context) {
-    List<String> availableTechnicians = [
-      "Ranniel F. Lauriaga",
-      "Dennis Cargamento",
-      "Christian Sicat",
-      "Christian 2",
-      "Christian 3",
-      "Christian 4",
-      "Christian 5",
-      "Christian 6",
-      "Christian 7",
-      "Christian 8",
-      "Christian 9",
-    ];
 
-    showCustomSelectionModal(
-      context: context,
-      title: "Add Technicians",
-      options: availableTechnicians,
-      selectedOptions: technicians, // Use your existing list
-      onConfirm: (List<String> selectedTechs) {
-        setState(() {
-          technicians = selectedTechs; // Update state with selected items
-        });
-      },
-    );
-  }
+  TextEditingController incidentNameController = TextEditingController();
+  TextEditingController subjectController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController natureController = TextEditingController();
+  TextEditingController impactsController = TextEditingController();
+  TextEditingController affectedAreasController = TextEditingController();
 
-  void _showRemoveTechnicianDialog(BuildContext context, String techName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Remove Technician"),
-          content: Text("Are you sure you want to remove $techName?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context), // Close dialog
-              child: const Text("CANCEL"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  technicians.remove(techName); // Remove technician
-                });
-                Navigator.pop(context); // Close dialog
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text("REMOVE"),
-            ),
-          ],
+  final List<String> technicians = [
+    'John Doe',
+    'John Deer',
+    'Jane Smith',
+    'Mark Johnson',
+    'Emily Davis',
+    'Michael Brown',
+    'Sarah Wilson',
+    'Daniel Martinez',
+    'Laura Garcia',
+    'James Anderson'
+  ];
+
+  final List<String> verifiers = [
+    'Mark Johnson',
+    'Michael Brown',
+    'Sarah Wilson',
+    'Laura Garcia'
+  ];
+
+  final List<String> approvers = [
+    'John Doe',
+    'John Deer',
+    'Jane Smith',
+    'Emily Davis'
+  ];
+
+  final AutoSizeGroup radioTextGroup = AutoSizeGroup();
+  final List<String> priorityLevels = ["Low", "Normal", "High"];
+
+  // Placeholder for current user id, replace with your session logic
+  String? currentUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers and fields with widget.incident values
+    incidentNameController.text = widget.incident['incident_name'] ?? '';
+    subjectController.text = widget.incident['subject'] ?? '';
+    descriptionController.text = widget.incident['description'] ?? '';
+    natureController.text = widget.incident['incident_nature'] ?? '';
+    impactsController.text = widget.incident['impact'] ?? '';
+    affectedAreasController.text = widget.incident['affected_areas'] ?? '';
+    selectedStatus = widget.incident['priority_level'] ?? "none";
+    selectedLocation = widget.incident['location'];
+    selectedVerifier = widget.incident['verifier_name'];
+    selectedApprover = widget.incident['approver_name'];
+    // Parse date and time
+    if (widget.incident['incident_date'] != null) {
+      selectedDate = DateTime.tryParse(widget.incident['incident_date']);
+    }
+    if (widget.incident['incident_time'] != null) {
+      final timeParts = widget.incident['incident_time'].split(':');
+      if (timeParts.length >= 2) {
+        selectedTime = TimeOfDay(
+          hour: int.tryParse(timeParts[0]) ?? 0,
+          minute: int.tryParse(timeParts[1]) ?? 0,
         );
-      },
+      }
+    }
+
+    // TODO: Replace this with your actual session/user id retrieval logic
+    // For example, from a provider or secure storage
+    currentUserId = "123"; // Example user id
+  }
+
+  // Reset form fields to initial values
+  void _resetForm() {
+    incidentNameController.clear();
+    subjectController.clear();
+    descriptionController.clear();
+    natureController.clear();
+    impactsController.clear();
+    affectedAreasController.clear();
+    selectedStatus = "none";
+    selectedLocation = null;
+    selectedVerifier = null;
+    selectedApprover = null;
+    isRepair = false;
+    isAdditional = false;
+    selectedDate = null;
+    selectedTime = null;
+  }
+
+  // Validate form fields
+  bool _validateForm() {
+    if (incidentNameController.text.isEmpty) {
+      _showErrorSnackBar("Incident name is required.");
+      return false;
+    }
+    if (subjectController.text.isEmpty) {
+      _showErrorSnackBar("Subject is required.");
+      return false;
+    }
+    if (descriptionController.text.isEmpty) {
+      _showErrorSnackBar("Description is required.");
+      return false;
+    }
+    if (natureController.text.isEmpty) {
+      _showErrorSnackBar("Nature of incident is required.");
+      return false;
+    }
+    if (impactsController.text.isEmpty) {
+      _showErrorSnackBar("Impacts are required.");
+      return false;
+    }
+    if (affectedAreasController.text.isEmpty) {
+      _showErrorSnackBar("Affected areas are required.");
+      return false;
+    }
+    if (selectedStatus == "none") {
+      _showErrorSnackBar("Priority level is required.");
+      return false;
+    }
+    if (selectedLocation == null) {
+      _showErrorSnackBar("Location is required.");
+      return false;
+    }
+    if (selectedVerifier == null) {
+      _showErrorSnackBar("Verifier is required.");
+      return false;
+    }
+    if (selectedApprover == null) {
+      _showErrorSnackBar("Approver is required.");
+      return false;
+    }
+    if (selectedDate == null) {
+      _showErrorSnackBar("Incident date is required.");
+      return false;
+    }
+    if (selectedTime == null) {
+      _showErrorSnackBar("Incident time is required.");
+      return false;
+    }
+    return true;
+  }
+
+  // Show error snackbar
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 
-  Widget _buildDropdownField(String label, String? value, List<String> options,
-      Function(String) onSelect) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            GestureDetector(
-              onTap: () => _showModal(context, options, onSelect),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      value ?? '',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
+  // Submit edited incident report to the API
+  Future<void> _submitIncidentReport() async {
+    if (!_validateForm()) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      // Better way to handle verifier and approver IDs
+      String? verifierId;
+      if (selectedVerifier != null && selectedVerifier!.isNotEmpty) {
+        // Find the correct index in a safer way
+        int verifierIndex = verifiers.indexOf(selectedVerifier!);
+        if (verifierIndex >= 0) {
+          // Add 1 only if we found a valid index
+          verifierId = (verifierIndex + 1).toString();
+        } else {
+          // Handle case where verifier name isn't in the list
+          _showErrorSnackBar("Selected verifier not found in system. Please choose another.");
+          setState(() => isSubmitting = false);
+          return;
+        }
+      }
+
+      String? approverId;
+      if (selectedApprover != null && selectedApprover!.isNotEmpty) {
+        int approverIndex = approvers.indexOf(selectedApprover!);
+        if (approverIndex >= 0) {
+          approverId = (approverIndex + 1).toString();
+        } else {
+          _showErrorSnackBar("Selected approver not found in system. Please choose another.");
+          setState(() => isSubmitting = false);
+          return;
+        }
+      }
+
+      // Print debug info before making the API call
+      print('Submitting with verifier: $selectedVerifier (ID: $verifierId)');
+      print('Submitting with approver: $selectedApprover (ID: $approverId)');
+
+      // Call the update API
+      final response = await _apiService.updateIncidentReport(
+        id: widget.incident['id'],
+        priorityLevel: selectedStatus,
+        incidentName: incidentNameController.text,
+        incidentNature: natureController.text,
+        incidentDate: selectedDate!,
+        incidentTime: selectedTime!,
+        location: selectedLocation!,
+        subject: subjectController.text,
+        description: descriptionController.text,
+        impact: impactsController.text,
+        affectedAreas: affectedAreasController.text,
+        verifierId: verifierId,
+        approverId: approverId,
+      );
+
+      // Show success dialog
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => PopScope(
+          canPop: false,
+          onPopInvoked: (didPop) {
+            if (!didPop) {
+              _resetForm();
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (route) => route.settings.name == '/',
+              );
+            }
+          },
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: CustomModalButtonRequest(
+                      title: "Incident report updated successfully",
+                      message: "Your incident report has been updated successfully.",
+                      onConfirm: () async {
+                        Navigator.pop(context);
+                        _resetForm();
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/home',
+                          (route) => route.settings.name == '/',
+                        );
+                      },
                     ),
-                    const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: value != null ? -10 : 13,
-              left: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                color: Colors.white,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: Colors.black,
-                    fontSize: value != null ? 18 : 18,
-                    fontWeight: FontWeight.normal,
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    _resetForm();
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                      (route) => route.settings.name == '/',
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        // const SizedBox(height: 15),
-      ],
-    );
-  }
-
-  void _showModal(
-      BuildContext context, List<String> options, Function(String) onSelect) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SizedBox(
-          height: 300,
-          child: ListView.builder(
-            itemCount: options.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(options[index]),
-                onTap: () {
-                  onSelect(options[index]);
-                  Navigator.pop(context);
-                },
-              );
-            },
           ),
-        );
-      },
-    );
+        ),
+      );
+    } catch (e) {
+      // Enhanced error logging and handling
+      print('========= INCIDENT UPDATE ERROR =========');
+      print('Error type: ${e.runtimeType}');
+      print('Error details: $e');
+      print('Incident ID: ${widget.incident['id']}');
+      print('Verifier: $selectedVerifier (ID: ${selectedVerifier != null ? verifiers.indexOf(selectedVerifier!) + 1 : "null"})');
+      print('Approver: $selectedApprover (ID: ${selectedApprover != null ? approvers.indexOf(selectedApprover!) + 1 : "null"})');
+      print('============ END ERROR LOG =============');
+      
+      // Show more specific error message based on the error
+      if (e.toString().contains("foreign key constraint fails")) {
+        _showErrorSnackBar("Database error: Invalid user selection. Please select different verifier/approver.");
+      } else {
+        _showErrorSnackBar("Unable to update incident report. Please try again later.");
+      }
+    } finally {
+      setState(() {
+        isSubmitting = false;
+      });
+    }
   }
 
   @override
@@ -174,12 +367,12 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
       appBar: CurvedEdgesAppBar(
         height: MediaQuery.of(context).size.height * 0.13,
         showFooter: false,
+        backgroundColor: const Color(0xFF14213D),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
           child: Stack(
-            alignment: Alignment.center, // Centers the text
+            alignment: Alignment.center,
             children: [
-              // 🔹 Back Icon (Left)
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
@@ -191,16 +384,26 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
                   ),
                 ),
               ),
-
-              // 🔹 Title (Centered)
-              const Text(
-                'Edit Incident Report',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.5,
+                    child: AutoSizeText(
+                      'Edit Incident',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      minFontSize: 12,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -214,59 +417,14 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
           children: [
             Center(
               child: SizedBox(
-                width: MediaQuery.of(context).size.width *
-                    0.85, // Set width for all children
+                width: MediaQuery.of(context).size.width * 0.85,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Padding(
                       padding: EdgeInsets.fromLTRB(0, 25, 0, 10),
                       child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
-                        child: Text(
-                          "Priority level",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
-                      child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomRadioButton(
-                              label: "Normal",
-                              value: "Normal",
-                              groupValue: selectedStatus,
-                              onChanged: (value) =>
-                                  setState(() => selectedStatus = value),
-                              textGroup: radioTextGroup, // ✅ Pass AutoSizeGroup
-                            ),
-                            CustomRadioButton(
-                              label: "High Priority",
-                              value: "High",
-                              groupValue: selectedStatus,
-                              onChanged: (value) =>
-                                  setState(() => selectedStatus = value),
-                              textGroup: radioTextGroup, // ✅ Pass AutoSizeGroup
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(0, 25, 0, 10),
-                      child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
+                        alignment: Alignment.centerLeft,
                         child: Text(
                           "Incident Details",
                           style: TextStyle(
@@ -276,236 +434,124 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
                         ),
                       ),
                     ),
+                    
+                    // Priority Level dropdown
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: buildDropdownField(context, "Service Category",
-                          selectedLocation, Locations, (value) {
-                        setState(() => selectedLocation = value);
-                      }),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: buildDropdownField(context, "Service Category",
-                          selectedLocation, Locations, (value) {
-                        setState(() => selectedLocation = value);
-                      }),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: buildDropdownField(context, "Service Category",
-                          selectedLocation, Locations, (value) {
-                        setState(() => selectedLocation = value);
-                      }),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: buildDropdownField(context, "Service Category",
-                          selectedLocation, Locations, (value) {
-                        setState(() => selectedLocation = value);
-                      }),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 1, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Notes',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
+                      child: buildDropdownField(
+                        context,
+                        "Priority Level",
+                        selectedStatus == "none" ? null : selectedStatus,
+                        priorityLevels,
+                        (value) {
+                          setState(() => selectedStatus = value);
+                        },
                       ),
                     ),
+                    
+                    // Incident Name field
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 3, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Notes',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
+                      child: buildTextField(
+                        'Incident Name',
+                        incidentNameController,
                       ),
                     ),
+                    
+                    // Subject field
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 1, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Notes',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
+                      child: buildTextField(
+                        'Subject',
+                        subjectController,
+                      ),
+                    ),
+                    
+                    // Description field
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Description',
+                        descriptionController,
+                        maxLines: 3,
+                      ),
+                    ),
+                    
+                    // Date picker
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                      child: buildDatePickerField(
+                        context,
+                        "Date of Incident",
+                        selectedDate,
+                        (date) {
+                          setState(() => selectedDate = date);
+                        },
                       ),
                     ),
 
+                    // Time picker
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                      child: buildTimePickerField(
+                        context,
+                        "Time of Incident",
+                        selectedTime,
+                        (time) {
+                          setState(() => selectedTime = time);
+                        },
+                      ),
+                    ),
+                    
+                    // Nature of incident field
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                      child: TextFormField(
-                        controller: notesController,
-                        minLines: 1, // Start with one line
-                        maxLines: null, // Allow expansion as user types
-                        keyboardType:
-                            TextInputType.multiline, // Enable multiline input
-                        decoration: InputDecoration(
-                          labelText: 'Notes',
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF018203), width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 2),
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
+                      child: buildTextField(
+                        'Nature of Incident',
+                        natureController,
                       ),
                     ),
-
-                    const SizedBox(height: 20),
-
+                    
+                    // Location dropdown
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: isAdditional,
-                            activeColor: Color(0xFF007A33),
-                            onChanged: (bool? value) {
-                              setState(() {
-                                isAdditional = value!;
-                              });
-                            },
-                          ),
-                          Text("Additional Details",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              )),
-                        ],
+                      padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+                      child: buildDropdownField(
+                        context, 
+                        "Location of Incident",
+                        selectedLocation, 
+                        Locations, 
+                        (value) {
+                          setState(() => selectedLocation = value);
+                        }
                       ),
                     ),
-                    isAdditional
-                        ? Padding(
-                            padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Service Category",
-                                      selectedLocation,
-                                      Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Service Category",
-                                      selectedLocation,
-                                      Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Service Category",
-                                      selectedLocation,
-                                      Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                                  child: buildDropdownField(
-                                      context,
-                                      "Service Category",
-                                      selectedLocation,
-                                      Locations, (value) {
-                                    setState(() => selectedLocation = value);
-                                  }),
-                                ),
-                              ],
-                            ),
-                          )
-                        : const SizedBox.shrink(),
 
-                    // : const SizedBox(height: 10),
-                    /// 📷 **Photo Documentation**
-                    /// 📸 **Centered Documentation**
-                    ///
+                    // Impacts field
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Impact/s',
+                        impactsController,
+                      ),
+                    ),
+
+                    // Affected areas field
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildTextField(
+                        'Affected Area/s',
+                        affectedAreasController,
+                      ),
+                    ),
+
+                    // Signatories section
+                    const SizedBox(height: 15),
                     const Padding(
-                      padding: EdgeInsets.fromLTRB(0, 5, 0, 10),
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                       child: Align(
-                        alignment: Alignment
-                            .centerLeft, // Aligns only the text to the left
+                        alignment: Alignment.centerLeft,
                         child: Text(
-                          "Documentaion",
+                          "Signatories",
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -513,32 +559,44 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
                         ),
                       ),
                     ),
-                    Center(
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 100,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.camera_alt,
-                                size: 40, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text("Add photo documentation."),
-                        ],
+                    
+                    // Verifier dropdown
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                      child: buildDropdownField(
+                        context, 
+                        "Verified by",
+                        selectedVerifier, 
+                        verifiers, 
+                        (value) {
+                          setState(() => selectedVerifier = value);
+                        }
                       ),
                     ),
-
-                    const SizedBox(height: 20),
-
+                    
+                    // Approver dropdown
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 25),
-                      child: _buildButton(context, "SUBMIT INCIDENT REPORT",
-                          Color(0xFF007A33), () {}),
-                    )
+                      padding: EdgeInsets.fromLTRB(0, 10, 0, 20),
+                      child: buildDropdownField(
+                        context, 
+                        "Approved by",
+                        selectedApprover, 
+                        approvers, 
+                        (value) {
+                          setState(() => selectedApprover = value);
+                        }
+                      ),
+                    ),
+                    
+                    // Update button
+                    _buildButton(
+                      context, 
+                      isSubmitting ? "UPDATING..." : "UPDATE INCIDENT REPORT",
+                      Color(0xFF007A33), 
+                      _submitIncidentReport
+                    ),
+                    
+                    const SizedBox(height: 25),
                   ],
                 ),
               ),
@@ -549,58 +607,34 @@ class _EditIncidentReportState extends State<EditIncidentReport> {
     ));
   }
 
-  /// 🔹 **Reusable Button**
-  Widget _addTechBuildButton(
-      BuildContext context, String text, Color color, VoidCallback onPressed) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.85,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+  // Build button widget
+  Widget _buildButton(BuildContext context, String text, Color color, VoidCallback onPressed) {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
       ),
-    );
-  }
-
-  Widget _buildButton(
-      BuildContext context, String text, Color color, VoidCallback onPressed) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.9,
       child: ElevatedButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => CustomModalIncidentModal(
-              title: "Incident report added successfully",
-              onConfirm: () {
-                Navigator.pop(context); // Close modal first
-                onPressed(); // Then navigate
-              },
-            ),
-          );
-        },
+        onPressed: isSubmitting ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
-          padding: const EdgeInsets.symmetric(vertical: 15),
+          disabledBackgroundColor: Colors.grey,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        child: Text(
-          text,
-          style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+        child: isSubmitting
+          ? const CircularProgressIndicator(color: Colors.white)
+          : Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
       ),
     );
   }

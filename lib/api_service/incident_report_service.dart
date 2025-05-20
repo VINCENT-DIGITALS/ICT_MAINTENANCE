@@ -136,4 +136,108 @@ class IncidentReportService {
       throw Exception('Error: $e');
     }
   }
+
+  // Add a new method to fetch incident history
+  Future<Map<String, dynamic>> getIncidentHistory(String incidentId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/incident-reports/history/$incidentId'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['status'] == true) {
+          return {
+            'statusHistory': jsonResponse['data']['history'] ?? [],
+            'workingTimeFormatted': jsonResponse['data']['workingTimeFormatted'] ?? '00:00:00',
+          };
+        } else {
+          return {
+            'statusHistory': [],
+            'workingTimeFormatted': '00:00:00',
+          };
+        }
+      } else {
+        throw Exception('Failed to fetch incident history: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching incident history: $e');
+      return {
+        'statusHistory': [],
+        'workingTimeFormatted': '00:00:00',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> updateIncidentReport({
+    required dynamic id,
+    required String priorityLevel,
+    required String incidentName,
+    required String incidentNature,
+    required DateTime incidentDate,
+    required TimeOfDay incidentTime,
+    required String location,
+    String? subject,
+    String? description,
+    String? impact,
+    String? affectedAreas,
+    String? verifierId,
+    String? approverId,
+  }) async {
+    try {
+      final token = await _sessionManager.getToken();
+      
+      // Format the date and time as required by the API
+      final String formattedDate =
+          "${incidentDate.year}-${incidentDate.month.toString().padLeft(2, '0')}-${incidentDate.day.toString().padLeft(2, '0')}";
+      final String formattedTime =
+          "${incidentTime.hour.toString().padLeft(2, '0')}:${incidentTime.minute.toString().padLeft(2, '0')}:00";
+
+      final Map<String, dynamic> requestData = {
+        'id': id, // Include ID in the request body as required by the API
+        'priority_level': priorityLevel,
+        'incident_name': incidentName,
+        'subject': subject,
+        'description': description,
+        'incident_nature': incidentNature,
+        'incident_date': formattedDate,
+        'incident_time': formattedTime,
+        'location': location,
+        'impact': impact,
+        'affected_areas': affectedAreas,
+      };
+
+      // Add optional fields if provided
+      if (verifierId != null) {
+        requestData['verifier_id'] = verifierId;
+      }
+
+      if (approverId != null) {
+        requestData['approver_id'] = approverId;
+      }
+
+      // Include ID in the URL path as required by the API
+      final response = await http.post(
+        Uri.parse('$baseUrl/incident-reports/update/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestData),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['status'] == true) {
+        return responseData;
+      } else {
+        throw Exception(
+            'Failed to update incident report: ${responseData['data']['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      throw Exception('Error updating incident report: $e');
+    }
+  }
 }

@@ -15,8 +15,9 @@ import 'package:servicetracker_app/components/qrScanner.dart';
 import 'package:servicetracker_app/components/request/PickRequestModal.dart';
 import 'package:servicetracker_app/pages/ongoingRequests/serviceDetails.dart';
 import 'package:servicetracker_app/pages/dumpPages/UpdateRequest.dart';
+import 'package:servicetracker_app/pages/incidentReports/incidentDetailsPage.dart';
 
-import '../../auth/sessionmanager.dart';
+import '../../../../auth/sessionmanager.dart';
 import 'IncidentReportResolvedPage.dart';
 
 class IncidentReportPage extends StatefulWidget {
@@ -1167,13 +1168,8 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        IncidentReportResolvedPage(
-                                      incidentNumber:
-                                          incident['id']?.toString() ?? 'N/A',
-                                      incidentName: incident['incident_name'] ?? 'Unnamed Incident',
-                                      isResolved:
-                                          incident['status'] == 'Resolved',
+                                    builder: (context) => IncidentDetailsPage(
+                                      incident: incident,
                                     ),
                                   ));
                             },
@@ -1189,7 +1185,7 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                       child: Text(
                         incident['status'] == 'Resolved'
                             ? 'ALREADY RESOLVED'
-                            : 'MARK AS RESOLVED',
+                            : 'VIEW DETAILS',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -1277,16 +1273,12 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                               : () {
                                   // Close the modal first
                                   Navigator.of(context).pop();
-                                  // Navigate to resolution page
+                                  // Navigate to incident details page
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          IncidentReportResolvedPage(
-                                        incidentNumber:
-                                            incident['id']?.toString() ?? 'N/A',
-                                        incidentName: incident['incident_name'] ?? 'Unnamed Incident',
-                                        isResolved: false,
+                                      builder: (context) => IncidentDetailsPage(
+                                        incident: incident,
                                       ),
                                     ),
                                   );
@@ -1304,7 +1296,7 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                           child: Text(
                             incident['status'] == 'Resolved'
                                 ? "ALREADY RESOLVED"
-                                : "MARK AS RESOLVED",
+                                : "VIEW DETAILS",
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
