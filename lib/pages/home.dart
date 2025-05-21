@@ -274,7 +274,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         child: AutoSizeText(
-                          'Mabuhay, Ranniel!',
+                          'Mabuhay!',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 30,

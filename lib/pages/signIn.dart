@@ -218,7 +218,7 @@ class _LoginPageState extends State<LoginPage>
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width *
                                 0.85, // 90% of screen width
-                            child: buildTextField("Username", emailController),
+                            child: buildTextField("Philrice ID", emailController),
                             //  TextFormField(
                             //   controller: emailController,
                             //   autofocus: false,
